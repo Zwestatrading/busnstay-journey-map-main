@@ -58,7 +58,7 @@ dependencies:
   path: ^1.8.0
   
   # Sign in with Apple (explicit version for compatibility)
-  sign_in_with_apple: ^5.1.0
+  sign_in_with_apple: ^5.0.0
 
 dev_dependencies:
   flutter_test:
