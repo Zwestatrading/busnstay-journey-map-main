@@ -1,0 +1,295 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* BusNStay Design System - Modern Magazine Aesthetic */
+
+@layer base {
+  :root {
+    /* Core Brand Colors - Dark & Sophisticated */
+    --background: 220 30% 97%;
+    --foreground: 220 30% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 15%;
+
+    /* Primary - Charcoal/Deep Slate */
+    --primary: 220 35% 20%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - Cool Teal */
+    --secondary: 188 100% 40%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted */
+    --muted: 220 20% 90%;
+    --muted-foreground: 220 15% 50%;
+
+    /* Accent - Warm Gold */
+    --accent: 45 90% 55%;
+    --accent-foreground: 0 0% 15%;
+
+    /* Journey States */
+    --journey-completed: 165 75% 45%;
+    --journey-completed-foreground: 0 0% 100%;
+    --journey-active: 188 100% 40%;
+    --journey-active-foreground: 0 0% 100%;
+    --journey-upcoming: 220 20% 70%;
+    --journey-upcoming-foreground: 220 30% 20%;
+
+    /* Town Hierarchy */
+    --town-major: 220 35% 20%;
+    --town-medium: 188 100% 40%;
+    --town-minor: 220 20% 60%;
+
+    /* Services */
+    --service-restaurant: 12 85% 55%;
+    --service-hotel: 188 100% 40%;
+    --service-rider: 165 75% 45%;
+    --service-taxi: 45 90% 55%;
+
+    /* Map Specific */
+    --map-route: 220 35% 20%;
+    --map-route-glow: 188 100% 40%;
+    --map-overlay: 220 30% 15%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 10%;
+
+    --border: 220 20% 88%;
+    --input: 220 20% 88%;
+    --ring: 188 100% 40%;
+
+    --radius: 0.75rem;
+
+    /* Gradients - Modern Magazine Style */
+    --gradient-primary: linear-gradient(135deg, hsl(220 35% 20%) 0%, hsl(220 35% 30%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(45 90% 55%) 0%, hsl(40 85% 50%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(188 100% 40%) 0%, hsl(185 90% 35%) 100%);
+    --gradient-journey: linear-gradient(90deg, hsl(165 75% 45%) 0%, hsl(188 100% 40%) 50%, hsl(220 20% 70%) 100%);
+    --gradient-glass: linear-gradient(135deg, hsla(0, 0%, 100%, 0.95) 0%, hsla(0, 0%, 100%, 0.75) 100%);
+    --gradient-dark-glass: linear-gradient(135deg, hsla(220, 30%, 15%, 0.95) 0%, hsla(220, 30%, 15%, 0.85) 100%);
+  }
+
+  .dark {
+    --background: 220 30% 10%;
+    --foreground: 220 20% 95%;
+
+    --card: 220 30% 15%;
+    --card-foreground: 220 20% 95%;
+
+    --popover: 220 30% 15%;
+    --popover-foreground: 220 20% 95%;
+
+    --primary: 220 35% 20%;
+    --primary-foreground: 220 20% 95%;
+
+    --secondary: 188 100% 40%;
+    --secondary-foreground: 220 30% 10%;
+
+    --muted: 220 30% 20%;
+    --muted-foreground: 220 15% 60%;
+
+    --accent: 45 90% 55%;
+    --accent-foreground: 228 40% 8%;
+
+    --border: 228 25% 20%;
+    --input: 228 25% 20%;
+    --ring: 32 95% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Glass Morphism Cards */
+  .glass-card {
+    @apply backdrop-blur-xl border border-white/20 shadow-xl;
+    background: var(--gradient-glass);
+  }
+
+  .glass-card-dark {
+    @apply backdrop-blur-xl border border-white/10 shadow-2xl;
+    background: var(--gradient-dark-glass);
+  }
+
+  /* Journey Progress Indicator */
+  .journey-progress {
+    background: var(--gradient-journey);
+  }
+
+  /* Pulsing Active Marker */
+  .pulse-marker {
+    @apply relative;
+  }
+
+  .pulse-marker::before {
+    content: '';
+    @apply absolute inset-0 rounded-full animate-ping;
+    background: hsl(var(--journey-active) / 0.4);
+  }
+
+  .pulse-marker::after {
+    content: '';
+    @apply absolute inset-0 rounded-full animate-pulse;
+    background: hsl(var(--journey-active) / 0.2);
+    animation-duration: 2s;
+  }
+
+  /* Town Markers */
+  .town-marker-major {
+    @apply w-6 h-6 rounded-full shadow-lg;
+    background: hsl(var(--town-major));
+    box-shadow: 0 0 20px hsl(var(--town-major) / 0.4);
+  }
+
+  .town-marker-medium {
+    @apply w-4 h-4 rounded-full shadow-md;
+    background: hsl(var(--town-medium));
+  }
+
+  .town-marker-minor {
+    @apply w-2.5 h-2.5 rounded-full shadow-sm;
+    background: hsl(var(--town-minor));
+  }
+
+  /* Service Icons */
+  .service-icon {
+    @apply w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300;
+  }
+
+  .service-icon:hover {
+    @apply scale-110 -translate-y-1;
+  }
+
+  .service-restaurant {
+    background: linear-gradient(135deg, hsl(var(--service-restaurant)) 0%, hsl(var(--service-restaurant) / 0.8) 100%);
+  }
+
+  .service-hotel {
+    background: linear-gradient(135deg, hsl(var(--service-hotel)) 0%, hsl(var(--service-hotel) / 0.8) 100%);
+  }
+
+  .service-rider {
+    background: linear-gradient(135deg, hsl(var(--service-rider)) 0%, hsl(var(--service-rider) / 0.8) 100%);
+  }
+
+  .service-taxi {
+    background: linear-gradient(135deg, hsl(var(--service-taxi)) 0%, hsl(var(--service-taxi) / 0.8) 100%);
+  }
+
+  /* Map Controls */
+  .map-control {
+    @apply glass-card rounded-xl p-3 transition-all duration-200 cursor-pointer;
+  }
+
+  .map-control:hover {
+    @apply scale-105 shadow-2xl;
+  }
+
+  /* Route Line */
+  .route-line {
+    stroke: hsl(var(--map-route));
+    stroke-width: 4;
+    stroke-linecap: round;
+    filter: drop-shadow(0 2px 4px hsl(var(--map-route) / 0.3));
+  }
+
+  .route-line-glow {
+    stroke: hsl(var(--map-route-glow));
+    stroke-width: 6;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 8px hsl(var(--map-route-glow) / 0.6));
+  }
+}
+
+@layer utilities {
+  .text-gradient-primary {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+
+  .text-gradient-accent {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-accent);
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes glow {
+  0% { box-shadow: 0 0 5px hsl(var(--accent) / 0.5), 0 0 20px hsl(var(--accent) / 0.3); }
+  100% { box-shadow: 0 0 20px hsl(var(--accent) / 0.8), 0 0 40px hsl(var(--accent) / 0.5); }
+}
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Leaflet Customizations */
+.leaflet-container {
+  @apply rounded-none;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.leaflet-control-zoom {
+  @apply hidden;
+}
+
+.leaflet-popup-content-wrapper {
+  @apply glass-card rounded-xl border-0 p-0 overflow-hidden;
+}
+
+.leaflet-popup-content {
+  @apply m-0 p-4;
+}
+
+.leaflet-popup-tip {
+  @apply hidden;
+}

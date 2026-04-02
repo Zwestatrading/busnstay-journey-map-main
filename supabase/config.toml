@@ -1,0 +1,19 @@
+project_id = "ksepddxhvfkjfvnaervh"
+
+[functions.gps-update]
+verify_jwt = false
+
+[functions.calculate-eta]
+verify_jwt = false
+
+[functions.manage-order]
+verify_jwt = false
+
+[functions.share-journey]
+verify_jwt = false
+
+[functions.system-health]
+verify_jwt = false
+
+[functions.taxi-service]
+verify_jwt = false

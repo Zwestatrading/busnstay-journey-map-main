@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>REACT_TO_FLUTTER_MIGRATION.md</title>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+    
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+html,footer,header{
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Custom MD PDF CSS
+ */
+html,footer,header{
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+
+ }
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+<link rel="stylesheet" href="file:///r%3A/2.Travail/1.Enseignement/Cours/_1.Outils/2.Developpement/1.SCSS/main.css" type="text/css"><link rel="stylesheet" href="file:///d%3A/rdaros/Cours/_1.Outils/2.Developpement/1.SCSS/main.css" type="text/css">
+</head>
+
+<body>
+    <h1 id="busnstay-react-%E2%86%94-flutter-code-comparison-guide">BusNStay: React ↔ Flutter Code Comparison Guide</h1>
+<p>This guide shows how React code translates to Flutter code for common patterns.</p>
+<hr>
+<h2 id="1-components--widgets">1. Components &amp; Widgets</h2>
+<h3 id="react-component">React Component</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// src/components/JourneyCard.tsx</span>
+<span class="hljs-keyword">import</span> React <span class="hljs-keyword">from</span> <span class="hljs-string">'react'</span>;
+<span class="hljs-keyword">import</span> { Card } <span class="hljs-keyword">from</span> <span class="hljs-string">'@/components/ui/card'</span>;
+<span class="hljs-keyword">import</span> { Badge } <span class="hljs-keyword">from</span> <span class="hljs-string">'@/components/ui/badge'</span>;
+
+<span class="hljs-keyword">interface</span> JourneyCardProps {
+  journey: Journey;
+  onSelect: <span class="hljs-function">(<span class="hljs-params">journey: Journey</span>) =&gt;</span> <span class="hljs-built_in">void</span>;
+}
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> JourneyCard: React.FC&lt;JourneyCardProps&gt; = ({
+  journey,
+  onSelect,
+}) =&gt; {
+  <span class="hljs-keyword">return</span> (
+    &lt;div className=<span class="hljs-string">"p-4 border rounded-lg hover:shadow-md transition-shadow"</span>&gt;
+      &lt;div className=<span class="hljs-string">"flex justify-between items-start"</span>&gt;
+        &lt;div&gt;
+          &lt;h3 className=<span class="hljs-string">"font-bold text-lg"</span>&gt;{journey.from}&lt;<span class="hljs-regexp">/h3&gt;
+          &lt;p className="text-sm text-gray-600"&gt;{journey.departure}&lt;/</span>p&gt;
+        &lt;<span class="hljs-regexp">/div&gt;
+        &lt;Badge variant={journey.status === 'active' ? 'default' : 'secondary'}&gt;
+          {journey.status}
+        &lt;/</span>Badge&gt;
+      &lt;<span class="hljs-regexp">/div&gt;
+      &lt;p className="mt-2 font-semibold"&gt;${journey.fare}&lt;/</span>p&gt;
+      &lt;button
+        onClick={<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> onSelect(journey)}
+        className=<span class="hljs-string">"mt-4 w-full bg-blue-600 text-white py-2 rounded"</span>
+      &gt;
+        Book Now
+      &lt;<span class="hljs-regexp">/button&gt;
+    &lt;/</span>div&gt;
+  );
+};
+</div></code></pre>
+<h3 id="flutter-widget-equivalent">Flutter Widget (Equivalent)</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// lib/widgets/journey_card.dart</span>
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter/material.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter_screenutil/flutter_screenutil.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'../config/theme.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'../models/journey.dart'</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">JourneyCard</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">StatelessWidget</span> </span>{
+  <span class="hljs-keyword">final</span> Journey journey;
+  <span class="hljs-keyword">final</span> VoidCallback onSelect;
+
+  <span class="hljs-keyword">const</span> JourneyCard({
+    required <span class="hljs-keyword">this</span>.journey,
+    required <span class="hljs-keyword">this</span>.onSelect,
+    Key? key,
+  }) : <span class="hljs-keyword">super</span>(key: key);
+
+  <span class="hljs-meta">@override</span>
+  Widget build(BuildContext context) {
+    <span class="hljs-keyword">return</span> Card(
+      margin: EdgeInsets.symmetric(horizontal: <span class="hljs-number">16.</span>w, vertical: <span class="hljs-number">8.</span>h),
+      child: Padding(
+        padding: EdgeInsets.all(<span class="hljs-number">16.</span>w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      journey.departurePoint,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    SizedBox(height: <span class="hljs-number">4.</span>h),
+                    Text(
+                      journey.departureTime.toString(),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+                Chip(
+                  label: Text(journey.status),
+                  backgroundColor: journey.status == <span class="hljs-string">'active'</span>
+                      ? Colors.green
+                      : Colors.orange,
+                ),
+              ],
+            ),
+            SizedBox(height: <span class="hljs-number">8.</span>h),
+            Text(
+              <span class="hljs-string">'ZMW <span class="hljs-subst">${journey.fare.toStringAsFixed(<span class="hljs-number">2</span>)}</span>'</span>,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            SizedBox(height: <span class="hljs-number">16.</span>h),
+            SizedBox(
+              width: <span class="hljs-built_in">double</span>.infinity,
+              child: ElevatedButton(
+                onPressed: onSelect,
+                child: <span class="hljs-keyword">const</span> Text(<span class="hljs-string">'Book Now'</span>),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+</div></code></pre>
+<h3 id="key-differences">Key Differences</h3>
+<table>
+<thead>
+<tr>
+<th>React</th>
+<th>Flutter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>props</code> destructuring</td>
+<td>Constructor parameters with <code>required</code></td>
+</tr>
+<tr>
+<td><code>className</code> (Tailwind)</td>
+<td><code>style</code> parameters + <code>Theme.of()</code></td>
+</tr>
+<tr>
+<td><code>onClick</code></td>
+<td><code>onPressed</code></td>
+</tr>
+<tr>
+<td>Inline conditional: <code>{condition ? a : b}</code></td>
+<td><code>condition ? a : b</code> or ternary</td>
+</tr>
+<tr>
+<td><code>&lt;div&gt;, &lt;p&gt;, &lt;span&gt;</code></td>
+<td><code>Column</code>, <code>Row</code>, <code>Text</code>, <code>Container</code></td>
+</tr>
+<tr>
+<td>Component imports</td>
+<td>Widget class definition</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2-state-management">2. State Management</h2>
+<h3 id="react-context-api">React (Context API)</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// src/contexts/AuthContext.tsx</span>
+<span class="hljs-keyword">import</span> React, { createContext, useState } <span class="hljs-keyword">from</span> <span class="hljs-string">'react'</span>;
+
+<span class="hljs-keyword">interface</span> AuthContextType {
+  user: User | <span class="hljs-literal">null</span>;
+  isLoading: <span class="hljs-built_in">boolean</span>;
+  login: <span class="hljs-function">(<span class="hljs-params">email: <span class="hljs-built_in">string</span>, password: <span class="hljs-built_in">string</span></span>) =&gt;</span> <span class="hljs-built_in">Promise</span>&lt;<span class="hljs-built_in">void</span>&gt;;
+  logout: <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> <span class="hljs-built_in">Promise</span>&lt;<span class="hljs-built_in">void</span>&gt;;
+}
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> AuthContext = createContext&lt;AuthContextType | <span class="hljs-literal">undefined</span>&gt;(
+  <span class="hljs-literal">undefined</span>
+);
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> AuthProvider: React.FC&lt;{ children: React.ReactNode }&gt; = ({
+  children,
+}) =&gt; {
+  <span class="hljs-keyword">const</span> [user, setUser] = useState&lt;User | <span class="hljs-literal">null</span>&gt;(<span class="hljs-literal">null</span>);
+  <span class="hljs-keyword">const</span> [isLoading, setIsLoading] = useState(<span class="hljs-literal">false</span>);
+
+  <span class="hljs-keyword">const</span> login = <span class="hljs-keyword">async</span> (email: <span class="hljs-built_in">string</span>, password: <span class="hljs-built_in">string</span>) =&gt; {
+    setIsLoading(<span class="hljs-literal">true</span>);
+    <span class="hljs-keyword">try</span> {
+      <span class="hljs-keyword">const</span> response = <span class="hljs-keyword">await</span> apiClient.post(<span class="hljs-string">'/api/auth/login'</span>, {
+        email,
+        password,
+      });
+      setUser(response.data.user);
+    } <span class="hljs-keyword">finally</span> {
+      setIsLoading(<span class="hljs-literal">false</span>);
+    }
+  };
+
+  <span class="hljs-keyword">return</span> (
+    &lt;AuthContext.Provider value={{ user, isLoading, login, logout }}&gt;
+      {children}
+    &lt;<span class="hljs-regexp">/AuthContext.Provider&gt;
+  );
+};
+
+export const useAuth = () =&gt; {
+  const context = React.useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
+};
+
+/</span><span class="hljs-regexp">/ Usage in component
+export const LoginForm = () =&gt; {
+  const { login, isLoading } = useAuth();
+  /</span><span class="hljs-regexp">/ ... form JSX
+};
+</span></div></code></pre>
+<h3 id="flutter-riverpod">Flutter (Riverpod)</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// lib/providers/auth_provider.dart</span>
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter_riverpod/flutter_riverpod.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'../services/auth_service.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'../models/user.dart'</span>;
+
+<span class="hljs-keyword">final</span> authServiceProvider = Provider((ref) =&gt; AuthService());
+
+<span class="hljs-keyword">final</span> currentUserProvider = FutureProvider&lt;User?&gt;((ref) <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> authService = ref.watch(authServiceProvider);
+  <span class="hljs-keyword">return</span> authService.getCurrentUser();
+});
+
+<span class="hljs-keyword">final</span> loginProvider = FutureProvider.family&lt;
+    <span class="hljs-built_in">Map</span>&lt;<span class="hljs-built_in">String</span>, <span class="hljs-built_in">dynamic</span>&gt;,
+    ({<span class="hljs-built_in">String</span> email, <span class="hljs-built_in">String</span> password})&gt;((ref, params) <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> authService = ref.watch(authServiceProvider);
+  <span class="hljs-keyword">return</span> authService.login(
+    email: params.email,
+    password: params.password,
+  );
+});
+
+<span class="hljs-comment">// Usage in widget</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginForm</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">ConsumerWidget</span> </span>{
+  <span class="hljs-keyword">const</span> LoginForm({Key? key}) : <span class="hljs-keyword">super</span>(key: key);
+
+  <span class="hljs-meta">@override</span>
+  Widget build(BuildContext context, WidgetRef ref) {
+    <span class="hljs-keyword">final</span> loginAsyncValue = ref.watch(loginProvider);
+
+    <span class="hljs-keyword">return</span> loginAsyncValue.when(
+      data: (result) =&gt; Text(<span class="hljs-string">'Logged in'</span>),
+      loading: () =&gt; CircularProgressIndicator(),
+      error: (error, stack) =&gt; Text(<span class="hljs-string">'Error: <span class="hljs-subst">$error</span>'</span>),
+    );
+  }
+}
+</div></code></pre>
+<h3 id="key-differences">Key Differences</h3>
+<table>
+<thead>
+<tr>
+<th>React</th>
+<th>Flutter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>useState</code></td>
+<td><code>FutureProvider</code> / <code>StateNotifier</code></td>
+</tr>
+<tr>
+<td><code>useContext</code></td>
+<td><code>ref.watch()</code></td>
+</tr>
+<tr>
+<td>Context Provider wraps tree</td>
+<td>ProviderScope wraps app</td>
+</tr>
+<tr>
+<td>Manual re-render management</td>
+<td>Automatic with <code>.when()</code></td>
+</tr>
+<tr>
+<td>Error/loading handled manually</td>
+<td>Built-in <code>.when()</code> pattern</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="3-api-calls">3. API Calls</h2>
+<h3 id="react">React</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// src/services/JourneyService.ts</span>
+<span class="hljs-keyword">import</span> { supabase } <span class="hljs-keyword">from</span> <span class="hljs-string">'@/lib/supabase'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> searchJourneys = <span class="hljs-keyword">async</span> (
+  <span class="hljs-keyword">from</span>: <span class="hljs-built_in">string</span>,
+  to: <span class="hljs-built_in">string</span>,
+  date: <span class="hljs-built_in">Date</span>
+): <span class="hljs-built_in">Promise</span>&lt;Journey[]&gt; =&gt; {
+  <span class="hljs-keyword">const</span> { data, error } = <span class="hljs-keyword">await</span> supabase
+    .from(<span class="hljs-string">'journeys'</span>)
+    .select()
+    .eq(<span class="hljs-string">'departure_point'</span>, <span class="hljs-keyword">from</span>)
+    .eq(<span class="hljs-string">'destination_point'</span>, to)
+    .gte(<span class="hljs-string">'departure_time'</span>, date.toISOString());
+
+  <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(error.message);
+  <span class="hljs-keyword">return</span> data || [];
+};
+
+<span class="hljs-comment">// Usage in component with React Query</span>
+<span class="hljs-keyword">import</span> { useQuery } <span class="hljs-keyword">from</span> <span class="hljs-string">'@tanstack/react-query'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> JourneySearch = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  <span class="hljs-keyword">const</span> { data: journeys, isLoading, error } = useQuery({
+    queryKey: [<span class="hljs-string">'journeys'</span>, <span class="hljs-keyword">from</span>, to, date],
+    queryFn: <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> searchJourneys(<span class="hljs-keyword">from</span>, to, date),
+  });
+
+  <span class="hljs-keyword">if</span> (isLoading) <span class="hljs-keyword">return</span> &lt;Skeleton /&gt;;
+  <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">return</span> &lt;<span class="hljs-built_in">Error</span> message={error.message} /&gt;;
+
+  <span class="hljs-keyword">return</span> journeys?.map(<span class="hljs-function">(<span class="hljs-params">j</span>) =&gt;</span> &lt;JourneyCard key={j.id} journey={j} /&gt;);
+};
+</div></code></pre>
+<h3 id="flutter">Flutter</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// lib/services/journey_service.dart</span>
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:supabase_flutter/supabase_flutter.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'../models/journey.dart'</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">JourneyService</span> </span>{
+  <span class="hljs-keyword">final</span> SupabaseClient _supabase;
+
+  JourneyService(<span class="hljs-keyword">this</span>._supabase);
+
+  Future&lt;<span class="hljs-built_in">List</span>&lt;Journey&gt;&gt; searchJourneys({
+    required <span class="hljs-built_in">String</span> from,
+    required <span class="hljs-built_in">String</span> to,
+    required <span class="hljs-built_in">DateTime</span> date,
+  }) <span class="hljs-keyword">async</span> {
+    <span class="hljs-keyword">try</span> {
+      <span class="hljs-keyword">final</span> response = <span class="hljs-keyword">await</span> _supabase
+          .from(<span class="hljs-string">'journeys'</span>)
+          .select()
+          .eq(<span class="hljs-string">'departure_point'</span>, from)
+          .eq(<span class="hljs-string">'destination_point'</span>, to)
+          .gte(<span class="hljs-string">'departure_time'</span>, date.toIso8601String());
+
+      <span class="hljs-keyword">return</span> (response <span class="hljs-keyword">as</span> <span class="hljs-built_in">List</span>)
+          .map((e) =&gt; Journey.fromJson(e <span class="hljs-keyword">as</span> <span class="hljs-built_in">Map</span>&lt;<span class="hljs-built_in">String</span>, <span class="hljs-built_in">dynamic</span>&gt;))
+          .toList();
+    } <span class="hljs-keyword">catch</span> (e) {
+      <span class="hljs-keyword">throw</span> Exception(<span class="hljs-string">'Failed to search journeys: <span class="hljs-subst">$e</span>'</span>);
+    }
+  }
+}
+
+<span class="hljs-comment">// Usage in widget with Riverpod</span>
+<span class="hljs-keyword">final</span> journeySearchProvider = FutureProvider.family&lt;
+    <span class="hljs-built_in">List</span>&lt;Journey&gt;,
+    ({<span class="hljs-built_in">String</span> from, <span class="hljs-built_in">String</span> to, <span class="hljs-built_in">DateTime</span> date})&gt;((ref, params) <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> journeyService = ref.watch(journeyServiceProvider);
+  <span class="hljs-keyword">return</span> journeyService.searchJourneys(
+    from: params.from,
+    to: params.to,
+    date: params.date,
+  );
+});
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">JourneySearch</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">ConsumerWidget</span> </span>{
+  <span class="hljs-keyword">const</span> JourneySearch({Key? key}) : <span class="hljs-keyword">super</span>(key: key);
+
+  <span class="hljs-meta">@override</span>
+  Widget build(BuildContext context, WidgetRef ref) {
+    <span class="hljs-keyword">final</span> journeyAsyncValue = ref.watch(
+      journeySearchProvider((
+        from: <span class="hljs-string">'Lusaka'</span>,
+        to: <span class="hljs-string">'Kitwe'</span>,
+        date: <span class="hljs-built_in">DateTime</span>.now(),
+      )),
+    );
+
+    <span class="hljs-keyword">return</span> journeyAsyncValue.when(
+      data: (journeys) =&gt; ListView.builder(
+        itemCount: journeys.length,
+        itemBuilder: (context, index) =&gt;
+            JourneyCard(journey: journeys[index], onSelect: () {}),
+      ),
+      loading: () =&gt; <span class="hljs-keyword">const</span> CircularProgressIndicator(),
+      error: (error, stack) =&gt; Text(<span class="hljs-string">'Error: <span class="hljs-subst">$error</span>'</span>),
+    );
+  }
+}
+</div></code></pre>
+<hr>
+<h2 id="4-forms--validation">4. Forms &amp; Validation</h2>
+<h3 id="react">React</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// src/pages/auth/RegisterScreen.tsx</span>
+<span class="hljs-keyword">import</span> { useForm } <span class="hljs-keyword">from</span> <span class="hljs-string">'react-hook-form'</span>;
+<span class="hljs-keyword">import</span> { zodResolver } <span class="hljs-keyword">from</span> <span class="hljs-string">'@hookform/resolvers/zod'</span>;
+<span class="hljs-keyword">import</span> * <span class="hljs-keyword">as</span> z <span class="hljs-keyword">from</span> <span class="hljs-string">'zod'</span>;
+
+<span class="hljs-keyword">const</span> registerSchema = z
+  .object({
+    email: z.string().email(<span class="hljs-string">'Invalid email'</span>),
+    password: z.string().min(<span class="hljs-number">8</span>, <span class="hljs-string">'Min 8 characters'</span>),
+    confirmPassword: z.string(),
+  })
+  .refine(<span class="hljs-function">(<span class="hljs-params">data</span>) =&gt;</span> data.password === data.confirmPassword, {
+    message: <span class="hljs-string">'Passwords do not match'</span>,
+    path: [<span class="hljs-string">'confirmPassword'</span>],
+  });
+
+<span class="hljs-keyword">type</span> RegisterFormData = z.infer&lt;<span class="hljs-keyword">typeof</span> registerSchema&gt;;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> RegisterScreen = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  <span class="hljs-keyword">const</span> {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm&lt;RegisterFormData&gt;({
+    resolver: zodResolver(registerSchema),
+  });
+
+  <span class="hljs-keyword">const</span> onSubmit = <span class="hljs-keyword">async</span> (data: RegisterFormData) =&gt; {
+    <span class="hljs-comment">// Handle registration</span>
+  };
+
+  <span class="hljs-keyword">return</span> (
+    &lt;form onSubmit={handleSubmit(onSubmit)}&gt;
+      &lt;input {...register(<span class="hljs-string">'email'</span>)} placeholder=<span class="hljs-string">"Email"</span> /&gt;
+      {errors.email &amp;&amp; &lt;span&gt;{errors.email.message}&lt;<span class="hljs-regexp">/span&gt;}
+
+      &lt;input
+        {...register('password')}
+        type="password"
+        placeholder="Password"
+      /</span>&gt;
+      {errors.password &amp;&amp; &lt;span&gt;{errors.password.message}&lt;<span class="hljs-regexp">/span&gt;}
+
+      &lt;button type="submit"&gt;Register&lt;/</span>button&gt;
+    &lt;<span class="hljs-regexp">/form&gt;
+  );
+};
+</span></div></code></pre>
+<h3 id="flutter">Flutter</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// lib/screens/auth/register_screen.dart</span>
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter/material.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter_riverpod/flutter_riverpod.dart'</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">RegisterForm</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">ConsumerStatefulWidget</span> </span>{
+  <span class="hljs-keyword">const</span> RegisterForm({Key? key}) : <span class="hljs-keyword">super</span>(key: key);
+
+  <span class="hljs-meta">@override</span>
+  ConsumerState&lt;RegisterForm&gt; createState() =&gt; _RegisterFormState();
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">_RegisterFormState</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">ConsumerState</span>&lt;<span class="hljs-title">RegisterForm</span>&gt; </span>{
+  late TextEditingController _emailController;
+  late TextEditingController _passwordController;
+  late TextEditingController _confirmPasswordController;
+
+  <span class="hljs-keyword">final</span> _formKey = GlobalKey&lt;FormState&gt;();
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> initState() {
+    <span class="hljs-keyword">super</span>.initState();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+  }
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    <span class="hljs-keyword">super</span>.dispose();
+  }
+
+  <span class="hljs-built_in">String</span>? _validateEmail(<span class="hljs-built_in">String</span>? value) {
+    <span class="hljs-keyword">if</span> (value?.isEmpty ?? <span class="hljs-keyword">true</span>) <span class="hljs-keyword">return</span> <span class="hljs-string">'Email is required'</span>;
+    <span class="hljs-keyword">if</span> (!value!.contains(<span class="hljs-string">'@'</span>)) <span class="hljs-keyword">return</span> <span class="hljs-string">'Invalid email'</span>;
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">null</span>;
+  }
+
+  <span class="hljs-built_in">String</span>? _validatePassword(<span class="hljs-built_in">String</span>? value) {
+    <span class="hljs-keyword">if</span> (value?.isEmpty ?? <span class="hljs-keyword">true</span>) <span class="hljs-keyword">return</span> <span class="hljs-string">'Password is required'</span>;
+    <span class="hljs-keyword">if</span> (value!.length &lt; <span class="hljs-number">8</span>) <span class="hljs-keyword">return</span> <span class="hljs-string">'Min 8 characters'</span>;
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">null</span>;
+  }
+
+  <span class="hljs-built_in">String</span>? _validateConfirmPassword(<span class="hljs-built_in">String</span>? value) {
+    <span class="hljs-keyword">if</span> (value?.isEmpty ?? <span class="hljs-keyword">true</span>) <span class="hljs-keyword">return</span> <span class="hljs-string">'Confirm password is required'</span>;
+    <span class="hljs-keyword">if</span> (value != _passwordController.text) <span class="hljs-keyword">return</span> <span class="hljs-string">'Passwords do not match'</span>;
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">null</span>;
+  }
+
+  <span class="hljs-keyword">void</span> _handleSubmit() {
+    <span class="hljs-keyword">if</span> (_formKey.currentState?.validate() ?? <span class="hljs-keyword">false</span>) {
+      <span class="hljs-comment">// Handle registration</span>
+    }
+  }
+
+  <span class="hljs-meta">@override</span>
+  Widget build(BuildContext context) {
+    <span class="hljs-keyword">return</span> Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          TextFormField(
+            controller: _emailController,
+            decoration: InputDecoration(hintText: <span class="hljs-string">'Email'</span>),
+            validator: _validateEmail,
+          ),
+          SizedBox(height: <span class="hljs-number">16</span>),
+          TextFormField(
+            controller: _passwordController,
+            decoration: InputDecoration(hintText: <span class="hljs-string">'Password'</span>),
+            obscureText: <span class="hljs-keyword">true</span>,
+            validator: _validatePassword,
+          ),
+          SizedBox(height: <span class="hljs-number">16</span>),
+          TextFormField(
+            controller: _confirmPasswordController,
+            decoration: InputDecoration(hintText: <span class="hljs-string">'Confirm Password'</span>),
+            obscureText: <span class="hljs-keyword">true</span>,
+            validator: _validateConfirmPassword,
+          ),
+          SizedBox(height: <span class="hljs-number">24</span>),
+          ElevatedButton(
+            onPressed: _handleSubmit,
+            child: Text(<span class="hljs-string">'Register'</span>),
+          ),
+        ],
+      ),
+    );
+  }
+}
+</div></code></pre>
+<hr>
+<h2 id="5-routing">5. Routing</h2>
+<h3 id="react">React</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// src/App.tsx</span>
+<span class="hljs-keyword">import</span> { BrowserRouter, Routes, Route } <span class="hljs-keyword">from</span> <span class="hljs-string">'react-router-dom'</span>;
+<span class="hljs-keyword">import</span> { LoginPage } <span class="hljs-keyword">from</span> <span class="hljs-string">'@/pages/LoginPage'</span>;
+<span class="hljs-keyword">import</span> { DashboardPage } <span class="hljs-keyword">from</span> <span class="hljs-string">'@/pages/DashboardPage'</span>;
+<span class="hljs-keyword">import</span> ProtectedRoute <span class="hljs-keyword">from</span> <span class="hljs-string">'@/components/ProtectedRoute'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> App = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  <span class="hljs-keyword">return</span> (
+    &lt;BrowserRouter&gt;
+      &lt;Routes&gt;
+        &lt;Route path=<span class="hljs-string">"/login"</span> element={&lt;LoginPage /&gt;} /&gt;
+        &lt;Route
+          path=<span class="hljs-string">"/dashboard"</span>
+          element={
+            &lt;ProtectedRoute&gt;
+              &lt;DashboardPage /&gt;
+            &lt;<span class="hljs-regexp">/ProtectedRoute&gt;
+          }
+        /</span>&gt;
+      &lt;<span class="hljs-regexp">/Routes&gt;
+    &lt;/</span>BrowserRouter&gt;
+  );
+};
+
+<span class="hljs-comment">// Navigation</span>
+<span class="hljs-keyword">import</span> { useNavigate } <span class="hljs-keyword">from</span> <span class="hljs-string">'react-router-dom'</span>;
+
+<span class="hljs-keyword">const</span> MyComponent = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  <span class="hljs-keyword">const</span> navigate = useNavigate();
+  <span class="hljs-keyword">return</span> (
+    &lt;button onClick={<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> navigate(<span class="hljs-string">'/dashboard'</span>)}&gt;Go to Dashboard&lt;<span class="hljs-regexp">/button&gt;
+  );
+};
+</span></div></code></pre>
+<h3 id="flutter">Flutter</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// lib/main.dart</span>
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter/material.dart'</span>;
+
+<span class="hljs-keyword">void</span> main() {
+  runApp(<span class="hljs-keyword">const</span> BusNStayApp());
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BusNStayApp</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">StatelessWidget</span> </span>{
+  <span class="hljs-keyword">const</span> BusNStayApp({Key? key}) : <span class="hljs-keyword">super</span>(key: key);
+
+  <span class="hljs-meta">@override</span>
+  Widget build(BuildContext context) {
+    <span class="hljs-keyword">return</span> MaterialApp(
+      title: <span class="hljs-string">'BusNStay'</span>,
+      theme: ThemeData.light(),
+      home: <span class="hljs-keyword">const</span> HomePage(),
+      routes: {
+        <span class="hljs-string">'/login'</span>: (context) =&gt; <span class="hljs-keyword">const</span> LoginScreen(),
+        <span class="hljs-string">'/dashboard'</span>: (context) =&gt; <span class="hljs-keyword">const</span> DashboardScreen(),
+      },
+    );
+  }
+}
+
+<span class="hljs-comment">// Navigation</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MyComponent</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">StatelessWidget</span> </span>{
+  <span class="hljs-keyword">const</span> MyComponent({Key? key}) : <span class="hljs-keyword">super</span>(key: key);
+
+  <span class="hljs-meta">@override</span>
+  Widget build(BuildContext context) {
+    <span class="hljs-keyword">return</span> ElevatedButton(
+      onPressed: () {
+        Navigator.pushNamed(context, <span class="hljs-string">'/dashboard'</span>);
+        <span class="hljs-comment">// Or: Navigator.push(context, MaterialPageRoute(builder: (_) =&gt; DashboardScreen()))</span>
+      },
+      child: Text(<span class="hljs-string">'Go to Dashboard'</span>),
+    );
+  }
+}
+</div></code></pre>
+<hr>
+<h2 id="6-lists--iteration">6. Lists &amp; Iteration</h2>
+<h3 id="react">React</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// Rendering lists</span>
+{journeys.map(<span class="hljs-function">(<span class="hljs-params">journey</span>) =&gt;</span> (
+  &lt;JourneyCard key={journey.id} journey={journey} /&gt;
+))}
+
+<span class="hljs-comment">// Conditional rendering</span>
+{isLoading ? (
+  &lt;Skeleton /&gt;
+) : error ? (
+  &lt;ErrorComponent error={error} /&gt;
+) : (
+  &lt;JourneyList journeys={journeys} /&gt;
+)}
+
+<span class="hljs-comment">// Array operations</span>
+<span class="hljs-keyword">const</span> filtered = journeys.filter(<span class="hljs-function">(<span class="hljs-params">j</span>) =&gt;</span> j.price &lt; <span class="hljs-number">100</span>);
+<span class="hljs-keyword">const</span> mapped = journeys.map(<span class="hljs-function">(<span class="hljs-params">j</span>) =&gt;</span> ({...j, discounted: <span class="hljs-literal">true</span>}));
+<span class="hljs-keyword">const</span> sorted = journeys.sort(<span class="hljs-function">(<span class="hljs-params">a, b</span>) =&gt;</span> a.price - b.price);
+</div></code></pre>
+<h3 id="flutter">Flutter</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// Rendering lists</span>
+ListView.builder(
+  itemCount: journeys.length,
+  itemBuilder: (context, index) =&gt; JourneyCard(
+    journey: journeys[index],
+  ),
+)
+
+<span class="hljs-comment">// Conditional rendering</span>
+<span class="hljs-keyword">if</span> (isLoading) {
+  <span class="hljs-keyword">return</span> SkeletonLoader();
+} <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (hasError) {
+  <span class="hljs-keyword">return</span> ErrorComponent(error: error);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-keyword">return</span> JourneyList(journeys: journeys);
+}
+
+<span class="hljs-comment">// Using ternary for simpler cases</span>
+isLoading ? <span class="hljs-keyword">const</span> CircularProgressIndicator() : JourneyList(journeys)
+
+<span class="hljs-comment">// Array operations</span>
+<span class="hljs-keyword">final</span> filtered = journeys.where((j) =&gt; j.fare &lt; <span class="hljs-number">100</span>).toList();
+<span class="hljs-keyword">final</span> mapped = journeys.map((j) =&gt; {...j, discounted: <span class="hljs-keyword">true</span>}).toList();
+<span class="hljs-keyword">final</span> sorted = journeys..sort((a, b) =&gt; a.fare.compareTo(b.fare));
+</div></code></pre>
+<hr>
+<h2 id="7-http-requests">7. HTTP Requests</h2>
+<h3 id="react-with-axios">React with Axios</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// src/lib/apiClient.ts</span>
+<span class="hljs-keyword">import</span> axios <span class="hljs-keyword">from</span> <span class="hljs-string">'axios'</span>;
+
+<span class="hljs-keyword">const</span> apiClient = axios.create({
+  baseURL: <span class="hljs-string">'https://ksepddxhvfkjfvnaervh.supabase.co'</span>,
+  timeout: <span class="hljs-number">10000</span>,
+});
+
+<span class="hljs-comment">// Add interceptor for auth token</span>
+apiClient.interceptors.request.use(<span class="hljs-function">(<span class="hljs-params">config</span>) =&gt;</span> {
+  <span class="hljs-keyword">const</span> token = localStorage.getItem(<span class="hljs-string">'authToken'</span>);
+  <span class="hljs-keyword">if</span> (token) {
+    config.headers.Authorization = <span class="hljs-string">`Bearer <span class="hljs-subst">${token}</span>`</span>;
+  }
+  <span class="hljs-keyword">return</span> config;
+});
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> getJourneys = <span class="hljs-keyword">async</span> () =&gt; {
+  <span class="hljs-keyword">const</span> response = <span class="hljs-keyword">await</span> apiClient.get(<span class="hljs-string">'/rest/v1/journeys'</span>);
+  <span class="hljs-keyword">return</span> response.data;
+};
+</div></code></pre>
+<h3 id="flutter-with-dio">Flutter with Dio</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">// lib/services/api_client.dart</span>
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:dio/dio.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:shared_preferences/shared_preferences.dart'</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ApiClient</span> </span>{
+  late Dio _dio;
+  late SharedPreferences _prefs;
+
+  ApiClient() {
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: <span class="hljs-string">'https://ksepddxhvfkjfvnaervh.supabase.co'</span>,
+        connectTimeout: <span class="hljs-keyword">const</span> <span class="hljs-built_in">Duration</span>(seconds: <span class="hljs-number">10</span>),
+        receiveTimeout: <span class="hljs-keyword">const</span> <span class="hljs-built_in">Duration</span>(seconds: <span class="hljs-number">10</span>),
+      ),
+    );
+
+    <span class="hljs-comment">// Add interceptor</span>
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) <span class="hljs-keyword">async</span> {
+        _prefs = <span class="hljs-keyword">await</span> SharedPreferences.getInstance();
+        <span class="hljs-keyword">final</span> token = _prefs.getString(<span class="hljs-string">'authToken'</span>);
+        <span class="hljs-keyword">if</span> (token != <span class="hljs-keyword">null</span>) {
+          options.headers[<span class="hljs-string">'Authorization'</span>] = <span class="hljs-string">'Bearer <span class="hljs-subst">$token</span>'</span>;
+        }
+        <span class="hljs-keyword">return</span> handler.next(options);
+      },
+    ));
+  }
+
+  Future&lt;<span class="hljs-built_in">List</span>&lt;Journey&gt;&gt; getJourneys() <span class="hljs-keyword">async</span> {
+    <span class="hljs-keyword">final</span> response = <span class="hljs-keyword">await</span> _dio.<span class="hljs-keyword">get</span>(<span class="hljs-string">'/rest/v1/journeys'</span>);
+    <span class="hljs-keyword">return</span> (response.data <span class="hljs-keyword">as</span> <span class="hljs-built_in">List</span>)
+        .map((e) =&gt; Journey.fromJson(e))
+        .toList();
+  }
+}
+</div></code></pre>
+<hr>
+<h2 id="summary">Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Concept</th>
+<th>React</th>
+<th>Flutter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Components</strong></td>
+<td>Function/Class Components</td>
+<td>Stateless/StatefulWidget</td>
+</tr>
+<tr>
+<td><strong>Props</strong></td>
+<td>Function parameters</td>
+<td>Constructor parameters</td>
+</tr>
+<tr>
+<td><strong>Styling</strong></td>
+<td>CSS/Tailwind</td>
+<td>Theme/Style properties</td>
+</tr>
+<tr>
+<td><strong>State</strong></td>
+<td>useState/Context</td>
+<td>StateNotifier/Riverpod</td>
+</tr>
+<tr>
+<td><strong>Lists</strong></td>
+<td>.map()</td>
+<td>ListView.builder()</td>
+</tr>
+<tr>
+<td><strong>Conditionals</strong></td>
+<td>Ternary/&amp;&amp;/||</td>
+<td>if-else/.when()</td>
+</tr>
+<tr>
+<td><strong>Forms</strong></td>
+<td>react-hook-form</td>
+<td>Form + TextFormField</td>
+</tr>
+<tr>
+<td><strong>HTTP</strong></td>
+<td>Axios/React Query</td>
+<td>Dio/Riverpod</td>
+</tr>
+<tr>
+<td><strong>Routing</strong></td>
+<td>React Router</td>
+<td>Navigator/Routes</td>
+</tr>
+<tr>
+<td><strong>Navigation</strong></td>
+<td>useNavigate()</td>
+<td>Navigator.push()</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Remember</strong>: Flutter uses explicit widget tree instead of HTML/JSX. Instead of thinking in DOM elements, think in widgets that compose vertically and horizontally.</p>
+
+</body>
+
+</html>

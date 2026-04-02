@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>FLUTTER_APP_COMPLETE_GUIDE.md</title>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+    
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+html,footer,header{
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Custom MD PDF CSS
+ */
+html,footer,header{
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+
+ }
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+<link rel="stylesheet" href="file:///r%3A/2.Travail/1.Enseignement/Cours/_1.Outils/2.Developpement/1.SCSS/main.css" type="text/css"><link rel="stylesheet" href="file:///d%3A/rdaros/Cours/_1.Outils/2.Developpement/1.SCSS/main.css" type="text/css">
+</head>
+
+<body>
+    <h1 id="busnstay-flutter-app---complete-implementation-guide">BusNStay Flutter App - Complete Implementation Guide</h1>
+<h2 id="project-setup">Project Setup</h2>
+<h3 id="1-flutter-project-structure">1. Flutter Project Structure</h3>
+<pre class="hljs"><code><div>busnstay_flutter/
+├── lib/
+│   ├── main.dart                           # App entry point
+│   ├── config/
+│   │   ├── app_config.dart                # Configuration
+│   │   ├── theme.dart                     # Material theme matching Tailwind
+│   │   └── constants.dart                 # App constants
+│   ├── models/
+│   │   ├── user.dart
+│   │   ├── journey.dart
+│   │   ├── bus.dart
+│   │   ├── restaurant.dart
+│   │   ├── hotel.dart
+│   │   └── auth.dart
+│   ├── services/
+│   │   ├── auth_service.dart              # Supabase auth
+│   │   ├── user_service.dart              # User management
+│   │   ├── journey_service.dart           # Bus journeys
+│   │   ├── restaurant_service.dart        # Restaurant management
+│   │   ├── hotel_service.dart             # Hotel management
+│   │   ├── payment_service.dart           # Flutterwave integration
+│   │   ├── location_service.dart          # GPS &amp; location
+│   │   ├── notification_service.dart      # Push notifications
+│   │   └── analytics_service.dart         # Analytics
+│   ├── providers/                         # State management (Riverpod)
+│   │   ├── auth_provider.dart
+│   │   ├── user_provider.dart
+│   │   ├── journey_provider.dart
+│   │   ├── restaurant_provider.dart
+│   │   ├── hotel_provider.dart
+│   │   └── payment_provider.dart
+│   ├── screens/
+│   │   ├── auth/
+│   │   │   ├── login_screen.dart
+│   │   │   ├── register_screen.dart
+│   │   │   ├── verify_email_screen.dart
+│   │   │   ├── passenger_register_screen.dart
+│   │   │   ├── operator_register_screen.dart
+│   │   │   └── forgot_password_screen.dart
+│   │   ├── home/
+│   │   │   ├── home_screen.dart           # Main dashboard
+│   │   │   ├── journey_search_screen.dart # Search journeys
+│   │   │   ├── journey_detail_screen.dart # Journey details
+│   │   │   └── seat_selection_screen.dart # Seat booking
+│   │   ├── restaurant/
+│   │   │   ├── restaurant_list_screen.dart
+│   │   │   ├── restaurant_detail_screen.dart
+│   │   │   ├── menu_screen.dart
+│   │   │   ├── cart_screen.dart
+│   │   │   └── checkout_screen.dart
+│   │   ├── hotel/
+│   │   │   ├── hotel_list_screen.dart
+│   │   │   ├── hotel_detail_screen.dart
+│   │   │   ├── room_selection_screen.dart
+│   │   │   ├── room_booking_screen.dart
+│   │   │   └── checkout_screen.dart
+│   │   ├── delivery/
+│   │   │   ├── delivery_tracking_screen.dart
+│   │   │   ├── delivery_list_screen.dart
+│   │   │   └── delivery_map_screen.dart
+│   │   ├── account/
+│   │   │   ├── profile_screen.dart
+│   │   │   ├── edit_profile_screen.dart
+│   │   │   ├── settings_screen.dart
+│   │   │   ├── payment_methods_screen.dart
+│   │   │   ├── saved_addresses_screen.dart
+│   │   │   ├── order_history_screen.dart
+│   │   │   └── loyalty_screen.dart
+│   │   ├── admin/
+│   │   │   ├── admin_dashboard_screen.dart
+│   │   │   ├── user_management_screen.dart
+│   │   │   ├── analytics_screen.dart
+│   │   │   └── dispute_management_screen.dart
+│   │   └── splash_screen.dart
+│   ├── widgets/
+│   │   ├── custom_app_bar.dart
+│   │   ├── custom_bottom_nav.dart
+│   │   ├── journey_card.dart
+│   │   ├── bus_seat_selector.dart
+│   │   ├── restaurant_card.dart
+│   │   ├── hotel_card.dart
+│   │   ├── room_card.dart
+│   │   ├── loyalty_badge.dart
+│   │   ├── payment_method_selector.dart
+│   │   ├── loading_shimmer.dart
+│   │   ├── error_widget.dart
+│   │   ├── date_time_picker.dart
+│   │   ├── location_input.dart
+│   │   ├── rating_widget.dart
+│   │   └── custom_button.dart
+│   ├── utils/
+│   │   ├── validators.dart
+│   │   ├── formatters.dart
+│   │   ├── extensions.dart
+│   │   ├── permissions_handler.dart
+│   │   └── logger.dart
+│   └── l10n/                              # Localization
+│       ├── app_en.arb
+│       └── app_sw.arb
+├── pubspec.yaml
+├── analysis_options.yaml
+└── README.md
+</div></code></pre>
+<hr>
+<h2 id="pubspecyaml">pubspec.yaml</h2>
+<pre class="hljs"><code><div><span class="hljs-attr">name:</span> <span class="hljs-string">busnstay_flutter</span>
+<span class="hljs-attr">description:</span> <span class="hljs-string">"BusNStay - African Transportation &amp; Delivery Platform"</span>
+<span class="hljs-attr">publish_to:</span> <span class="hljs-string">'none'</span>
+
+<span class="hljs-attr">version:</span> <span class="hljs-number">1.0</span><span class="hljs-number">.0</span><span class="hljs-string">+1</span>
+
+<span class="hljs-attr">environment:</span>
+  <span class="hljs-attr">sdk:</span> <span class="hljs-string">'&gt;=3.0.0 &lt;4.0.0'</span>
+
+<span class="hljs-attr">dependencies:</span>
+  <span class="hljs-attr">flutter:</span>
+    <span class="hljs-attr">sdk:</span> <span class="hljs-string">flutter</span>
+
+  <span class="hljs-comment"># State Management</span>
+  <span class="hljs-attr">riverpod:</span> <span class="hljs-string">^2.4.0</span>
+  <span class="hljs-attr">flutter_riverpod:</span> <span class="hljs-string">^2.4.0</span>
+  <span class="hljs-attr">riverpod_generator:</span> <span class="hljs-string">^2.3.0</span>
+
+  <span class="hljs-comment"># HTTP &amp; API</span>
+  <span class="hljs-attr">dio:</span> <span class="hljs-string">^5.3.0</span>
+  <span class="hljs-attr">http:</span> <span class="hljs-string">^1.1.0</span>
+
+  <span class="hljs-comment"># Supabase</span>
+  <span class="hljs-attr">supabase_flutter:</span> <span class="hljs-string">^1.10.0</span>
+  <span class="hljs-attr">supabase:</span> <span class="hljs-string">^1.10.0</span>
+
+  <span class="hljs-comment"># UI &amp; Design</span>
+  <span class="hljs-attr">flutter_screenutil:</span> <span class="hljs-string">^5.9.0</span>
+  <span class="hljs-attr">google_fonts:</span> <span class="hljs-string">^6.1.0</span>
+  <span class="hljs-attr">cached_network_image:</span> <span class="hljs-string">^3.3.0</span>
+  <span class="hljs-attr">shimmer:</span> <span class="hljs-string">^3.0.0</span>
+  <span class="hljs-attr">flip_card:</span> <span class="hljs-string">^0.7.0</span>
+  <span class="hljs-attr">intl:</span> <span class="hljs-string">^0.19.0</span>
+
+  <span class="hljs-comment"># Maps &amp; Location</span>
+  <span class="hljs-attr">google_maps_flutter:</span> <span class="hljs-string">^2.5.0</span>
+  <span class="hljs-attr">geolocator:</span> <span class="hljs-string">^10.1.0</span>
+  <span class="hljs-attr">geocoding:</span> <span class="hljs-string">^2.1.0</span>
+
+  <span class="hljs-comment"># Payment Gateway</span>
+  <span class="hljs-attr">flutterwave_standard:</span> <span class="hljs-string">^1.0.0</span>
+  <span class="hljs-attr">provider:</span> <span class="hljs-string">^6.0.0</span>
+
+  <span class="hljs-comment"># Firebase &amp; Notifications</span>
+  <span class="hljs-attr">firebase_core:</span> <span class="hljs-string">^2.24.0</span>
+  <span class="hljs-attr">firebase_messaging:</span> <span class="hljs-string">^14.6.0</span>
+  <span class="hljs-attr">firebase_analytics:</span> <span class="hljs-string">^10.7.0</span>
+
+  <span class="hljs-comment"># Storage &amp; Persistence</span>
+  <span class="hljs-attr">shared_preferences:</span> <span class="hljs-string">^2.2.0</span>
+  <span class="hljs-attr">get_storage:</span> <span class="hljs-string">^2.1.0</span>
+  <span class="hljs-attr">hive:</span> <span class="hljs-string">^2.2.0</span>
+  <span class="hljs-attr">hive_flutter:</span> <span class="hljs-string">^1.1.0</span>
+
+  <span class="hljs-comment"># Image &amp; Photo</span>
+  <span class="hljs-attr">image_picker:</span> <span class="hljs-string">^1.0.0</span>
+  <span class="hljs-attr">image_cropper:</span> <span class="hljs-string">^5.0.0</span>
+  <span class="hljs-attr">photo_manager:</span> <span class="hljs-string">^2.7.0</span>
+
+  <span class="hljs-comment"># Date &amp; Time</span>
+  <span class="hljs-attr">table_calendar:</span> <span class="hljs-string">^3.0.0</span>
+  <span class="hljs-attr">datetime_picker_formfield_new:</span> <span class="hljs-string">^2.2.0</span>
+
+  <span class="hljs-comment"># Video &amp; Media</span>
+  <span class="hljs-attr">video_player:</span> <span class="hljs-string">^2.8.0</span>
+  <span class="hljs-attr">file_picker:</span> <span class="hljs-string">^6.0.0</span>
+
+  <span class="hljs-comment"># Local Notifications</span>
+  <span class="hljs-attr">flutter_local_notifications:</span> <span class="hljs-string">^16.2.0</span>
+
+  <span class="hljs-comment"># Utilities</span>
+  <span class="hljs-attr">uuid:</span> <span class="hljs-string">^4.0.0</span>
+  <span class="hljs-attr">get:</span> <span class="hljs-string">^4.6.0</span>
+  <span class="hljs-attr">connectivity_plus:</span> <span class="hljs-string">^5.0.0</span>
+  <span class="hljs-attr">device_info_plus:</span> <span class="hljs-string">^9.1.0</span>
+  <span class="hljs-attr">package_info_plus:</span> <span class="hljs-string">^5.0.0</span>
+  <span class="hljs-attr">url_launcher:</span> <span class="hljs-string">^6.2.0</span>
+  <span class="hljs-attr">share_plus:</span> <span class="hljs-string">^7.1.0</span>
+  <span class="hljs-attr">qr_flutter:</span> <span class="hljs-string">^4.1.0</span>
+
+  <span class="hljs-comment"># Dio logging</span>
+  <span class="hljs-attr">dio_smart_retry:</span> <span class="hljs-string">^5.0.0</span>
+  <span class="hljs-attr">pretty_logger:</span> <span class="hljs-string">^1.0.0</span>
+
+  <span class="hljs-comment"># Bottom sheet</span>
+  <span class="hljs-attr">bottom_sheet:</span> <span class="hljs-string">^4.0.0</span>
+  <span class="hljs-attr">persistent_bottom_sheet:</span> <span class="hljs-string">^4.0.0</span>
+
+  <span class="hljs-comment"># PDF</span>
+  <span class="hljs-attr">pdf:</span> <span class="hljs-string">^3.10.0</span>
+  <span class="hljs-attr">printing:</span> <span class="hljs-string">^5.11.0</span>
+
+  <span class="hljs-comment"># Animations</span>
+  <span class="hljs-attr">lottie:</span> <span class="hljs-string">^2.6.0</span>
+  <span class="hljs-attr">flutter_animate:</span> <span class="hljs-string">^4.2.0</span>
+
+  <span class="hljs-comment"># Device info</span>
+  <span class="hljs-attr">android_id:</span> <span class="hljs-string">^0.0.3</span>
+
+<span class="hljs-attr">dev_dependencies:</span>
+  <span class="hljs-attr">flutter_test:</span>
+    <span class="hljs-attr">sdk:</span> <span class="hljs-string">flutter</span>
+
+  <span class="hljs-attr">flutter_lints:</span> <span class="hljs-string">^3.0.0</span>
+  <span class="hljs-attr">build_runner:</span> <span class="hljs-string">^2.4.0</span>
+  <span class="hljs-attr">riverpod_generator:</span> <span class="hljs-string">^2.3.0</span>
+
+  <span class="hljs-comment"># Testing</span>
+  <span class="hljs-attr">mockito:</span> <span class="hljs-string">^5.4.0</span>
+  <span class="hljs-attr">freezed:</span> <span class="hljs-string">^2.4.0</span>
+
+<span class="hljs-attr">flutter_gen:</span>
+  <span class="hljs-attr">output:</span> <span class="hljs-string">lib/gen</span>
+  <span class="hljs-attr">line_length:</span> <span class="hljs-number">80</span>
+
+<span class="hljs-attr">flutter_intl:</span>
+  <span class="hljs-attr">enabled:</span> <span class="hljs-literal">true</span>
+  <span class="hljs-attr">default_locale:</span> <span class="hljs-string">en</span>
+  <span class="hljs-attr">locales:</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-string">en</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-string">sw</span>
+</div></code></pre>
+<hr>
+<h2 id="configuration-files">Configuration Files</h2>
+<h3 id="libconfigthemedart">lib/config/theme.dart</h3>
+<pre class="hljs"><code><div><span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter/material.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:google_fonts/google_fonts.dart'</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BusNStayTheme</span> </span>{
+  <span class="hljs-comment">// Primary Colors (Matching Tailwind config)</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color primary = Color(<span class="hljs-number">0xFF3B82F6</span>);        <span class="hljs-comment">// Blue</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color primaryForeground = Color(<span class="hljs-number">0xFFFFFFFF</span>);
+  
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color secondary = Color(<span class="hljs-number">0xFFF59E0B</span>);      <span class="hljs-comment">// Amber</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color secondaryForeground = Color(<span class="hljs-number">0xFFFFFFFF</span>);
+  
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color accent = Color(<span class="hljs-number">0xFF10B981</span>);         <span class="hljs-comment">// Green</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color accentForeground = Color(<span class="hljs-number">0xFFFFFFFF</span>);
+  
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color destructive = Color(<span class="hljs-number">0xFFEF4444</span>);    <span class="hljs-comment">// Red</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color destructiveForeground = Color(<span class="hljs-number">0xFFFFFFFF</span>);
+  
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color warning = Color(<span class="hljs-number">0xFFFCA5A5</span>);        <span class="hljs-comment">// Light Red</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color warningForeground = Color(<span class="hljs-number">0xFF7F1D1D</span>);
+
+  <span class="hljs-comment">// Background Colors</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color background = Color(<span class="hljs-number">0xFFFFFFFF</span>);
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color backgroundDark = Color(<span class="hljs-number">0xFF1F2937</span>);
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color foreground = Color(<span class="hljs-number">0xFF111827</span>);
+  
+  <span class="hljs-comment">// Neutral Colors</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color muted = Color(<span class="hljs-number">0xFFF3F4F6</span>);
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color mutedDark = Color(<span class="hljs-number">0xFF374151</span>);
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color mutedForeground = Color(<span class="hljs-number">0xFF6B7280</span>);
+  
+  <span class="hljs-comment">// Journey Status Colors (Custom)</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color journeyCompleted = Color(<span class="hljs-number">0xFF10B981</span>);
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color journeyActive = Color(<span class="hljs-number">0xFF3B82F6</span>);
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color journeyUpcoming = Color(<span class="hljs-number">0xFFFCA5A5</span>);
+
+  <span class="hljs-comment">// Service Colors</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color serviceRestaurant = Color(<span class="hljs-number">0xFFDC2626</span>);
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color serviceHotel = Color(<span class="hljs-number">0xFF9333EA</span>);
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color serviceRider = Color(<span class="hljs-number">0xFF06B6D4</span>);
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> Color serviceTaxi = Color(<span class="hljs-number">0xFFEAB308</span>);
+
+  <span class="hljs-keyword">static</span> ThemeData getLightTheme() {
+    <span class="hljs-keyword">return</span> ThemeData(
+      useMaterial3: <span class="hljs-keyword">true</span>,
+      brightness: Brightness.light,
+      fontFamily: GoogleFonts.inter().fontFamily,
+      primaryColor: primary,
+      scaffoldBackgroundColor: background,
+      
+      colorScheme: ColorScheme.light(
+        primary: primary,
+        secondary: secondary,
+        tertiary: accent,
+        error: destructive,
+        surface: background,
+        onPrimary: primaryForeground,
+        onSecondary: secondaryForeground,
+        onError: destructiveForeground,
+      ),
+
+      appBarTheme: AppBarTheme(
+        backgroundColor: background,
+        foregroundColor: foreground,
+        elevation: <span class="hljs-number">0</span>,
+        centerTitle: <span class="hljs-keyword">true</span>,
+        titleTextStyle: GoogleFonts.spacegrotesk(
+          fontSize: <span class="hljs-number">20</span>,
+          fontWeight: FontWeight.bold,
+          color: foreground,
+        ),
+      ),
+
+      inputDecorationTheme: InputDecorationTheme(
+        filled: <span class="hljs-keyword">true</span>,
+        fillColor: muted,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(<span class="hljs-number">12</span>),
+          borderSide: <span class="hljs-keyword">const</span> BorderSide(color: Color(<span class="hljs-number">0xFFE5E7EB</span>)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(<span class="hljs-number">12</span>),
+          borderSide: <span class="hljs-keyword">const</span> BorderSide(color: Color(<span class="hljs-number">0xFFE5E7EB</span>)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(<span class="hljs-number">12</span>),
+          borderSide: <span class="hljs-keyword">const</span> BorderSide(color: primary, width: <span class="hljs-number">2</span>),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(<span class="hljs-number">12</span>),
+          borderSide: <span class="hljs-keyword">const</span> BorderSide(color: destructive),
+        ),
+        contentPadding: <span class="hljs-keyword">const</span> EdgeInsets.symmetric(horizontal: <span class="hljs-number">16</span>, vertical: <span class="hljs-number">12</span>),
+        hintStyle: TextStyle(
+          color: mutedForeground,
+          fontSize: <span class="hljs-number">14</span>,
+        ),
+      ),
+
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: primaryForeground,
+          padding: <span class="hljs-keyword">const</span> EdgeInsets.symmetric(horizontal: <span class="hljs-number">32</span>, vertical: <span class="hljs-number">12</span>),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(<span class="hljs-number">8</span>),
+          ),
+          elevation: <span class="hljs-number">0</span>,
+        ),
+      ),
+
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: primary,
+          padding: <span class="hljs-keyword">const</span> EdgeInsets.symmetric(horizontal: <span class="hljs-number">16</span>, vertical: <span class="hljs-number">8</span>),
+        ),
+      ),
+
+      cardTheme: CardTheme(
+        color: background,
+        elevation: <span class="hljs-number">0</span>,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(<span class="hljs-number">12</span>),
+          side: <span class="hljs-keyword">const</span> BorderSide(color: Color(<span class="hljs-number">0xFFE5E7EB</span>)),
+        ),
+      ),
+
+      dividerTheme: <span class="hljs-keyword">const</span> DividerThemeData(
+        color: Color(<span class="hljs-number">0xFFE5E7EB</span>),
+        thickness: <span class="hljs-number">1</span>,
+      ),
+
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: background,
+        selectedItemColor: primary,
+        unselectedItemColor: mutedForeground,
+        elevation: <span class="hljs-number">8</span>,
+        type: BottomNavigationBarType.fixed,
+      ),
+
+      textTheme: TextTheme(
+        displayLarge: GoogleFonts.spacegrotesk(
+          fontSize: <span class="hljs-number">32</span>,
+          fontWeight: FontWeight.bold,
+          color: foreground,
+        ),
+        displayMedium: GoogleFonts.spacegrotesk(
+          fontSize: <span class="hljs-number">28</span>,
+          fontWeight: FontWeight.bold,
+          color: foreground,
+        ),
+        headlineLarge: GoogleFonts.spacegrotesk(
+          fontSize: <span class="hljs-number">24</span>,
+          fontWeight: FontWeight.bold,
+          color: foreground,
+        ),
+        headlineMedium: GoogleFonts.spacegrotesk(
+          fontSize: <span class="hljs-number">20</span>,
+          fontWeight: FontWeight.w600,
+          color: foreground,
+        ),
+        titleLarge: GoogleFonts.inter(
+          fontSize: <span class="hljs-number">18</span>,
+          fontWeight: FontWeight.w600,
+          color: foreground,
+        ),
+        titleMedium: GoogleFonts.inter(
+          fontSize: <span class="hljs-number">16</span>,
+          fontWeight: FontWeight.w500,
+          color: foreground,
+        ),
+        bodyLarge: GoogleFonts.inter(
+          fontSize: <span class="hljs-number">16</span>,
+          fontWeight: FontWeight.w400,
+          color: foreground,
+        ),
+        bodyMedium: GoogleFonts.inter(
+          fontSize: <span class="hljs-number">14</span>,
+          fontWeight: FontWeight.w400,
+          color: foreground,
+        ),
+        bodySmall: GoogleFonts.inter(
+          fontSize: <span class="hljs-number">12</span>,
+          fontWeight: FontWeight.w400,
+          color: mutedForeground,
+        ),
+      ),
+    );
+  }
+
+  <span class="hljs-keyword">static</span> ThemeData getDarkTheme() {
+    <span class="hljs-keyword">return</span> ThemeData(
+      useMaterial3: <span class="hljs-keyword">true</span>,
+      brightness: Brightness.dark,
+      fontFamily: GoogleFonts.inter().fontFamily,
+      primaryColor: primary,
+      scaffoldBackgroundColor: backgroundDark,
+      
+      colorScheme: ColorScheme.dark(
+        primary: primary,
+        secondary: secondary,
+        tertiary: accent,
+        error: destructive,
+        surface: backgroundDark,
+      ),
+
+      <span class="hljs-comment">// Similar configuration for dark theme...</span>
+    );
+  }
+}
+</div></code></pre>
+<h3 id="libconfigconstantsdart">lib/config/constants.dart</h3>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AppConstants</span> </span>{
+  <span class="hljs-comment">// API Configuration</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">String</span> supabaseUrl = <span class="hljs-string">'https://ksepddxhvfkjfvnaervh.supabase.co'</span>;
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">String</span> supabaseAnonKey = <span class="hljs-string">'sb_publishable_I97gCQ3PcClNtAvJ6SYdiQ_WBaYLm6O'</span>;
+  
+  <span class="hljs-comment">// Flutterwave Configuration</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">String</span> flutterwavePublicKey = <span class="hljs-string">'d7f4d56f-451d-4765-9df5-29be37a11782'</span>;
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">String</span> flutterwaveEnvironment = <span class="hljs-string">'staging'</span>;
+  
+  <span class="hljs-comment">// OSRM Configuration</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">String</span> osrmBaseUrl = <span class="hljs-string">'https://router.project-osrm.org'</span>;
+  
+  <span class="hljs-comment">// App Configuration</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">String</span> appName = <span class="hljs-string">'BusNStay'</span>;
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">String</span> appVersion = <span class="hljs-string">'1.0.0'</span>;
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">String</span> currency = <span class="hljs-string">'ZMW'</span>;
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">String</span> defaultLanguage = <span class="hljs-string">'en'</span>;
+  
+  <span class="hljs-comment">// Platform Fee</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">double</span> platformFeePercentage = <span class="hljs-number">0.10</span>; <span class="hljs-comment">// 10%</span>
+  
+  <span class="hljs-comment">// Timeouts</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">Duration</span> apiTimeout = <span class="hljs-built_in">Duration</span>(seconds: <span class="hljs-number">30</span>);
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">Duration</span> connectionTimeout = <span class="hljs-built_in">Duration</span>(seconds: <span class="hljs-number">10</span>);
+  
+  <span class="hljs-comment">// Pagination</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">int</span> defaultPageSize = <span class="hljs-number">20</span>;
+  
+  <span class="hljs-comment">// Location</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">double</span> defaultZoom = <span class="hljs-number">12.0</span>;
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">double</span> searchRadiusKm = <span class="hljs-number">50.0</span>;
+  
+  <span class="hljs-comment">// Loyalty Tiers</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">Map</span>&lt;<span class="hljs-built_in">String</span>, <span class="hljs-built_in">int</span>&gt; loyaltyThresholds = {
+    <span class="hljs-string">'bronze'</span>: <span class="hljs-number">0</span>,
+    <span class="hljs-string">'silver'</span>: <span class="hljs-number">1000</span>,
+    <span class="hljs-string">'gold'</span>: <span class="hljs-number">5000</span>,
+    <span class="hljs-string">'platinum'</span>: <span class="hljs-number">10000</span>,
+  };
+}
+</div></code></pre>
+<hr>
+<h2 id="key-implementation-files">Key Implementation Files</h2>
+<h3 id="libservicesauthservicedart">lib/services/auth_service.dart</h3>
+<pre class="hljs"><code><div><span class="hljs-keyword">import</span> <span class="hljs-string">'package:supabase_flutter/supabase_flutter.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:shared_preferences/shared_preferences.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'../models/user.dart'</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AuthService</span> </span>{
+  <span class="hljs-keyword">final</span> SupabaseClient _supabase = Supabase.instance.client;
+  late SharedPreferences _prefs;
+
+  Future&lt;<span class="hljs-keyword">void</span>&gt; initialize() <span class="hljs-keyword">async</span> {
+    _prefs = <span class="hljs-keyword">await</span> SharedPreferences.getInstance();
+  }
+
+  <span class="hljs-comment">// Register new user</span>
+  Future&lt;<span class="hljs-built_in">Map</span>&lt;<span class="hljs-built_in">String</span>, <span class="hljs-built_in">dynamic</span>&gt;&gt; register({
+    required <span class="hljs-built_in">String</span> email,
+    required <span class="hljs-built_in">String</span> password,
+    required <span class="hljs-built_in">String</span> fullName,
+    required <span class="hljs-built_in">String</span> phoneNumber,
+    required <span class="hljs-built_in">bool</span> termsAccepted,
+  }) <span class="hljs-keyword">async</span> {
+    <span class="hljs-keyword">try</span> {
+      <span class="hljs-comment">// 1. Create auth user</span>
+      <span class="hljs-keyword">final</span> response = <span class="hljs-keyword">await</span> _supabase.auth.signUp(
+        email: email,
+        password: password,
+      );
+
+      <span class="hljs-keyword">final</span> userId = response.user?.id;
+      <span class="hljs-keyword">if</span> (userId == <span class="hljs-keyword">null</span>) <span class="hljs-keyword">throw</span> Exception(<span class="hljs-string">'User creation failed'</span>);
+
+      <span class="hljs-comment">// 2. Create user profile</span>
+      <span class="hljs-keyword">await</span> _supabase.from(<span class="hljs-string">'users'</span>).insert({
+        <span class="hljs-string">'id'</span>: userId,
+        <span class="hljs-string">'email'</span>: email,
+        <span class="hljs-string">'username'</span>: email.split(<span class="hljs-string">'@'</span>)[<span class="hljs-number">0</span>],
+        <span class="hljs-string">'full_name'</span>: fullName,
+        <span class="hljs-string">'phone_number'</span>: phoneNumber,
+        <span class="hljs-string">'terms_accepted'</span>: termsAccepted,
+      });
+
+      <span class="hljs-comment">// 3. Assign passenger role</span>
+      <span class="hljs-keyword">await</span> _supabase.from(<span class="hljs-string">'user_roles'</span>).insert({
+        <span class="hljs-string">'user_id'</span>: userId,
+        <span class="hljs-string">'role'</span>: <span class="hljs-string">'passenger'</span>,
+        <span class="hljs-string">'is_active'</span>: <span class="hljs-keyword">true</span>,
+      });
+
+      <span class="hljs-comment">// 4. Create passenger profile</span>
+      <span class="hljs-keyword">await</span> _supabase.from(<span class="hljs-string">'passenger_profiles'</span>).insert({
+        <span class="hljs-string">'user_id'</span>: userId,
+      });
+
+      <span class="hljs-keyword">return</span> {<span class="hljs-string">'success'</span>: <span class="hljs-keyword">true</span>, <span class="hljs-string">'userId'</span>: userId};
+    } <span class="hljs-keyword">catch</span> (e) {
+      <span class="hljs-keyword">return</span> {<span class="hljs-string">'success'</span>: <span class="hljs-keyword">false</span>, <span class="hljs-string">'error'</span>: e.toString()};
+    }
+  }
+
+  <span class="hljs-comment">// Login user</span>
+  Future&lt;<span class="hljs-built_in">Map</span>&lt;<span class="hljs-built_in">String</span>, <span class="hljs-built_in">dynamic</span>&gt;&gt; login({
+    required <span class="hljs-built_in">String</span> email,
+    required <span class="hljs-built_in">String</span> password,
+  }) <span class="hljs-keyword">async</span> {
+    <span class="hljs-keyword">try</span> {
+      <span class="hljs-keyword">final</span> response = <span class="hljs-keyword">await</span> _supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+
+      <span class="hljs-keyword">final</span> user = response.user;
+      <span class="hljs-keyword">if</span> (user == <span class="hljs-keyword">null</span>) <span class="hljs-keyword">throw</span> Exception(<span class="hljs-string">'Login failed'</span>);
+
+      <span class="hljs-comment">// Fetch user profile</span>
+      <span class="hljs-keyword">final</span> userData = <span class="hljs-keyword">await</span> _supabase
+          .from(<span class="hljs-string">'users'</span>)
+          .select()
+          .eq(<span class="hljs-string">'id'</span>, user.id)
+          .single();
+
+      <span class="hljs-comment">// Fetch user roles</span>
+      <span class="hljs-keyword">final</span> roles = <span class="hljs-keyword">await</span> _supabase
+          .from(<span class="hljs-string">'user_roles'</span>)
+          .select()
+          .eq(<span class="hljs-string">'user_id'</span>, user.id)
+          .eq(<span class="hljs-string">'is_active'</span>, <span class="hljs-keyword">true</span>);
+
+      <span class="hljs-comment">// Store session</span>
+      <span class="hljs-keyword">await</span> _prefs.setString(<span class="hljs-string">'auth_token'</span>, response.session?.accessToken ?? <span class="hljs-string">''</span>);
+      <span class="hljs-keyword">await</span> _prefs.setString(<span class="hljs-string">'userId'</span>, user.id);
+
+      <span class="hljs-keyword">return</span> {
+        <span class="hljs-string">'success'</span>: <span class="hljs-keyword">true</span>,
+        <span class="hljs-string">'user'</span>: userData,
+        <span class="hljs-string">'roles'</span>: roles,
+      };
+    } <span class="hljs-keyword">catch</span> (e) {
+      <span class="hljs-keyword">return</span> {<span class="hljs-string">'success'</span>: <span class="hljs-keyword">false</span>, <span class="hljs-string">'error'</span>: e.toString()};
+    }
+  }
+
+  <span class="hljs-comment">// Logout user</span>
+  Future&lt;<span class="hljs-keyword">void</span>&gt; logout() <span class="hljs-keyword">async</span> {
+    <span class="hljs-keyword">await</span> _supabase.auth.signOut();
+    <span class="hljs-keyword">await</span> _prefs.remove(<span class="hljs-string">'auth_token'</span>);
+    <span class="hljs-keyword">await</span> _prefs.remove(<span class="hljs-string">'userId'</span>);
+  }
+
+  <span class="hljs-comment">// Get current user</span>
+  User? getCurrentUser() {
+    <span class="hljs-keyword">final</span> user = _supabase.auth.currentUser;
+    <span class="hljs-keyword">if</span> (user == <span class="hljs-keyword">null</span>) <span class="hljs-keyword">return</span> <span class="hljs-keyword">null</span>;
+    <span class="hljs-keyword">return</span> User(
+      id: user.id,
+      email: user.email ?? <span class="hljs-string">''</span>,
+      fullName: <span class="hljs-string">''</span>,
+      phoneNumber: <span class="hljs-string">''</span>,
+      createdAt: user.createdAt,
+    );
+  }
+
+  <span class="hljs-built_in">bool</span> <span class="hljs-keyword">get</span> isAuthenticated =&gt; _supabase.auth.currentUser != <span class="hljs-keyword">null</span>;
+}
+</div></code></pre>
+<h3 id="libprovidersauthproviderdart">lib/providers/auth_provider.dart</h3>
+<pre class="hljs"><code><div><span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter_riverpod/flutter_riverpod.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'../services/auth_service.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'../models/user.dart'</span>;
+
+<span class="hljs-keyword">final</span> authServiceProvider = Provider((ref) =&gt; AuthService());
+
+<span class="hljs-keyword">final</span> authStateProvider = StreamProvider((ref) {
+  <span class="hljs-keyword">return</span> Supabase.instance.client.auth.onAuthStateChange;
+});
+
+<span class="hljs-keyword">final</span> currentUserProvider = FutureProvider&lt;User?&gt;((ref) <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> authService = ref.watch(authServiceProvider);
+  <span class="hljs-keyword">return</span> authService.getCurrentUser();
+});
+
+<span class="hljs-keyword">final</span> loginProvider = FutureProvider.family&lt;<span class="hljs-built_in">Map</span>&lt;<span class="hljs-built_in">String</span>, <span class="hljs-built_in">dynamic</span>&gt;, ({<span class="hljs-built_in">String</span> email, <span class="hljs-built_in">String</span> password})&gt;((ref, params) <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> authService = ref.watch(authServiceProvider);
+  <span class="hljs-keyword">return</span> authService.login(
+    email: params.email,
+    password: params.password,
+  );
+});
+
+<span class="hljs-keyword">final</span> registerProvider = FutureProvider.family&lt;<span class="hljs-built_in">Map</span>&lt;<span class="hljs-built_in">String</span>, <span class="hljs-built_in">dynamic</span>&gt;, ({
+  <span class="hljs-built_in">String</span> email,
+  <span class="hljs-built_in">String</span> password,
+  <span class="hljs-built_in">String</span> fullName,
+  <span class="hljs-built_in">String</span> phoneNumber,
+  <span class="hljs-built_in">bool</span> termsAccepted,
+})&gt;((ref, params) <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> authService = ref.watch(authServiceProvider);
+  <span class="hljs-keyword">return</span> authService.register(
+    email: params.email,
+    password: params.password,
+    fullName: params.fullName,
+    phoneNumber: params.phoneNumber,
+    termsAccepted: params.termsAccepted,
+  );
+});
+</div></code></pre>
+<hr>
+<h2 id="main-app-entry-point">Main App Entry Point</h2>
+<h3 id="libmaindart">lib/main.dart</h3>
+<pre class="hljs"><code><div><span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter/material.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter_riverpod/flutter_riverpod.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter_screenutil/flutter_screenutil.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:supabase_flutter/supabase_flutter.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:firebase_core/firebase_core.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'firebase_options.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'config/theme.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'config/constants.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'screens/auth/login_screen.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'screens/home/home_screen.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'screens/splash_screen.dart'</span>;
+
+<span class="hljs-keyword">void</span> main() <span class="hljs-keyword">async</span> {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  <span class="hljs-comment">// Initialize Supabase</span>
+  <span class="hljs-keyword">await</span> Supabase.initialize(
+    url: AppConstants.supabaseUrl,
+    anonKey: AppConstants.supabaseAnonKey,
+  );
+
+  <span class="hljs-comment">// Initialize Firebase</span>
+  <span class="hljs-keyword">await</span> Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  runApp(
+    ProviderScope(
+      child: ScreenUtilInit(
+        designSize: <span class="hljs-keyword">const</span> Size(<span class="hljs-number">375</span>, <span class="hljs-number">812</span>),
+        minTextAdapt: <span class="hljs-keyword">true</span>,
+        splitScreenMode: <span class="hljs-keyword">true</span>,
+        builder: (context, child) {
+          <span class="hljs-keyword">return</span> <span class="hljs-keyword">const</span> BusNStayApp();
+        },
+      ),
+    ),
+  );
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BusNStayApp</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">ConsumerWidget</span> </span>{
+  <span class="hljs-keyword">const</span> BusNStayApp({Key? key}) : <span class="hljs-keyword">super</span>(key: key);
+
+  <span class="hljs-meta">@override</span>
+  Widget build(BuildContext context, WidgetRef ref) {
+    <span class="hljs-keyword">final</span> authState = ref.watch(authStateProvider);
+
+    <span class="hljs-keyword">return</span> MaterialApp(
+      title: AppConstants.appName,
+      theme: BusNStayTheme.getLightTheme(),
+      darkTheme: BusNStayTheme.getDarkTheme(),
+      themeMode: ThemeMode.system,
+      home: authState.when(
+        loading: () =&gt; <span class="hljs-keyword">const</span> SplashScreen(),
+        error: (error, stack) {
+          <span class="hljs-keyword">return</span> MaterialApp(
+            home: Scaffold(
+              body: Center(child: Text(<span class="hljs-string">'Error: <span class="hljs-subst">$error</span>'</span>)),
+            ),
+          );
+        },
+        data: (auth) {
+          <span class="hljs-keyword">return</span> auth.session == <span class="hljs-keyword">null</span> ? <span class="hljs-keyword">const</span> LoginScreen() : <span class="hljs-keyword">const</span> HomeScreen();
+        },
+      ),
+    );
+  }
+}
+</div></code></pre>
+<hr>
+<h2 id="screens-implementation">Screens Implementation</h2>
+<h3 id="libscreensauthloginscreendart">lib/screens/auth/login_screen.dart</h3>
+<pre class="hljs"><code><div><span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter/material.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter_riverpod/flutter_riverpod.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter_screenutil/flutter_screenutil.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'../../config/theme.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'../../providers/auth_provider.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'register_screen.dart'</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginScreen</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">ConsumerStatefulWidget</span> </span>{
+  <span class="hljs-keyword">const</span> LoginScreen({Key? key}) : <span class="hljs-keyword">super</span>(key: key);
+
+  <span class="hljs-meta">@override</span>
+  ConsumerState&lt;LoginScreen&gt; createState() =&gt; _LoginScreenState();
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">_LoginScreenState</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">ConsumerState</span>&lt;<span class="hljs-title">LoginScreen</span>&gt; </span>{
+  late TextEditingController _emailController;
+  late TextEditingController _passwordController;
+  <span class="hljs-built_in">bool</span> _obscurePassword = <span class="hljs-keyword">true</span>;
+  <span class="hljs-built_in">bool</span> _isLoading = <span class="hljs-keyword">false</span>;
+  <span class="hljs-built_in">String</span>? _errorMessage;
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> initState() {
+    <span class="hljs-keyword">super</span>.initState();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+  }
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    <span class="hljs-keyword">super</span>.dispose();
+  }
+
+  <span class="hljs-keyword">void</span> _handleLogin() <span class="hljs-keyword">async</span> {
+    setState(() {
+      _isLoading = <span class="hljs-keyword">true</span>;
+      _errorMessage = <span class="hljs-keyword">null</span>;
+    });
+
+    <span class="hljs-keyword">final</span> result = <span class="hljs-keyword">await</span> ref.read(
+      loginProvider((
+        email: _emailController.text,
+        password: _passwordController.text,
+      )).future,
+    );
+
+    <span class="hljs-keyword">if</span> (result[<span class="hljs-string">'success'</span>] == <span class="hljs-keyword">false</span>) {
+      setState(() {
+        _errorMessage = result[<span class="hljs-string">'error'</span>];
+        _isLoading = <span class="hljs-keyword">false</span>;
+      });
+    }
+  }
+
+  <span class="hljs-meta">@override</span>
+  Widget build(BuildContext context) {
+    <span class="hljs-keyword">return</span> Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: <span class="hljs-number">24.</span>w, vertical: <span class="hljs-number">32.</span>h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: <span class="hljs-number">40.</span>h),
+              
+              <span class="hljs-comment">// Logo</span>
+              Container(
+                width: <span class="hljs-number">120.</span>w,
+                height: <span class="hljs-number">120.</span>w,
+                decoration: BoxDecoration(
+                  color: BusNStayTheme.primary.withOpacity(<span class="hljs-number">0.1</span>),
+                  borderRadius: BorderRadius.circular(<span class="hljs-number">20.</span>r),
+                ),
+                child: Center(
+                  child: Text(
+                    <span class="hljs-string">'BusNStay'</span>,
+                    style: Theme.of(context).textTheme.displayMedium,
+                  ),
+                ),
+              ),
+
+              SizedBox(height: <span class="hljs-number">40.</span>h),
+
+              <span class="hljs-comment">// Title</span>
+              Text(
+                <span class="hljs-string">'Welcome Back'</span>,
+                style: Theme.of(context).textTheme.displayMedium,
+                textAlign: TextAlign.center,
+              ),
+
+              SizedBox(height: <span class="hljs-number">8.</span>h),
+
+              Text(
+                <span class="hljs-string">'Sign in to your account'</span>,
+                style: Theme.of(context).textTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+
+              SizedBox(height: <span class="hljs-number">32.</span>h),
+
+              <span class="hljs-comment">// Error message</span>
+              <span class="hljs-keyword">if</span> (_errorMessage != <span class="hljs-keyword">null</span>)
+                Container(
+                  padding: EdgeInsets.all(<span class="hljs-number">12.</span>w),
+                  decoration: BoxDecoration(
+                    color: BusNStayTheme.destructive.withOpacity(<span class="hljs-number">0.1</span>),
+                    borderRadius: BorderRadius.circular(<span class="hljs-number">8.</span>r),
+                  ),
+                  child: Text(
+                    _errorMessage!,
+                    style: TextStyle(color: BusNStayTheme.destructive),
+                  ),
+                ),
+
+              SizedBox(height: <span class="hljs-number">16.</span>h),
+
+              <span class="hljs-comment">// Email field</span>
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  hintText: <span class="hljs-string">'Email'</span>,
+                  prefixIcon: <span class="hljs-keyword">const</span> Icon(Icons.email_outlined),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+
+              SizedBox(height: <span class="hljs-number">16.</span>h),
+
+              <span class="hljs-comment">// Password field</span>
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  hintText: <span class="hljs-string">'Password'</span>,
+                  prefixIcon: <span class="hljs-keyword">const</span> Icon(Icons.lock_outlined),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () =&gt; setState(() =&gt; _obscurePassword = !_obscurePassword),
+                  ),
+                ),
+                obscureText: _obscurePassword,
+              ),
+
+              SizedBox(height: <span class="hljs-number">24.</span>h),
+
+              <span class="hljs-comment">// Login button</span>
+              ElevatedButton(
+                onPressed: _isLoading ? <span class="hljs-keyword">null</span> : _handleLogin,
+                child: _isLoading
+                    ? <span class="hljs-keyword">const</span> SizedBox(
+                        width: <span class="hljs-number">20</span>,
+                        height: <span class="hljs-number">20</span>,
+                        child: CircularProgressIndicator(strokeWidth: <span class="hljs-number">2</span>),
+                      )
+                    : <span class="hljs-keyword">const</span> Text(<span class="hljs-string">'Sign In'</span>),
+              ),
+
+              SizedBox(height: <span class="hljs-number">16.</span>h),
+
+              <span class="hljs-comment">// Register link</span>
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    <span class="hljs-string">"Don't have an account? "</span>,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) =&gt; <span class="hljs-keyword">const</span> RegisterScreen()),
+                      );
+                    },
+                    child: <span class="hljs-keyword">const</span> Text(<span class="hljs-string">'Sign Up'</span>),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+</div></code></pre>
+<h3 id="libscreenshomehomescreendart">lib/screens/home/home_screen.dart</h3>
+<pre class="hljs"><code><div><span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter/material.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter_riverpod/flutter_riverpod.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'package:flutter_screenutil/flutter_screenutil.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'../../config/theme.dart'</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">'../../widgets/custom_bottom_nav.dart'</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">HomeScreen</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">ConsumerWidget</span> </span>{
+  <span class="hljs-keyword">const</span> HomeScreen({Key? key}) : <span class="hljs-keyword">super</span>(key: key);
+
+  <span class="hljs-meta">@override</span>
+  Widget build(BuildContext context, WidgetRef ref) {
+    <span class="hljs-keyword">return</span> Scaffold(
+      appBar: AppBar(
+        title: <span class="hljs-keyword">const</span> Text(<span class="hljs-string">'BusNStay'</span>),
+        actions: [
+          IconButton(
+            icon: <span class="hljs-keyword">const</span> Icon(Icons.notifications_outlined),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: <span class="hljs-keyword">const</span> Icon(Icons.person_outlined),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(<span class="hljs-number">16.</span>w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            <span class="hljs-comment">// Quick access cards</span>
+            Text(
+              <span class="hljs-string">'Services'</span>,
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            SizedBox(height: <span class="hljs-number">16.</span>h),
+            
+            GridView.count(
+              crossAxisCount: <span class="hljs-number">2</span>,
+              shrinkWrap: <span class="hljs-keyword">true</span>,
+              physics: <span class="hljs-keyword">const</span> NeverScrollableScrollPhysics(),
+              mainAxisSpacing: <span class="hljs-number">12.</span>h,
+              crossAxisSpacing: <span class="hljs-number">12.</span>w,
+              children: [
+                _ServiceCard(
+                  icon: Icons.directions_bus,
+                  title: <span class="hljs-string">'Journeys'</span>,
+                  color: BusNStayTheme.serviceRider,
+                  onTap: () {},
+                ),
+                _ServiceCard(
+                  icon: Icons.restaurant,
+                  title: <span class="hljs-string">'Restaurants'</span>,
+                  color: BusNStayTheme.serviceRestaurant,
+                  onTap: () {},
+                ),
+                _ServiceCard(
+                  icon: Icons.hotel,
+                  title: <span class="hljs-string">'Hotels'</span>,
+                  color: BusNStayTheme.serviceHotel,
+                  onTap: () {},
+                ),
+                _ServiceCard(
+                  icon: Icons.local_shipping,
+                  title: <span class="hljs-string">'Delivery'</span>,
+                  color: BusNStayTheme.serviceTaxi,
+                  onTap: () {},
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: <span class="hljs-keyword">const</span> CustomBottomNav(),
+    );
+  }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">_ServiceCard</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">StatelessWidget</span> </span>{
+  <span class="hljs-keyword">final</span> IconData icon;
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> title;
+  <span class="hljs-keyword">final</span> Color color;
+  <span class="hljs-keyword">final</span> VoidCallback onTap;
+
+  <span class="hljs-keyword">const</span> _ServiceCard({
+    required <span class="hljs-keyword">this</span>.icon,
+    required <span class="hljs-keyword">this</span>.title,
+    required <span class="hljs-keyword">this</span>.color,
+    required <span class="hljs-keyword">this</span>.onTap,
+  });
+
+  <span class="hljs-meta">@override</span>
+  Widget build(BuildContext context) {
+    <span class="hljs-keyword">return</span> GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: color.withOpacity(<span class="hljs-number">0.1</span>),
+          borderRadius: BorderRadius.circular(<span class="hljs-number">12.</span>r),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: <span class="hljs-number">40.</span>sp, color: color),
+            SizedBox(height: <span class="hljs-number">8.</span>h),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: color,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+</div></code></pre>
+<hr>
+<h2 id="models">Models</h2>
+<h3 id="libmodelsuserdart">lib/models/user.dart</h3>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">User</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> id;
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> email;
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> fullName;
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> phoneNumber;
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span>? profileImageUrl;
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> accountStatus;
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">bool</span> isEmailVerified;
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">bool</span> isPhoneVerified;
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">bool</span> twoFactorEnabled;
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">DateTime</span> createdAt;
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">DateTime</span> updatedAt;
+
+  User({
+    required <span class="hljs-keyword">this</span>.id,
+    required <span class="hljs-keyword">this</span>.email,
+    required <span class="hljs-keyword">this</span>.fullName,
+    required <span class="hljs-keyword">this</span>.phoneNumber,
+    <span class="hljs-keyword">this</span>.profileImageUrl,
+    <span class="hljs-keyword">this</span>.accountStatus = <span class="hljs-string">'active'</span>,
+    <span class="hljs-keyword">this</span>.isEmailVerified = <span class="hljs-keyword">false</span>,
+    <span class="hljs-keyword">this</span>.isPhoneVerified = <span class="hljs-keyword">false</span>,
+    <span class="hljs-keyword">this</span>.twoFactorEnabled = <span class="hljs-keyword">false</span>,
+    required <span class="hljs-keyword">this</span>.createdAt,
+    required <span class="hljs-keyword">this</span>.updatedAt,
+  });
+
+  <span class="hljs-keyword">factory</span> User.fromJson(<span class="hljs-built_in">Map</span>&lt;<span class="hljs-built_in">String</span>, <span class="hljs-built_in">dynamic</span>&gt; json) {
+    <span class="hljs-keyword">return</span> User(
+      id: json[<span class="hljs-string">'id'</span>] <span class="hljs-keyword">as</span> <span class="hljs-built_in">String</span>,
+      email: json[<span class="hljs-string">'email'</span>] <span class="hljs-keyword">as</span> <span class="hljs-built_in">String</span>,
+      fullName: json[<span class="hljs-string">'full_name'</span>] <span class="hljs-keyword">as</span> <span class="hljs-built_in">String</span>,
+      phoneNumber: json[<span class="hljs-string">'phone_number'</span>] <span class="hljs-keyword">as</span> <span class="hljs-built_in">String</span>,
+      profileImageUrl: json[<span class="hljs-string">'profile_image_url'</span>] <span class="hljs-keyword">as</span> <span class="hljs-built_in">String</span>?,
+      accountStatus: json[<span class="hljs-string">'account_status'</span>] <span class="hljs-keyword">as</span> <span class="hljs-built_in">String</span>? ?? <span class="hljs-string">'active'</span>,
+      isEmailVerified: json[<span class="hljs-string">'is_email_verified'</span>] <span class="hljs-keyword">as</span> <span class="hljs-built_in">bool</span>? ?? <span class="hljs-keyword">false</span>,
+      isPhoneVerified: json[<span class="hljs-string">'is_phone_verified'</span>] <span class="hljs-keyword">as</span> <span class="hljs-built_in">bool</span>? ?? <span class="hljs-keyword">false</span>,
+      twoFactorEnabled: json[<span class="hljs-string">'two_factor_enabled'</span>] <span class="hljs-keyword">as</span> <span class="hljs-built_in">bool</span>? ?? <span class="hljs-keyword">false</span>,
+      createdAt: <span class="hljs-built_in">DateTime</span>.parse(json[<span class="hljs-string">'created_at'</span>] <span class="hljs-keyword">as</span> <span class="hljs-built_in">String</span>),
+      updatedAt: <span class="hljs-built_in">DateTime</span>.parse(json[<span class="hljs-string">'updated_at'</span>] <span class="hljs-keyword">as</span> <span class="hljs-built_in">String</span>),
+    );
+  }
+
+  <span class="hljs-built_in">Map</span>&lt;<span class="hljs-built_in">String</span>, <span class="hljs-built_in">dynamic</span>&gt; toJson() {
+    <span class="hljs-keyword">return</span> {
+      <span class="hljs-string">'id'</span>: id,
+      <span class="hljs-string">'email'</span>: email,
+      <span class="hljs-string">'full_name'</span>: fullName,
+      <span class="hljs-string">'phone_number'</span>: phoneNumber,
+      <span class="hljs-string">'profile_image_url'</span>: profileImageUrl,
+      <span class="hljs-string">'account_status'</span>: accountStatus,
+      <span class="hljs-string">'is_email_verified'</span>: isEmailVerified,
+      <span class="hljs-string">'is_phone_verified'</span>: isPhoneVerified,
+      <span class="hljs-string">'two_factor_enabled'</span>: twoFactorEnabled,
+      <span class="hljs-string">'created_at'</span>: createdAt.toIso8601String(),
+      <span class="hljs-string">'updated_at'</span>: updatedAt.toIso8601String(),
+    };
+  }
+}
+</div></code></pre>
+<hr>
+<h2 id="deployment-checklist">Deployment Checklist</h2>
+<ul>
+<li><input type="checkbox" id="checkbox0"><label for="checkbox0">Create new Flutter project: </label><code>flutter create busnstay_flutter</code></li>
+<li><input type="checkbox" id="checkbox1"><label for="checkbox1">Copy all files from this guide</label></li>
+<li><input type="checkbox" id="checkbox2"><label for="checkbox2">Update </label><code>pubspec.yaml</code> with all dependencies</li>
+<li><input type="checkbox" id="checkbox3"><label for="checkbox3">Run </label><code>flutter pub get</code></li>
+<li><input type="checkbox" id="checkbox4"><label for="checkbox4">Update Supabase configuration in </label><code>constants.dart</code></li>
+<li><input type="checkbox" id="checkbox5"><label for="checkbox5">Update Flutterwave keys</label></li>
+<li><input type="checkbox" id="checkbox6"><label for="checkbox6">Generate Firebase options: </label><code>flutterfire configure</code></li>
+<li><input type="checkbox" id="checkbox7"><label for="checkbox7">Test on Android emulator: </label><code>flutter run</code></li>
+<li><input type="checkbox" id="checkbox8"><label for="checkbox8">Build release APK: </label><code>flutter build apk --release</code></li>
+<li><input type="checkbox" id="checkbox9"><label for="checkbox9">Build iOS app: </label><code>flutter build ios</code></li>
+<li><input type="checkbox" id="checkbox10"><label for="checkbox10">Deploy to Google Play Store</label></li>
+<li><input type="checkbox" id="checkbox11"><label for="checkbox11">Deploy to Apple App Store</label></li>
+</ul>
+<hr>
+<h2 id="optional-web-version">Optional: Web Version</h2>
+<p>Flutter Web allows you to deploy this as a web app too:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># Build web version</span>
+flutter build web
+
+<span class="hljs-comment"># Deploy to Firebase Hosting</span>
+firebase deploy
+
+<span class="hljs-comment"># Or deploy to Vercel</span>
+vercel deploy dist/web
+</div></code></pre>
+<p>This approach gives you:<br>
+✅ Single codebase for Android, iOS, Web<br>
+✅ All existing integrations (Supabase, Flutterwave, OSRM)<br>
+✅ Consistent styling and branding<br>
+✅ Multi-user management with role-based access<br>
+✅ Progressive deployment across platforms</p>
+
+</body>
+
+</html>

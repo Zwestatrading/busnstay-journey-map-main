@@ -1,0 +1,14 @@
+build:
+  builder: nixpacks
+
+deploy:
+  startCommand: npm run preview
+  restartPolicyMaxRetries: 5
+  healthcheckPath: /
+
+env:
+  VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+  VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+  VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+  VITE_FLUTTERWAVE_PUBLIC_KEY: ${{ secrets.VITE_FLUTTERWAVE_PUBLIC_KEY }}
+  VITE_FLUTTERWAVE_ENVIRONMENT: staging

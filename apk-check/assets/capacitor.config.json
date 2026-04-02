@@ -1,0 +1,23 @@
+{
+	"appId": "com.busnstay.app",
+	"appName": "BusNStay",
+	"webDir": "dist",
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 2000,
+			"backgroundColor": "#1a2744",
+			"showSpinner": true,
+			"logoWidth": 200,
+			"logoHeight": 200
+		},
+		"Geolocation": {
+			"permissions": [
+				"location"
+			]
+		}
+	},
+	"server": {
+		"url": "https://busnstay-journey-map-main.vercel.app",
+		"cleartext": false
+	}
+}

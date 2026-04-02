@@ -1,0 +1,543 @@
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import '../models/user_model.dart';
+import '../models/wallet_model.dart';
+import '../models/order_model.dart';
+import '../models/booking_model.dart';
+import '../models/delivery_model.dart';
+import 'supabase_service.dart';
+import 'database_service.dart';
+import 'flutterwave_service.dart';
+
+class AppState extends ChangeNotifier {
+  AppUser? _user;
+  bool _isLoggedIn = false;
+  bool _isAuthenticating = false;
+  String? _authError;
+  
+  // Service instances
+  late final SupabaseService _supabaseService;
+  late final DatabaseService _databaseService;
+
+  Wallet _wallet = Wallet(
+    balance: 2450.00,
+    transactions: [],
+    totalSpent: 1230.00,
+    totalReceived: 3680.00,
+  );
+  LoyaltyInfo _loyalty = LoyaltyInfo(
+    currentPoints: 2450,
+    totalEarned: 5230,
+    tier: LoyaltyTier.silver,
+    pointsToNextTier: 550,
+    availableRewards: [],
+  );
+
+  // Getters
+  AppUser? get user => _user;
+  bool get isLoggedIn => _isLoggedIn;
+  bool get isAuthenticating => _isAuthenticating;
+  String? get authError => _authError;
+  Wallet get wallet => _wallet;
+  LoyaltyInfo get loyalty => _loyalty;
+
+  AppState() {
+    _supabaseService = SupabaseService();
+    _databaseService = DatabaseService();
+    _initializeServices();
+  }
+
+  Future<void> _initializeServices() async {
+    try {
+      await _supabaseService.initialize();
+      // Check if user is already logged in via Supabase
+      if (_supabaseService.isAuthenticated()) {
+        await _restoreSession();
+      }
+    } catch (e) {
+      print('Error initializing Supabase: $e');
+    }
+  }
+
+  // AUTHENTICATION METHODS
+  Future<bool> signUp({
+    required String email,
+    required String password,
+    required String name,
+    required UserRole role,
+  }) async {
+    _isAuthenticating = true;
+    _authError = null;
+    notifyListeners();
+
+    try {
+      final authUser = await _supabaseService.signUp(
+        email: email,
+        password: password,
+        name: name,
+        role: role,
+      );
+
+      if (authUser != null) {
+        _user = AppUser(
+          id: authUser.id,
+          name: name,
+          email: email,
+          phone: '+260 97 123 4567',
+          role: role,
+          memberSince: DateTime.now(),
+        );
+        _isLoggedIn = true;
+        _initDemoData();
+      }
+      _isAuthenticating = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _authError = e.toString();
+      _isAuthenticating = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> signIn({
+    required String email,
+    required String password,
+    required UserRole role,
+  }) async {
+    _isAuthenticating = true;
+    _authError = null;
+    notifyListeners();
+
+    try {
+      final authUser = await _supabaseService.signIn(
+        email: email,
+        password: password,
+      );
+
+      if (authUser != null) {
+        final profile = await _supabaseService.getUserProfile(authUser.id);
+        _user = AppUser(
+          id: authUser.id,
+          name: profile?['name'] ?? 'User',
+          email: email,
+          phone: profile?['phone'] ?? '+260 97 123 4567',
+          role: role,
+          memberSince: DateTime.parse(profile?['member_since'] ?? DateTime.now().toIso8601String()),
+        );
+        _isLoggedIn = true;
+        await _restoreWalletFromDatabase();
+        _initDemoData();
+      }
+      _isAuthenticating = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _authError = e.toString();
+      _isAuthenticating = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> _restoreSession() async {
+    final currentUser = _supabaseService.getCurrentUser();
+    if (currentUser != null) {
+      final profile = await _supabaseService.getUserProfile(currentUser.id);
+      _user = AppUser(
+        id: currentUser.id,
+        name: profile?['name'] ?? 'User',
+        email: currentUser.email ?? '',
+        phone: profile?['phone'] ?? '+260 97 123 4567',
+        role: _parseRole(profile?['role'] ?? 'passenger'),
+        memberSince: DateTime.parse(profile?['member_since'] ?? DateTime.now().toIso8601String()),
+      );
+      _isLoggedIn = true;
+      await _restoreWalletFromDatabase();
+      notifyListeners();
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      await _supabaseService.signOut();
+      await _databaseService.clearAllData();
+      _user = null;
+      _isLoggedIn = false;
+      _wallet = Wallet(balance: 0, transactions: [], totalSpent: 0, totalReceived: 0);
+      notifyListeners();
+    } catch (e) {
+      print('Error during logout: $e');
+    }
+  }
+
+  UserRole _parseRole(String roleString) {
+    return UserRole.values.firstWhere(
+      (e) => e.toString().split('.').last == roleString,
+      orElse: () => UserRole.passenger,
+    );
+  }
+
+
+  void _initDemoData() {
+    switch (role) {
+      case UserRole.passenger:
+        return 'Traveler';
+      case UserRole.busOperator:
+        return 'Bus Operator';
+      case UserRole.restaurantAdmin:
+        return 'Restaurant Manager';
+      case UserRole.deliveryAgent:
+        return 'Delivery Agent';
+      case UserRole.hotelManager:
+        return 'Hotel Manager';
+      case UserRole.platformAdmin:
+        return 'System Admin';
+      case UserRole.guest:
+        return 'Guest';
+    }
+  }
+
+  void _initDemoData() {
+    _wallet = Wallet(
+      balance: 2450.00,
+      transactions: _demoTransactions(),
+      totalSpent: 1230.00,
+      totalReceived: 3680.00,
+    );
+    _loyalty = LoyaltyInfo(
+      currentPoints: 2450,
+      totalEarned: 5230,
+      tier: LoyaltyTier.silver,
+      pointsToNextTier: 550,
+      availableRewards: _demoRewards(),
+    );
+  }
+
+  // Wallet operations
+  void addFunds(double amount, PaymentMethod method) {
+    final tx = WalletTransaction(
+      id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
+      amount: amount,
+      type: TransactionType.credit,
+      method: method,
+      status: TransactionStatus.completed,
+      description: 'Added funds via ${method.name}',
+      date: DateTime.now(),
+    );
+    _wallet = Wallet(
+      balance: _wallet.balance + amount,
+      transactions: [tx, ..._wallet.transactions],
+      totalSpent: _wallet.totalSpent,
+      totalReceived: _wallet.totalReceived + amount,
+    );
+    _loyalty = LoyaltyInfo(
+      currentPoints: _loyalty.currentPoints + (amount ~/ 10),
+      totalEarned: _loyalty.totalEarned + (amount ~/ 10),
+      tier: _loyalty.tier,
+      pointsToNextTier: _loyalty.pointsToNextTier,
+      availableRewards: _loyalty.availableRewards,
+    );
+    notifyListeners();
+  }
+
+  void transferFunds(double amount, String recipient) {
+    if (amount > _wallet.balance) return;
+    final tx = WalletTransaction(
+      id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
+      amount: amount,
+      type: TransactionType.debit,
+      method: PaymentMethod.wallet,
+      status: TransactionStatus.completed,
+      description: 'Transfer to $recipient',
+      date: DateTime.now(),
+    );
+    _wallet = Wallet(
+      balance: _wallet.balance - amount,
+      transactions: [tx, ..._wallet.transactions],
+      totalSpent: _wallet.totalSpent + amount,
+      totalReceived: _wallet.totalReceived,
+    );
+    notifyListeners();
+  }
+
+  void withdrawFunds(double amount) {
+    if (amount > _wallet.balance) return;
+    final tx = WalletTransaction(
+      id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
+      amount: amount,
+      type: TransactionType.debit,
+      method: PaymentMethod.mobileMoney,
+      status: TransactionStatus.processing,
+      description: 'Withdrawal to mobile money',
+      date: DateTime.now(),
+    );
+    _wallet = Wallet(
+      balance: _wallet.balance - amount,
+      transactions: [tx, ..._wallet.transactions],
+      totalSpent: _wallet.totalSpent + amount,
+      totalReceived: _wallet.totalReceived,
+    );
+    notifyListeners();
+  }
+
+  void redeemReward(String rewardId) {
+    final reward = _loyalty.availableRewards.firstWhere((r) => r.id == rewardId);
+    if (_loyalty.currentPoints < reward.pointsCost) return;
+    final updatedRewards = _loyalty.availableRewards.map((r) {
+      if (r.id == rewardId) {
+        return LoyaltyReward(
+          id: r.id,
+          title: r.title,
+          description: r.description,
+          pointsCost: r.pointsCost,
+          category: r.category,
+          isRedeemed: true,
+        );
+      }
+      return r;
+    }).toList();
+    _loyalty = LoyaltyInfo(
+      currentPoints: _loyalty.currentPoints - reward.pointsCost,
+      totalEarned: _loyalty.totalEarned,
+      tier: _loyalty.tier,
+      pointsToNextTier: _loyalty.pointsToNextTier,
+      availableRewards: updatedRewards,
+    );
+    notifyListeners();
+  }
+
+  List<WalletTransaction> _demoTransactions() {
+    return [
+      WalletTransaction(
+        id: 'tx_001',
+        amount: 150.00,
+        type: TransactionType.debit,
+        method: PaymentMethod.wallet,
+        status: TransactionStatus.completed,
+        description: 'Bus ticket: Lusaka → Livingstone',
+        date: DateTime.now().subtract(const Duration(hours: 2)),
+      ),
+      WalletTransaction(
+        id: 'tx_002',
+        amount: 500.00,
+        type: TransactionType.credit,
+        method: PaymentMethod.mobileMoney,
+        status: TransactionStatus.completed,
+        description: 'Added funds via MTN Mobile Money',
+        date: DateTime.now().subtract(const Duration(days: 1)),
+      ),
+      WalletTransaction(
+        id: 'tx_003',
+        amount: 85.00,
+        type: TransactionType.debit,
+        method: PaymentMethod.wallet,
+        status: TransactionStatus.completed,
+        description: 'Food order: Nshima Palace',
+        date: DateTime.now().subtract(const Duration(days: 1, hours: 5)),
+      ),
+      WalletTransaction(
+        id: 'tx_004',
+        amount: 1000.00,
+        type: TransactionType.credit,
+        method: PaymentMethod.card,
+        status: TransactionStatus.completed,
+        description: 'Added funds via Visa card',
+        date: DateTime.now().subtract(const Duration(days: 3)),
+      ),
+      WalletTransaction(
+        id: 'tx_005',
+        amount: 350.00,
+        type: TransactionType.debit,
+        method: PaymentMethod.wallet,
+        status: TransactionStatus.completed,
+        description: 'Hotel: Radisson Blu (1 night)',
+        date: DateTime.now().subtract(const Duration(days: 5)),
+      ),
+    ];
+  }
+
+  List<LoyaltyReward> _demoRewards() {
+    return [
+      LoyaltyReward(
+        id: 'rw_001',
+        title: 'Free Bus Ride',
+        description: 'One free bus ticket on any route',
+        pointsCost: 500,
+        category: 'Travel',
+      ),
+      LoyaltyReward(
+        id: 'rw_002',
+        title: '50% Off Hotel',
+        description: 'Half price on your next hotel booking',
+        pointsCost: 1000,
+        category: 'Hotels',
+      ),
+      LoyaltyReward(
+        id: 'rw_003',
+        title: 'Free Meal',
+        description: 'Complimentary meal at partner restaurants',
+        pointsCost: 300,
+        category: 'Food',
+      ),
+      LoyaltyReward(
+        id: 'rw_004',
+        title: 'Free Delivery',
+        description: 'Free delivery on your next 3 orders',
+        pointsCost: 200,
+        category: 'Delivery',
+      ),
+      LoyaltyReward(
+        id: 'rw_005',
+        title: 'K20 Credit',
+        description: 'K20 added directly to your wallet',
+        pointsCost: 400,
+        category: 'Wallet',
+      ),
+      LoyaltyReward(
+        id: 'rw_006',
+        title: 'Travel Kit',
+        description: 'BusNStay branded travel essentials kit',
+        pointsCost: 750,
+        category: 'Merchandise',
+      ),
+    ];
+  }
+
+  // Restaurant demo data
+  List<FoodOrder> getDemoOrders() {
+    return [
+      FoodOrder(
+        id: 'ORD-001',
+        customerName: 'Mwansa Chanda',
+        items: [
+          OrderItem(name: 'Nshima + Chicken', quantity: 2, price: 45.00),
+          OrderItem(name: 'Chibwantu', quantity: 1, price: 15.00),
+        ],
+        status: OrderStatus.pending,
+        orderTime: DateTime.now().subtract(const Duration(minutes: 5)),
+        specialInstructions: 'Extra sauce please',
+      ),
+      FoodOrder(
+        id: 'ORD-002',
+        customerName: 'Joseph Banda',
+        items: [
+          OrderItem(name: 'Ifisashi + Rice', quantity: 1, price: 40.00),
+          OrderItem(name: 'Maheu', quantity: 2, price: 10.00),
+        ],
+        status: OrderStatus.preparing,
+        orderTime: DateTime.now().subtract(const Duration(minutes: 15)),
+      ),
+      FoodOrder(
+        id: 'ORD-003',
+        customerName: 'Grace Tembo',
+        items: [
+          OrderItem(name: 'Grilled Tilapia', quantity: 1, price: 75.00),
+          OrderItem(name: 'Chips', quantity: 1, price: 25.00),
+        ],
+        status: OrderStatus.ready,
+        orderTime: DateTime.now().subtract(const Duration(minutes: 30)),
+      ),
+    ];
+  }
+
+  List<MenuItem> getDemoMenuItems() {
+    return [
+      MenuItem(id: 'm1', name: 'Nshima + Chicken', category: 'Main', price: 45.00, prepTimeMinutes: 20, description: 'Traditional nshima with grilled chicken'),
+      MenuItem(id: 'm2', name: 'Ifisashi + Rice', category: 'Main', price: 40.00, prepTimeMinutes: 15, description: 'Greens in peanut sauce with rice'),
+      MenuItem(id: 'm3', name: 'Grilled Tilapia', category: 'Main', price: 75.00, prepTimeMinutes: 25, description: 'Fresh lake tilapia grilled to perfection'),
+      MenuItem(id: 'm4', name: 'Chips', category: 'Sides', price: 25.00, prepTimeMinutes: 10),
+      MenuItem(id: 'm5', name: 'Chibwantu', category: 'Drinks', price: 15.00, prepTimeMinutes: 2),
+      MenuItem(id: 'm6', name: 'Maheu', category: 'Drinks', price: 10.00, prepTimeMinutes: 2),
+      MenuItem(id: 'm7', name: 'Kapenta + Nshima', category: 'Main', price: 35.00, prepTimeMinutes: 15, description: 'Dried fish with nshima'),
+      MenuItem(id: 'm8', name: 'Vitumbuwa', category: 'Snacks', price: 15.00, prepTimeMinutes: 10, description: 'Sweet fritters'),
+    ];
+  }
+
+  // Hotel demo data
+  List<HotelBooking> getDemoBookings() {
+    return [
+      HotelBooking(
+        id: 'BK-001', guestName: 'Mutale Nkonde', roomNumber: '301',
+        roomType: 'Deluxe', checkIn: DateTime.now(),
+        checkOut: DateTime.now().add(const Duration(days: 2)),
+        guests: 2, pricePerNight: 450.00, status: BookingStatus.confirmed,
+      ),
+      HotelBooking(
+        id: 'BK-002', guestName: 'Chileshe Mumba', roomNumber: '205',
+        roomType: 'Standard', checkIn: DateTime.now(),
+        checkOut: DateTime.now().add(const Duration(days: 3)),
+        guests: 1, pricePerNight: 280.00, status: BookingStatus.pending,
+      ),
+      HotelBooking(
+        id: 'BK-003', guestName: 'Bwalya Mulenga', roomNumber: '102',
+        roomType: 'Suite', checkIn: DateTime.now().subtract(const Duration(days: 1)),
+        checkOut: DateTime.now().add(const Duration(days: 1)),
+        guests: 2, pricePerNight: 750.00, status: BookingStatus.checkedIn,
+      ),
+    ];
+  }
+
+  List<HotelRoom> getDemoRooms() {
+    return [
+      HotelRoom(id: 'r1', number: '101', type: 'Standard', pricePerNight: 280.00, capacity: 2, isAvailable: true, amenities: ['WiFi', 'TV', 'AC']),
+      HotelRoom(id: 'r2', number: '102', type: 'Suite', pricePerNight: 750.00, capacity: 4, isAvailable: false, amenities: ['WiFi', 'TV', 'AC', 'Minibar', 'Balcony']),
+      HotelRoom(id: 'r3', number: '201', type: 'Standard', pricePerNight: 280.00, capacity: 2, isAvailable: true, amenities: ['WiFi', 'TV', 'AC']),
+      HotelRoom(id: 'r4', number: '205', type: 'Standard', pricePerNight: 280.00, capacity: 2, isAvailable: false, amenities: ['WiFi', 'TV', 'AC']),
+      HotelRoom(id: 'r5', number: '301', type: 'Deluxe', pricePerNight: 450.00, capacity: 3, isAvailable: false, amenities: ['WiFi', 'TV', 'AC', 'Minibar']),
+      HotelRoom(id: 'r6', number: '302', type: 'Deluxe', pricePerNight: 450.00, capacity: 3, isAvailable: true, amenities: ['WiFi', 'TV', 'AC', 'Minibar']),
+    ];
+  }
+
+  // Delivery demo data
+  List<DeliveryJob> getDemoDeliveries() {
+    return [
+      DeliveryJob(
+        id: 'DEL-001', pickupAddress: 'Nshima Palace, Cairo Rd',
+        deliveryAddress: 'Kabulonga, Plot 234', distance: 5.2, fee: 35.00,
+        customerName: 'Mwansa Chanda', status: DeliveryStatus.accepted,
+        createdAt: DateTime.now().subtract(const Duration(minutes: 10)),
+        itemDescription: 'Food order - 3 items',
+      ),
+      DeliveryJob(
+        id: 'DEL-002', pickupAddress: 'Shoprite Manda Hill',
+        deliveryAddress: 'Woodlands, House 45', distance: 3.8, fee: 25.00,
+        customerName: 'Joseph Banda', status: DeliveryStatus.available,
+        createdAt: DateTime.now().subtract(const Duration(minutes: 3)),
+        itemDescription: 'Groceries - 1 bag',
+      ),
+      DeliveryJob(
+        id: 'DEL-003', pickupAddress: 'Radisson Blu Hotel',
+        deliveryAddress: 'Airport Rd, Building 12', distance: 8.5, fee: 50.00,
+        customerName: 'Grace Tembo', status: DeliveryStatus.available,
+        createdAt: DateTime.now().subtract(const Duration(minutes: 1)),
+        itemDescription: 'Package - medium box',
+      ),
+    ];
+  }
+
+  // Bus demo data
+  List<BusJourney> getDemoJourneys() {
+    return [
+      BusJourney(
+        id: 'BJ-001', origin: 'Lusaka', destination: 'Livingstone',
+        departure: DateTime.now().add(const Duration(hours: 2)),
+        arrival: DateTime.now().add(const Duration(hours: 8)),
+        price: 150.00, totalSeats: 52, bookedSeats: 38, busNumber: 'BUS-001',
+      ),
+      BusJourney(
+        id: 'BJ-002', origin: 'Lusaka', destination: 'Ndola',
+        departure: DateTime.now().add(const Duration(hours: 4)),
+        arrival: DateTime.now().add(const Duration(hours: 8)),
+        price: 120.00, totalSeats: 52, bookedSeats: 45, busNumber: 'BUS-002',
+      ),
+      BusJourney(
+        id: 'BJ-003', origin: 'Kitwe', destination: 'Lusaka',
+        departure: DateTime.now().add(const Duration(hours: 6)),
+        arrival: DateTime.now().add(const Duration(hours: 10)),
+        price: 130.00, totalSeats: 48, bookedSeats: 20, busNumber: 'BUS-003',
+      ),
+    ];
+  }
+}
