@@ -73,29 +73,17 @@ class AppState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // final authUser = await _supabaseService.signUp(
-      //   email: email,
-      //   password: password,
-      //   name: name,
-      //   role: role,
-      // );
-      
       // Demo mode: create user without Supabase
-      final authUser = null;
-
-        _user = AppUser(
-          id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-          name: name,
-          email: email,
-          phone: '+260 97 123 4567',
-          role: role,
-          memberSince: DateTime.now(),
-        );
-        _isLoggedIn = true;
-        _initDemoData();
-      } else {
-        _isLoggedIn = true;
-        _initDemoData();
+      _user = AppUser(
+        id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+        name: name,
+        email: email,
+        phone: '+260 97 123 4567',
+        role: role,
+        memberSince: DateTime.now(),
+      );
+      _isLoggedIn = true;
+      _initDemoData();
       _isAuthenticating = false;
       notifyListeners();
       return true;
@@ -117,32 +105,18 @@ class AppState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // final authUser = await _supabaseService.signIn(
-      //   email: email,
-      //   password: password,
-      // );
-      
       // Demo mode: accept any login
-      final authUser = null;
-
-      // if (authUser != null) {
-        //   final profile = await _supabaseService.getUserProfile(authUser.id);
-        _user = AppUser(
-          id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-          name: 'User',
-          email: email,
-          phone: '+260 97 123 4567',
-          role: role,
-          memberSince: DateTime.now(),
-        );
-        _isLoggedIn = true;
-        await _restoreWalletFromDatabase();
-        _initDemoData();
-      } else {
-        _isLoggedIn = true;
-        _initDemoData();
-      }
-      // }
+      _user = AppUser(
+        id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+        name: 'User',
+        email: email,
+        phone: '+260 97 123 4567',
+        role: role,
+        memberSince: DateTime.now(),
+      );
+      _isLoggedIn = true;
+      await _restoreWalletFromDatabase();
+      _initDemoData();
       _isAuthenticating = false;
       notifyListeners();
       return true;
@@ -242,18 +216,18 @@ class AppState extends ChangeNotifier {
     // if (_supabaseService.isAuthenticated()) {
     //   try {
     //     await _supabaseService.client.from('transactions').insert({
-          'id': tx.id,
-          'user_id': _user?.id,
-          'type': tx.type.toString().split('.').last,
-          'amount': tx.amount,
-          'method': tx.method.toString().split('.').last,
-          'status': tx.status.toString().split('.').last,
-          'description': tx.description,
-          'reference': tx.reference,
-        });
-      } catch (e) {
-        print('Error syncing to Supabase: $e');
-      }
+    //       'id': tx.id,
+    //       'user_id': _user?.id,
+    //       'type': tx.type.toString().split('.').last,
+    //       'amount': tx.amount,
+    //       'method': tx.method.toString().split('.').last,
+    //       'status': tx.status.toString().split('.').last,
+    //       'description': tx.description,
+    //       'reference': tx.reference,
+    //     });
+    //   } catch (e) {
+    //     print('Error syncing to Supabase: $e');
+    //   }
     // }
   }
 
