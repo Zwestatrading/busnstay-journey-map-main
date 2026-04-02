@@ -154,8 +154,8 @@ class JourneyTown {
   }
 }
 
-/// Active bus journey
-class BusJourney {
+/// Active bus journey with real-time tracking
+class ActiveBusJourney {
   final String journeyId;
   final String busId;
   final String routeName;
@@ -169,7 +169,7 @@ class BusJourney {
   
   bool isActive;
 
-  BusJourney({
+  ActiveBusJourney({
     required this.journeyId,
     required this.busId,
     required this.routeName,
@@ -293,8 +293,8 @@ class BusJourney {
   };
 
   /// Create from JSON
-  factory BusJourney.fromJson(Map<String, dynamic> json) {
-    return BusJourney(
+  factory ActiveBusJourney.fromJson(Map<String, dynamic> json) {
+    return ActiveBusJourney(
       journeyId: json['journeyId'] as String,
       busId: json['busId'] as String,
       routeName: json['routeName'] as String,
