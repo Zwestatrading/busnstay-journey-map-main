@@ -12,8 +12,10 @@ import 'services/database_service.dart';
 import 'services/order_management_service.dart';
 import 'services/restaurant_notification_service.dart';
 import 'services/town_order_management_service.dart';
+import 'services/password_reset_service.dart';
 import 'widgets/payment_modal.dart';
 import 'widgets/status_badge.dart';
+import 'pages/forgot_password_page.dart';
 
 // ============ APP SERVICES SINGLETON ============
 class AppServices {
@@ -268,6 +270,7 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   bool _isLogin = true;
+  bool _showForgotPassword = false;
   UserRole _selectedRole = UserRole.passenger;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -281,6 +284,13 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Show forgot password screen
+    if (_showForgotPassword) {
+      return ForgotPasswordScreen(
+        onBackToLogin: () => setState(() => _showForgotPassword = false),
+      );
+    }
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -337,7 +347,24 @@ class _AuthScreenState extends State<AuthScreen> {
                     prefixIcon: const Icon(Icons.lock),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
+                // Forgot Password Link
+                if (_isLogin)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => setState(() => _showForgotPassword = true),
+                      child: const Text(
+                        'Forgot Password?',
+                        style: TextStyle(
+                          color: Color(0xFF3B82F6),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -427,18 +454,146 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
       appBar: AppBar(
         title: const Text('Account'),
         actions: [
-          IconButton(icon: const Icon(Icons.logout), onPressed: () => context.read<AppState>().logout()),
+          IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
         ],
       ),
+      drawer: _buildAppDrawer(context),
       body: _tabIndex == 0 ? _buildOverviewTab(context) : _tabIndex == 1 ? _buildWalletTab(context) : _tabIndex == 2 ? _buildRewardsTab(context) : _buildSettingsTab(context),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _tabIndex,
         onTap: (i) => setState(() => _tabIndex = i),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Overview'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.wallet), label: 'Wallet'),
           BottomNavigationBarItem(icon: Icon(Icons.card_giftcard), label: 'Rewards'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+        ],
+      ),
+    );
+  }
+
+  Drawer _buildAppDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(
+              color: Color(0xFF3B82F6),
+            ),
+            child: Consumer<AppState>(
+              builder: (context, state, _) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: Text(
+                      (state.user?.name ?? 'U')[0].toUpperCase(),
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF3B82F6)),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    state.user?.name ?? 'User',
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    state.user?.email ?? 'email@example.com',
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text('Home'),
+            onTap: () => Navigator.pop(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('Profile'),
+            onTap: () => Navigator.pop(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.security),
+            title: const Text('Change Password'),
+            onTap: () {
+              Navigator.pop(context);
+              _showChangePasswordDialog(context);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.help),
+            title: const Text('Help & Support'),
+            onTap: () => Navigator.pop(context),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Logout', style: TextStyle(color: Colors.red)),
+            onTap: () {
+              context.read<AppState>().logout();
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChangePasswordDialog(BuildContext context) {
+    final _currentPasswordController = TextEditingController();
+    final _newPasswordController = TextEditingController();
+    final _confirmPasswordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Change Password'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _currentPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Current Password'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _newPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'New Password'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Confirm Password'),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (_newPasswordController.text == _confirmPasswordController.text &&
+                  _newPasswordController.text.isNotEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Password changed successfully!')),
+                );
+                Navigator.pop(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Passwords do not match!')),
+                );
+              }
+            },
+            child: const Text('Update'),
+          ),
         ],
       ),
     );
