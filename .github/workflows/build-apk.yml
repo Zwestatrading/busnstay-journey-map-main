@@ -39,7 +39,7 @@ jobs:
           rm -rf android/.gradle
           rm -rf build/
           flutter clean
-          flutter pub cache clean --all
+          flutter pub cache repair
       
       - name: Get dependencies
         run: flutter pub get
