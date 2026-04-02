@@ -1,0 +1,69 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # Step 1: Checkout code
+    - uses: actions/checkout@v3
+    
+    # Step 2: Setup Flutter
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: 'latest'
+        channel: 'stable'
+    
+    # Step 3: Get dependencies
+    - name: Get dependencies
+      run: flutter pub get
+    
+    # Step 4: Run analyzer
+    - name: Analyze code
+      run: flutter analyze
+    
+    # Step 5: Build APK (Debug)
+    - name: Build APK - Debug
+      run: flutter build apk --debug --split-per-abi
+    
+    # Step 6: Build APK (Release)
+    - name: Build APK - Release
+      run: flutter build apk --release --split-per-abi
+    
+    # Step 7: Upload APK artifacts
+    - name: Upload APK artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: flutter-apk
+        path: |
+          build/app/outputs/flutter-apk/app-armeabi-v7a-debug.apk
+          build/app/outputs/flutter-apk/app-arm64-v8a-debug.apk
+          build/app/outputs/flutter-apk/app-x86_64-debug.apk
+          build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+          build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          build/app/outputs/flutter-apk/app-x86_64-release.apk
+
+  # Optional: Deploy to Firebase or other services
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    - name: Download APK artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: flutter-apk
+    
+    - name: List artifacts
+      run: ls -la
+    
+    # Add deployment steps here (Firebase App Distribution, Play Store, etc.)
