@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'dart:math' as Math;
 
 /// Town status in a journey
 enum TownStatus {
@@ -136,6 +137,19 @@ class JourneyTown {
       ),
       orderCutoffByDistance: json['orderCutoffByDistance'] ?? 3.0,
     );
+  }
+
+  /// Parse TownStatus from string
+  static TownStatus _parseTownStatus(String value) {
+    switch (value.toLowerCase()) {
+      case 'closed':
+        return TownStatus.closed;
+      case 'locked':
+        return TownStatus.locked;
+      case 'open':
+      default:
+        return TownStatus.open;
+    }
   }
 }
 
@@ -320,6 +334,3 @@ extension on Object? {
     return null;
   }
 }
-
-// Required imports
-import 'dart:math' as Math;

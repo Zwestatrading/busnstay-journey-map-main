@@ -388,19 +388,14 @@ class TownOrderManagementService {
   Stream<JourneyTown> subscribeToTownStatusUpdates(String journeyId) {
     return supabaseClient
         .from('town_status_updates')
-        .on(RealtimeListenTypes.postgresChanges,
-            ChannelFilter(
-              event: '*',
-              schema: 'public',
-              table: 'town_status_updates',
-              filter: 'journey_id=eq.$journeyId',
-            ))
-        .stream()
+        .stream(primaryKey: const ['id'])
+        .where((records) => records.any((r) => r['journey_id'] == journeyId))
+        .expand((records) => records)
         .asyncMap((event) async {
-      final townId = event.payload['town_id'];
+      final townId = event['town_id'];
       return await getTownDetails(townId) ?? JourneyTown(
         townId: townId,
-        townName: event.payload['town_name'],
+        townName: event['town_name'],
         latitude: 0,
         longitude: 0,
         pickupStationName: '',

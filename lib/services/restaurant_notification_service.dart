@@ -259,15 +259,10 @@ Sent from *BusNStay* 🍽️🚌''';
   ) {
     return supabaseClient
         .from('restaurant_notifications')
-        .on(RealtimeListenTypes.postgresChanges,
-            ChannelFilter(
-              event: '*',
-              schema: 'public',
-              table: 'restaurant_notifications',
-              filter: 'restaurant_id=eq.$restaurantId',
-            ))
-        .stream()
-        .map((event) => event.payload);
+        .stream(primaryKey: const ['notification_id'])
+        .where((records) => records.any((r) => r['restaurant_id'] == restaurantId))
+        .expand((records) => records)
+        .map((event) => event as Map<String, dynamic>);
   }
 
   /// ============= DATABASE LOGGING =============

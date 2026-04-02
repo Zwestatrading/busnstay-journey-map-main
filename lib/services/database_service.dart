@@ -239,12 +239,20 @@ class DatabaseService {
     return maps
         .map((map) => FoodOrder(
               id: map['id'],
-              customerName: 'Customer',
+              customerId: map['customer_id'] ?? '',
+              customerName: map['customer_name'] ?? 'Customer',
+              customerPhoneNumber: map['customer_phone'] ?? '',
+              restaurantId: map['restaurant_id'] ?? '',
+              restaurantName: map['restaurant_name'] ?? 'Unknown',
+              townId: map['town_id'] ?? '',
+              townName: map['town_name'] ?? 'Unknown',
+              journeyId: map['journey_id'] ?? '',
               items: [],
               status: _parseOrderStatus(map['status']),
               orderTime: DateTime.parse(map['createdAt']),
-              specialInstructions: '',
-              deliveryFee: 0,
+              specialInstructions: map['special_instructions'] ?? '',
+              deliveryFee: (map['delivery_fee'] as num?)?.toDouble() ?? 0,
+              platformFee: (map['platform_fee'] as num?)?.toDouble() ?? 0,
             ))
         .toList();
   }

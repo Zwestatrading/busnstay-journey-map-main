@@ -507,7 +507,14 @@ class AppState extends ChangeNotifier {
     return [
       FoodOrder(
         id: 'ORD-001',
+        customerId: 'CUST-001',
         customerName: 'John Mansa',
+        customerPhoneNumber: '+260973123456',
+        restaurantId: 'REST-001',
+        restaurantName: 'Nshima House',
+        townId: 'TOWN-001',
+        townName: 'Livingstone',
+        journeyId: 'JOUR-001',
         items: [
           OrderItem(name: 'Nshima', quantity: 1, price: 25.0),
           OrderItem(name: 'Chicken', quantity: 1, price: 45.0),
@@ -519,7 +526,14 @@ class AppState extends ChangeNotifier {
       ),
       FoodOrder(
         id: 'ORD-002',
+        customerId: 'CUST-002',
         customerName: 'Grace Tembo',
+        customerPhoneNumber: '+260978654321',
+        restaurantId: 'REST-002',
+        restaurantName: 'Traditional Kitchen',
+        townId: 'TOWN-002',
+        townName: 'Kitwe',
+        journeyId: 'JOUR-001',
         items: [
           OrderItem(name: 'Ifisashi', quantity: 1, price: 30.0),
           OrderItem(name: 'Rice', quantity: 1, price: 15.0),
@@ -592,6 +606,7 @@ class AppState extends ChangeNotifier {
     return [
       MenuItem(
         id: 'menu_001',
+        restaurantId: 'REST-001',
         name: 'Nshima & Chicken',
         category: 'Main',
         price: 65.0,
@@ -600,6 +615,7 @@ class AppState extends ChangeNotifier {
       ),
       MenuItem(
         id: 'menu_002',
+        restaurantId: 'REST-001',
         name: 'Ifisashi',
         category: 'Main',
         price: 45.0,
@@ -608,6 +624,7 @@ class AppState extends ChangeNotifier {
       ),
       MenuItem(
         id: 'menu_003',
+        restaurantId: 'REST-001',
         name: 'Freshly Squeezed Juice',
         category: 'Drinks',
         price: 20.0,

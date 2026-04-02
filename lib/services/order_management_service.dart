@@ -54,7 +54,7 @@ class OrderManagementService {
       final total = subtotal + deliveryFee + platformFee;
 
       // Create order object
-      final order = FoodOrder(
+      FoodOrder order = FoodOrder(
         id: _generateId('order'),
         customerId: customerId,
         customerName: customerName,
@@ -344,15 +344,10 @@ class OrderManagementService {
   Stream<FoodOrder> subscribeToOrderUpdates(String orderId) {
     return supabaseClient
         .from('orders')
-        .on(RealtimeListenTypes.postgresChanges,
-            ChannelFilter(
-              event: '*',
-              schema: 'public',
-              table: 'orders',
-              filter: 'id=eq.$orderId',
-            ))
-        .stream()
-        .map((event) => FoodOrder.fromJson(event.payload))
+        .stream(primaryKey: const ['id'])
+        .where((records) => records.any((r) => r['id'] == orderId))
+        .expand((records) => records)
+        .map((event) => FoodOrder.fromJson(event))
         .asyncMap((order) async {
       // Also update local database if applicable
       await databaseService.insertOrder(order);
@@ -364,26 +359,12 @@ class OrderManagementService {
   Stream<List<FoodOrder>> subscribeToRestaurantOrders(String restaurantId) {
     return supabaseClient
         .from('orders')
-        .on(RealtimeListenTypes.postgresChanges,
-            ChannelFilter(
-              event: '*',
-              schema: 'public',
-              table: 'orders',
-              filter: 'restaurant_id=eq.$restaurantId',
-            ))
-        .stream()
-        .asyncMap((_) async {
-      // Fetch updated list
-      final response = await supabaseClient
-          .from('orders')
-          .select()
-          .eq('restaurant_id', restaurantId)
-          .order('created_at', ascending: false);
-
-      return (response as List<dynamic>)
-          .map((o) => FoodOrder.fromJson(o))
-          .toList();
-    });
+        .stream(primaryKey: const ['id'])
+        .where((records) => records.isNotEmpty)
+        .map((records) => records
+            .where((r) => r['restaurant_id'] == restaurantId)
+            .map((r) => FoodOrder.fromJson(r))
+            .toList());
   }
 
   /// ============= HELPER METHODS =============
