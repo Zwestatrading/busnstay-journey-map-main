@@ -1,15 +1,84 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'models/user_model.dart';
 import 'models/wallet_model.dart';
 import 'models/order_model.dart';
 import 'models/booking_model.dart';
 import 'models/delivery_model.dart';
+import 'models/journey_model.dart';
 import 'services/app_state.dart';
+import 'services/database_service.dart';
+import 'services/order_management_service.dart';
+import 'services/restaurant_notification_service.dart';
+import 'services/town_order_management_service.dart';
 import 'widgets/payment_modal.dart';
 import 'widgets/status_badge.dart';
 
-void main() {
+// ============ APP SERVICES SINGLETON ============
+class AppServices {
+  static late OrderManagementService orderService;
+  static late RestaurantNotificationService notificationService;
+  static late TownOrderManagementService townService;
+  static late DatabaseService databaseService;
+
+  static bool _initialized = false;
+
+  static Future<void> initialize() async {
+    if (_initialized) return;
+    
+    print('🚀 [INIT] Initializing BusNStay services...');
+    
+    try {
+      // Initialize Supabase
+      print('🔐 [INIT] Connecting to Supabase...');
+      await Supabase.initialize(
+        url: 'https://ksepddxhvfkjfvnaervh.supabase.co',
+        anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZXBkZHhodmZramZ2bmFlcnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjAzNTAsImV4cCI6MjA4NjIzNjM1MH0.PoqNk4G_AqVt560NTlcTJjOXU1ib8ZItzH5vtFd45-A',
+      );
+      final supabaseClient = Supabase.instance.client;
+      print('✅ [INIT] Supabase connected successfully');
+
+      // Initialize database
+      databaseService = DatabaseService();
+      print('✅ [INIT] Database service initialized');
+
+      // Initialize notification service
+      notificationService = RestaurantNotificationService(
+        supabaseClient: supabaseClient,
+      );
+      print('✅ [INIT] Notification service initialized');
+
+      // Initialize town service
+      townService = TownOrderManagementService(
+        supabaseClient: supabaseClient,
+      );
+      print('✅ [INIT] Town management service initialized');
+
+      // Initialize order service
+      orderService = OrderManagementService(
+        supabaseClient: supabaseClient,
+        databaseService: databaseService,
+        notificationService: notificationService,
+        townService: townService,
+      );
+      print('✅ [INIT] Order management service initialized');
+
+      _initialized = true;
+      print('✅ [INIT] All services initialized successfully!');
+    } catch (e) {
+      print('❌ [ERROR] Failed to initialize services: $e');
+      rethrow;
+    }
+  }
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize all services
+  await AppServices.initialize();
+  
   runApp(const BusNStayApp());
 }
 

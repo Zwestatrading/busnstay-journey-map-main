@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SUPABASE_SETUP_GUIDE.md</title>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+    
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+html,footer,header{
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Custom MD PDF CSS
+ */
+html,footer,header{
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+
+ }
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+<link rel="stylesheet" href="file:///r%3A/2.Travail/1.Enseignement/Cours/_1.Outils/2.Developpement/1.SCSS/main.css" type="text/css"><link rel="stylesheet" href="file:///d%3A/rdaros/Cours/_1.Outils/2.Developpement/1.SCSS/main.css" type="text/css">
+</head>
+
+<body>
+    <h1 id="supabase-setup-guide-for-busnstay-order-management-system">Supabase Setup Guide for BusNStay Order Management System</h1>
+<h2 id="%E2%9C%85-step-1-supabase-configuration-completed">✅ Step 1: Supabase Configuration (COMPLETED)</h2>
+<p>Your Flutter app has been updated with Supabase credentials:</p>
+<ul>
+<li><strong>Project URL</strong>: <code>https://ksepddxhvfkjfvnaervh.supabase.co</code></li>
+<li><strong>Anon Key</strong>: Configured in <code>lib/main.dart</code></li>
+<li><strong>Credentials Location</strong>: <code>lib/main.dart</code> → <code>AppServices.initialize()</code></li>
+</ul>
+<h2 id="%F0%9F%93%8B-step-2-run-database-migration-next">📋 Step 2: Run Database Migration (NEXT)</h2>
+<p>The order management system requires specific database tables. Follow these steps:</p>
+<h3 id="option-a-using-supabase-dashboard-easiest">Option A: Using Supabase Dashboard (Easiest)</h3>
+<ol>
+<li><strong>Open Supabase Dashboard</strong>: https://app.supabase.com/</li>
+<li>Go to your project: <strong>Zwelt985's Project</strong></li>
+<li>Click <strong>SQL Editor</strong> (left sidebar)</li>
+<li>Click <strong>New query</strong></li>
+<li>Copy the SQL from: <code>supabase/migrations/busnstay_order_management_system.sql</code></li>
+<li>Paste into the editor</li>
+<li>Click <strong>Run</strong></li>
+<li>✅ Done! Check that you see the success message</li>
+</ol>
+<h3 id="option-b-using-supabase-cli-advanced">Option B: Using Supabase CLI (Advanced)</h3>
+<pre class="hljs"><code><div><span class="hljs-comment"># Install CLI (if not already installed)</span>
+npm install -g supabase
+
+<span class="hljs-comment"># Link to your project</span>
+supabase link --project-ref ksepddxhvfkjfvnaervh
+
+<span class="hljs-comment"># Run migrations</span>
+supabase migration list
+supabase migration up
+</div></code></pre>
+<h2 id="%F0%9F%94%84-step-3-enable-realtime-subscriptions">🔄 Step 3: Enable Realtime Subscriptions</h2>
+<p>The order system requires realtime updates for:</p>
+<ul>
+<li>New orders arriving at restaurants</li>
+<li>Town status changes</li>
+<li>Bus position updates</li>
+</ul>
+<h3 id="enable-realtime-via-dashboard">Enable Realtime via Dashboard:</h3>
+<ol>
+<li>Go to <strong>Database</strong> → <strong>Publications</strong> (left sidebar)</li>
+<li>Click <strong>supabase_realtime</strong></li>
+<li>Enable (toggle) the following tables:
+<ul>
+<li>✅ orders</li>
+<li>✅ restaurant_notifications</li>
+<li>✅ restaurant_notification_deliveries</li>
+<li>✅ journey_towns</li>
+<li>✅ town_status_updates</li>
+</ul>
+</li>
+</ol>
+<h2 id="%F0%9F%93%8A-verify-database-setup">📊 Verify Database Setup</h2>
+<p>Run these checks in Supabase SQL Editor to confirm tables exist:</p>
+<pre class="hljs"><code><div><span class="hljs-comment">-- Check all order management tables</span>
+<span class="hljs-keyword">SELECT</span> table_name 
+<span class="hljs-keyword">FROM</span> information_schema.tables 
+<span class="hljs-keyword">WHERE</span> table_schema = <span class="hljs-string">'public'</span> 
+<span class="hljs-keyword">AND</span> table_name <span class="hljs-keyword">IN</span> (
+  <span class="hljs-string">'orders'</span>,
+  <span class="hljs-string">'restaurant_notifications'</span>,
+  <span class="hljs-string">'restaurant_notification_deliveries'</span>,
+  <span class="hljs-string">'journey_towns'</span>,
+  <span class="hljs-string">'town_status_updates'</span>,
+  <span class="hljs-string">'journeys'</span>,
+  <span class="hljs-string">'restaurants'</span>
+);
+</div></code></pre>
+<p>Should return 7 tables. If not all show up, re-run the migration.</p>
+<h2 id="%F0%9F%A7%AA-test-connection-in-flutter">🧪 Test Connection in Flutter</h2>
+<p>Your app will automatically test the connection on startup.</p>
+<h3 id="expected-log-output">Expected Log Output:</h3>
+<pre class="hljs"><code><div>🚀 [INIT] Initializing BusNStay services...
+🔐 [INIT] Connecting to Supabase...
+✅ [INIT] Supabase connected successfully
+✅ [INIT] Database service initialized
+✅ [INIT] Notification service initialized
+✅ [INIT] Town management service initialized
+✅ [INIT] Order management service initialized
+✅ [INIT] All services initialized successfully!
+</div></code></pre>
+<h3 id="if-you-see-errors">If You See Errors:</h3>
+<p><strong>❌ &quot;Failed to initialize services&quot;</strong></p>
+<ul>
+<li>Check Supabase credentials in <code>lib/main.dart</code></li>
+<li>Verify project is running (go to Supabase dashboard and check)</li>
+<li>Check internet connection</li>
+</ul>
+<p><strong>❌ &quot;Table not found&quot;</strong></p>
+<ul>
+<li>Re-run the migration SQL (Step 2)</li>
+<li>Verify tables exist in Supabase SQL Editor</li>
+</ul>
+<p><strong>❌ &quot;Permission denied&quot;</strong></p>
+<ul>
+<li>Check Row-Level Security (RLS) policies</li>
+<li>Go to <strong>Database</strong> → <strong>Authentication</strong> and verify policies</li>
+</ul>
+<h2 id="%F0%9F%94%90-security-configuration-optional-but-recommended">🔐 Security Configuration (Optional but Recommended)</h2>
+<h3 id="configure-api-gateway">Configure API Gateway:</h3>
+<ol>
+<li>Go to <strong>Authentication</strong> → <strong>Policies</strong></li>
+<li>For <code>orders</code> table, add policy:
+<ul>
+<li><strong>Authenticated users</strong> can SELECT/INSERT their own orders</li>
+<li><strong>Restaurants</strong> can SELECT their own orders</li>
+</ul>
+</li>
+</ol>
+<h3 id="example-policy-sql">Example Policy SQL:</h3>
+<pre class="hljs"><code><div><span class="hljs-comment">-- Users can see orders they created</span>
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">POLICY</span> <span class="hljs-string">"Users view own orders"</span> <span class="hljs-keyword">ON</span> orders
+  <span class="hljs-keyword">FOR</span> <span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">USING</span> (auth.uid() = user_id);
+
+<span class="hljs-comment">-- Restaurants can see their notifications</span>
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">POLICY</span> <span class="hljs-string">"Restaurants view own notifications"</span> <span class="hljs-keyword">ON</span> restaurant_notifications
+  <span class="hljs-keyword">FOR</span> <span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">USING</span> (auth.uid() = restaurant_id);
+</div></code></pre>
+<h2 id="%F0%9F%9A%80-next-steps-after-setup">🚀 Next Steps After Setup</h2>
+<ol>
+<li>✅ Flutter app automatically connects to Supabase on startup</li>
+<li>Create test journey with towns (use BusOperatorDashboardPage)</li>
+<li>Create test order (use OrderCheckoutPage)</li>
+<li>Verify restaurant notification received (use RestaurantDashboardPage)</li>
+<li>Test auto-close algorithm with position updates</li>
+</ol>
+<h2 id="%F0%9F%93%9E-troubleshooting">📞 Troubleshooting</h2>
+<h3 id="connection-issues">Connection Issues?</h3>
+<ul>
+<li>Check that <code>https://ksepddxhvfkjfvnaervh.supabase.co</code> is accessible</li>
+<li>Verify credentials are not changed/regenerated</li>
+<li>Check Flutter app has internet permission (check AndroidManifest.xml)</li>
+</ul>
+<h3 id="orders-not-appearing">Orders Not Appearing?</h3>
+<ul>
+<li>Verify realtime publications are enabled</li>
+<li>Check that Supabase is not rate-limiting requests</li>
+<li>Check app logs for errors</li>
+</ul>
+<h3 id="notifications-not-working">Notifications Not Working?</h3>
+<ul>
+<li>Verify <code>restaurant_notifications</code> table exists</li>
+<li>Check that restaurants have valid <code>id</code> field</li>
+<li>Verify Twilio credentials (when configured - see next section)</li>
+</ul>
+<h2 id="%F0%9F%93%A7-configure-external-notifications-optional">📧 Configure External Notifications (Optional)</h2>
+<p>To enable real WhatsApp/SMS notifications:</p>
+<ol>
+<li><strong>Get Twilio Account</strong>: https://www.twilio.com/</li>
+<li>Update credentials in <code>lib/services/restaurant_notification_service.dart</code>:<pre class="hljs"><code><div><span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">String</span> TWILIO_ACCOUNT_SID = <span class="hljs-string">'your_account_sid'</span>;
+<span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">String</span> TWILIO_AUTH_TOKEN = <span class="hljs-string">'your_auth_token'</span>;
+<span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-built_in">String</span> TWILIO_PHONE_NUMBER = <span class="hljs-string">'+1234567890'</span>;
+</div></code></pre>
+</li>
+<li>Test with <code>notifyRestaurantOrderPlaced()</code></li>
+</ol>
+<h2 id="%E2%9C%85-verification-checklist">✅ Verification Checklist</h2>
+<ul>
+<li><input type="checkbox" id="checkbox0"><label for="checkbox0">Supabase credentials added to Flutter app</label></li>
+<li><input type="checkbox" id="checkbox1"><label for="checkbox1">Database migration SQL executed successfully</label></li>
+<li><input type="checkbox" id="checkbox2"><label for="checkbox2">All 7 tables created in Supabase</label></li>
+<li><input type="checkbox" id="checkbox3"><label for="checkbox3">Realtime publications enabled for 5 key tables</label></li>
+<li><input type="checkbox" id="checkbox4"><label for="checkbox4">Flutter app logs show successful initialization</label></li>
+<li><input type="checkbox" id="checkbox5"><label for="checkbox5">Test journey created in BusOperatorDashboardPage</label></li>
+<li><input type="checkbox" id="checkbox6"><label for="checkbox6">Test order created without errors</label></li>
+<li><input type="checkbox" id="checkbox7"><label for="checkbox7">Restaurant notification received (check database)</label></li>
+</ul>
+<h2 id="%F0%9F%8E%89-success">🎉 Success!</h2>
+<p>Once all checks pass, your BusNStay order management system is fully operational!</p>
+<hr>
+<p><strong>Questions or Issues?</strong> Check the logs in Flutter console for specific error messages.<br>
+<strong>Need to reset?</strong> Go to Supabase → Database Wipe and re-run migrations.</p>
+
+</body>
+
+</html>
