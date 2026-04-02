@@ -233,30 +233,10 @@ class BusNStayApp extends StatelessWidget {
         secondary: const Color(0xFFFF9800),
         tertiary: const Color(0xFF4CAF50),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-        ),
-      ),
-      // Modern typography
-      textTheme: GoogleFonts.poppinsTextTheme().copyWith(
-        displaySmall: GoogleFonts.poppins(
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: brightness == Brightness.light ? Colors.black : Colors.white,
-        ),
-        headlineSmall: GoogleFonts.poppins(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
-        titleMedium: GoogleFonts.poppins(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
-        bodyLarge: GoogleFonts.poppins(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
         ),
       ),
     );
