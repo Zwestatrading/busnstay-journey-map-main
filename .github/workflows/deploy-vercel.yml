@@ -1,25 +1,42 @@
-name: Deploy to Vercel (DISABLED - Flutter App)
-
-# This workflow is disabled for Flutter mobile projects
-# Flutter apps deploy to Google Play Store / App Store, not Vercel
-# To enable web deployment, configure this for Flutter Web build
+name: Deploy Web to Vercel
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+  workflow_dispatch:
 
 jobs:
-  Deploy-Production:
+  deploy:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
       
-      - name: Info
-        run: |
-          echo "ℹ️ Vercel deployment is disabled for Flutter mobile projects"
-          echo "🚀 To deploy Flutter Web: Configure Flutter web build"
-          echo "📱 To deploy mobile APK: Configure Play Store / App Store deployment"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build Flutter Web
+        run: flutter build web --release --web-renderer=canvaskit
+      
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: './build/web'
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+

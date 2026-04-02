@@ -1,13 +1,13 @@
-name: Build & Deploy to Google Play Store
+name: Deploy to Google Play Store
 
 on:
   push:
     tags:
-      - 'v*' # Trigger on version tags like v1.0.0
-  workflow_dispatch: # Allow manual trigger
+      - 'v*.*.*'
+  workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     
     steps:
@@ -25,109 +25,33 @@ jobs:
         with:
           channel: 'stable'
       
-      - name: Get Flutter dependencies
+      - name: Get dependencies
         run: flutter pub get
-        
-      - name: Verify Flutter installation
-        run: flutter --version && flutter doctor
       
-      - name: Build APK (for internal testing)
-        run: flutter build apk --release -v
+      - name: Build AAB (App Bundle)
+        run: flutter build appbundle --release --verbose
       
-      - name: Build App Bundle (for Play Store)
-        run: flutter build appbundle --release -v
-      
-      - name: List build outputs
-        run: |
-          echo "=== APK files ==="
-          find build/app/outputs/apk -type f -name "*.apk" 2>/dev/null || echo "No APK files found"
-          echo "=== App Bundle files ==="
-          find build/app/outputs/bundle -type f -name "*.aab" 2>/dev/null || echo "No AAB files found"
-      
-      - name: Upload APK artifact
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: flutter-apk
-          path: build/app/outputs/apk/release/app-release.apk
-          retention-days: 30
-      
-      - name: Upload App Bundle artifact
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: flutter-aab
-          path: build/app/outputs/bundle/release/app-release.aab
-          retention-days: 30
-      
-      - name: Setup Android signing key
-        if: success()
-        run: |
-          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
-            echo "⚠️  WARNING: ANDROID_KEYSTORE_BASE64 not configured. Skipping signing."
-            exit 0
-          fi
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > ~/upload-keystore.jks
-          mkdir -p ~/.gradle
-          echo "storeFile=$HOME/upload-keystore.jks" > ~/.gradle/gradle.properties
-          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> ~/.gradle/gradle.properties
-          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> ~/.gradle/gradle.properties
-          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> ~/.gradle/gradle.properties
-          echo "✅ Signing key configured"
-      
-      - name: Deploy to Google Play Store
-        if: success() && github.event_name == 'push'
+      - name: Upload to Play Store
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
           packageName: com.busnstay.app
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
-          track: internal
+          track: production
           status: completed
-          whatsNewDirectory: whats-new
+        continue-on-error: true
       
-      - name: Create Release
+      - name: Create GitHub Release
         if: success()
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref }}
-          release_name: BusNStay Release ${{ github.ref }}
           body: |
-            ## BusNStay Release
+            ## BusNStay Release ${{ github.ref }}
             
-            Version: ${{ github.ref }}
-            Date: ${{ github.event.head_commit.timestamp }}
-            
-            ### Features
-            - ✅ Instant restaurant notifications (Wati WhatsApp)
-            - ✅ Automatic town order cutoff
-            - ✅ Real-time Supabase sync
-            - ✅ Multi-channel notifications
-            
-            ### Build Output
-            - APK: Attached (direct installation)
-            - App Bundle: Attached (Play Store format)
-            
-            ### Deployment Status
-            - Build: ✅ Success
-            - Artifacts: ✅ Generated
-            
-          draft: false
-          prerelease: true
-      
-      - name: Summary
-        if: always()
-        run: |
-          echo "=========================================="
-          echo "Build Summary"
-          echo "=========================================="
-          echo "Status: ${{ job.status }}"
-          echo "Build timestamp: $(date)"
-          echo ""
-          echo "Next steps:"
-          echo "1. Check Artifacts tab for APK/AAB downloads"
-          echo "2. Test APK on device: adb install -r app-release.apk"
-          echo "3. Upload AAB to Play Store for distribution"
-          echo "=========================================="
+            Deployed to Google Play Store
+            **Package:** com.busnstay.app
+            **Track:** Production
+          files: build/app/outputs/bundle/release/app-release.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
