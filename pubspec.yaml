@@ -56,6 +56,9 @@ dependencies:
   sqflite: ^2.2.0
   path_provider: ^2.0.0
   path: ^1.8.0
+  
+  # Sign in with Apple (explicit version for compatibility)
+  sign_in_with_apple: ^5.1.0
 
 dev_dependencies:
   flutter_test:
