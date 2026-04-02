@@ -36,8 +36,8 @@ dependencies:
   intl: ^0.19.0
   shared_preferences: ^2.2.0
   
-  # Supabase authentication & backend
-  supabase_flutter: ^1.10.0
+  # Supabase authentication & backend - disabled for now (requires credentials)
+  # supabase_flutter: ^1.10.0
   
   # Maps & location
   # google_maps_flutter: ^2.2.0
@@ -50,9 +50,6 @@ dependencies:
   sqflite: ^2.2.0
   path_provider: ^2.0.0
   path: ^1.8.0
-
-dependency_overrides:
-  sign_in_with_apple: ^5.1.0
 
 dev_dependencies:
   flutter_test:

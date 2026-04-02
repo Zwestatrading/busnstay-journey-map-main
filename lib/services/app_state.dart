@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+// import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../models/user_model.dart';
 import '../models/wallet_model.dart';
 import '../models/order_model.dart';
 import '../models/booking_model.dart';
 import '../models/delivery_model.dart';
-import 'supabase_service.dart';
+// import 'supabase_service.dart';
 import 'database_service.dart';
 import 'flutterwave_service.dart';
 
@@ -17,7 +17,7 @@ class AppState extends ChangeNotifier {
   String? _authError;
 
   // Service instances
-  late final SupabaseService _supabaseService;
+  // late final SupabaseService _supabaseService;
   late final DatabaseService _databaseService;
 
   // Wallet & loyalty
@@ -43,23 +43,21 @@ class AppState extends ChangeNotifier {
   String? get authError => _authError;
   Wallet get wallet => _wallet;
   LoyaltyInfo get loyalty => _loyalty;
-  SupabaseService get supabaseService => _supabaseService;
+  // SupabaseService get supabaseService => _supabaseService;
   DatabaseService get databaseService => _databaseService;
 
   AppState() {
-    _supabaseService = SupabaseService();
+    // _supabaseService = SupabaseService();
     _databaseService = DatabaseService();
     _initializeServices();
   }
 
   Future<void> _initializeServices() async {
+    // Initialize database
     try {
-      await _supabaseService.initialize();
-      if (_supabaseService.isAuthenticated()) {
-        await _restoreSession();
-      }
+      final _ = await _databaseService.database;
     } catch (e) {
-      print('Error initializing Supabase: $e');
+      print('Error initializing database: $e');
     }
   }
 
@@ -75,16 +73,18 @@ class AppState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final authUser = await _supabaseService.signUp(
-        email: email,
-        password: password,
-        name: name,
-        role: role,
-      );
+      // final authUser = await _supabaseService.signUp(
+      //   email: email,
+      //   password: password,
+      //   name: name,
+      //   role: role,
+      // );
+      
+      // Demo mode: create user without Supabase
+      final authUser = null;
 
-      if (authUser != null) {
         _user = AppUser(
-          id: authUser.id,
+          id: 'user_${DateTime.now().millisecondsSinceEpoch}',
           name: name,
           email: email,
           phone: '+260 97 123 4567',
@@ -93,7 +93,9 @@ class AppState extends ChangeNotifier {
         );
         _isLoggedIn = true;
         _initDemoData();
-      }
+      } else {
+        _isLoggedIn = true;
+        _initDemoData();
       _isAuthenticating = false;
       notifyListeners();
       return true;
@@ -115,25 +117,32 @@ class AppState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final authUser = await _supabaseService.signIn(
-        email: email,
-        password: password,
-      );
+      // final authUser = await _supabaseService.signIn(
+      //   email: email,
+      //   password: password,
+      // );
+      
+      // Demo mode: accept any login
+      final authUser = null;
 
-      if (authUser != null) {
-        final profile = await _supabaseService.getUserProfile(authUser.id);
+      // if (authUser != null) {
+        //   final profile = await _supabaseService.getUserProfile(authUser.id);
         _user = AppUser(
-          id: authUser.id,
-          name: profile?['name'] ?? 'User',
+          id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+          name: 'User',
           email: email,
-          phone: profile?['phone'] ?? '+260 97 123 4567',
+          phone: '+260 97 123 4567',
           role: role,
-          memberSince: DateTime.parse(profile?['member_since'] ?? DateTime.now().toIso8601String()),
+          memberSince: DateTime.now(),
         );
         _isLoggedIn = true;
         await _restoreWalletFromDatabase();
         _initDemoData();
+      } else {
+        _isLoggedIn = true;
+        _initDemoData();
       }
+      // }
       _isAuthenticating = false;
       notifyListeners();
       return true;
@@ -161,26 +170,27 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _restoreSession() async {
-    final currentUser = _supabaseService.getCurrentUser();
-    if (currentUser != null) {
-      final profile = await _supabaseService.getUserProfile(currentUser.id);
-      _user = AppUser(
-        id: currentUser.id,
-        name: profile?['name'] ?? 'User',
-        email: currentUser.email ?? '',
-        phone: profile?['phone'] ?? '+260 97 123 4567',
-        role: _parseRole(profile?['role'] ?? 'passenger'),
-        memberSince: DateTime.parse(profile?['member_since'] ?? DateTime.now().toIso8601String()),
-      );
-      _isLoggedIn = true;
-      await _restoreWalletFromDatabase();
-      notifyListeners();
-    }
+    // Demo mode: skip Supabase restoration
+    // final currentUser = _supabaseService.getCurrentUser();
+    // if (currentUser != null) {
+    //   final profile = await _supabaseService.getUserProfile(currentUser.id);
+    //   _user = AppUser(
+    //     id: currentUser.id,
+    //     name: profile?['name'] ?? 'User',
+    //     email: currentUser.email ?? '',
+    //     phone: profile?['phone'] ?? '+260 97 123 4567',
+    //     role: _parseRole(profile?['role'] ?? 'passenger'),
+    //     memberSince: DateTime.parse(profile?['member_since'] ?? DateTime.now().toIso8601String()),
+    //   );
+    //   _isLoggedIn = true;
+    //   await _restoreWalletFromDatabase();
+    //   notifyListeners();
+    // }
   }
 
   Future<void> logout() async {
     try {
-      await _supabaseService.signOut();
+      // await _supabaseService.signOut();
       await _databaseService.clearAllData();
       _user = null;
       _isLoggedIn = false;
@@ -228,10 +238,10 @@ class AppState extends ChangeNotifier {
 
     notifyListeners();
 
-    // Sync to Supabase when online
-    if (_supabaseService.isAuthenticated()) {
-      try {
-        await _supabaseService.client.from('transactions').insert({
+    // Sync to Supabase when online - DISABLED
+    // if (_supabaseService.isAuthenticated()) {
+    //   try {
+    //     await _supabaseService.client.from('transactions').insert({
           'id': tx.id,
           'user_id': _user?.id,
           'type': tx.type.toString().split('.').last,
@@ -244,7 +254,7 @@ class AppState extends ChangeNotifier {
       } catch (e) {
         print('Error syncing to Supabase: $e');
       }
-    }
+    // }
   }
 
   Future<void> transferFunds(double amount, String recipient) async {
