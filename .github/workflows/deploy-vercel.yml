@@ -31,7 +31,7 @@ jobs:
         run: flutter build web --release
       
       - name: Deploy to Vercel
-        if: secrets.VERCEL_TOKEN != ''
+        if: ${{ secrets.VERCEL_TOKEN }}
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -41,6 +41,6 @@ jobs:
           scope: ${{ secrets.VERCEL_ORG_ID }}
       
       - name: Vercel deployment skipped
-        if: secrets.VERCEL_TOKEN == ''
+        if: ${{ !secrets.VERCEL_TOKEN }}
         run: echo "⏭️  Vercel deployment skipped - VERCEL_TOKEN secret not configured. To enable, add secrets to GitHub repository settings."
 
