@@ -322,23 +322,6 @@ String formatDuration(Duration duration) {
   return '${minutes}m';
 }
 
-/// Bus journey card model for display
-class BusJourney {
-  final String origin;
-  final String destination;
-  final double price;
-  final int bookedSeats;
-  final int totalSeats;
-
-  BusJourney({
-    required this.origin,
-    required this.destination,
-    required this.price,
-    required this.bookedSeats,
-    required this.totalSeats,
-  });
-}
-
 /// Extension for error handling
 extension on Object? {
   T? let<T>(T Function(dynamic) f) {
