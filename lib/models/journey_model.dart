@@ -183,11 +183,8 @@ class BusJourney {
 
   /// Get the next upcoming town (not locked)
   JourneyTown? get nextTown => towns
-      .firstWhere(
-        (t) => t.status != TownStatus.locked,
-        orElse: () => towns.isEmpty ? null : towns.last,
-      )
-      .let((t) => t == null ? null : t);
+      .cast<JourneyTown?>()
+      .firstWhereOrNull((t) => t != null && t.status != TownStatus.locked);
 
   /// Get all towns still open for orders
   List<JourneyTown> get openTowns => towns
@@ -274,9 +271,8 @@ class BusJourney {
 
   /// Mark a town as locked (bus passed)
   void lockTown(String townId) {
-    final town = towns.firstWhere(
+    final town = towns.firstWhereOrNull(
       (t) => t.townId == townId,
-      orElse: () => towns.isEmpty ? null : towns.first,
     );
     town?.lockTown();
   }
