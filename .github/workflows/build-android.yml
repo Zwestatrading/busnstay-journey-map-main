@@ -12,7 +12,7 @@ jobs:
     
     steps:
     # Step 1: Checkout code
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     # Step 2: Setup Flutter
     - name: Setup Flutter
@@ -39,7 +39,7 @@ jobs:
     
     # Step 7: Upload APK artifacts
     - name: Upload APK artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: flutter-apk
         path: |
@@ -57,9 +57,9 @@ jobs:
     if: github.ref == 'refs/heads/main'
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Download APK artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: flutter-apk
     
