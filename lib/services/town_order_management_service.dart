@@ -8,7 +8,7 @@ import 'dart:async';
 class TownOrderManagementService {
   final SupabaseClient supabaseClient;
   
-  BusJourney? _currentJourney;
+  ActiveBusJourney? _currentJourney;
   StreamSubscription? _positionStreamSubscription;
   final Map<String, StreamSubscription> _townStatusSubscriptions = {};
 
@@ -34,7 +34,7 @@ class TownOrderManagementService {
           .toList();
 
       // Create journey object
-      _currentJourney = BusJourney(
+      _currentJourney = ActiveBusJourney(
         journeyId: journeyData['id'],
         busId: journeyData['bus_id'],
         routeName: journeyData['route_name'],
@@ -420,7 +420,7 @@ class TownOrderManagementService {
   }
 
   /// Get current journey
-  BusJourney? get currentJourney => _currentJourney;
+  ActiveBusJourney? get currentJourney => _currentJourney;
 
   /// Cleanup resources
   Future<void> dispose() async {
