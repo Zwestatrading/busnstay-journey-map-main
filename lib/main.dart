@@ -209,16 +209,54 @@ class BusNStayApp extends StatelessWidget {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      primaryColor: const Color(0xFF3B82F6),
-      scaffoldBackgroundColor: brightness == Brightness.light ? Colors.white : const Color(0xFF1F2937),
+      // Vibrant primary orange (like KFC)
+      primaryColor: const Color(0xFFE74C3C),
+      // Colorful secondary
+      secondaryHeaderColor: const Color(0xFF9B59B6),
+      scaffoldBackgroundColor: brightness == Brightness.light 
+        ? const Color(0xFFFAFAFA) 
+        : const Color(0xFF121212),
       appBarTheme: AppBarTheme(
-        backgroundColor: brightness == Brightness.light ? const Color(0xFF3B82F6) : const Color(0xFF1F2937),
-        foregroundColor: Colors.white,
+        backgroundColor: brightness == Brightness.light 
+          ? const Color(0xFFFFFFFF) 
+          : const Color(0xFF1F2937),
+        foregroundColor: brightness == Brightness.light 
+          ? const Color(0xFF000000) 
+          : Colors.white,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
       ),
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF3B82F6),
+        seedColor: const Color(0xFFE74C3C),
         brightness: brightness,
+        secondary: const Color(0xFFFF9800),
+        tertiary: const Color(0xFF4CAF50),
+      ),
+      cardTheme: CardTheme(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      // Modern typography
+      textTheme: GoogleFonts.poppinsTextTheme().copyWith(
+        displaySmall: GoogleFonts.poppins(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: brightness == Brightness.light ? Colors.black : Colors.white,
+        ),
+        headlineSmall: GoogleFonts.poppins(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+        titleMedium: GoogleFonts.poppins(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+        bodyLarge: GoogleFonts.poppins(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
