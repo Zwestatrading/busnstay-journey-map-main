@@ -16,7 +16,7 @@ class SupabaseService {
   }
 
   // Sign up new user
-  Future<AuthUser?> signUp({
+  Future<User?> signUp({
     required String email,
     required String password,
     required String name,
@@ -52,7 +52,7 @@ class SupabaseService {
   }
 
   // Sign in existing user
-  Future<AuthUser?> signIn({
+  Future<User?> signIn({
     required String email,
     required String password,
   }) async {
@@ -91,7 +91,7 @@ class SupabaseService {
   }
 
   // Get current user
-  AuthUser? getCurrentUser() {
+  User? getCurrentUser() {
     return client.auth.currentUser;
   }
 

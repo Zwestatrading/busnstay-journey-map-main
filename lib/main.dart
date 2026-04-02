@@ -266,7 +266,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       final email = _emailController.text.isNotEmpty ? _emailController.text : 'user@busnstay.com';
-                      context.read<AppState>().login(email, '123', _selectedRole);
+                      context.read<AppState>().demoLogin(email, _selectedRole);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF3B82F6),

@@ -105,7 +105,7 @@ class DatabaseService {
     final db = await database;
     await db.insert('transactions', {
       'id': transaction.id,
-      'userId': transaction.userId,
+      'userId': 'local',
       'type': transaction.type.toString().split('.').last,
       'amount': transaction.amount,
       'method': transaction.method.toString().split('.').last,
@@ -129,12 +129,11 @@ class DatabaseService {
     return maps
         .map((map) => WalletTransaction(
               id: map['id'] as String,
-              userId: map['userId'] as String,
               type: _parseTransactionType(map['type'] as String),
               amount: map['amount'] as double,
               method: _parsePaymentMethod(map['method'] as String),
               status: _parseTransactionStatus(map['status'] as String),
-              description: map['description'] as String?,
+              description: (map['description'] as String?) ?? '',
               date: DateTime.parse(map['date'] as String),
               reference: map['reference'] as String?,
             ))
@@ -218,14 +217,14 @@ class DatabaseService {
   TransactionType _parseTransactionType(String type) {
     return TransactionType.values.firstWhere(
       (e) => e.toString().split('.').last == type,
-      orElse: () => TransactionType.deposit,
+      orElse: () => TransactionType.credit,
     );
   }
 
   PaymentMethod _parsePaymentMethod(String method) {
     return PaymentMethod.values.firstWhere(
       (e) => e.toString().split('.').last == method,
-      orElse: () => PaymentMethod.mobileMoneyMTN,
+      orElse: () => PaymentMethod.mobileMoney,
     );
   }
 

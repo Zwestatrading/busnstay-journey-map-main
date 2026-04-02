@@ -196,7 +196,6 @@ class AppState extends ChangeNotifier {
   Future<void> addFunds(double amount, PaymentMethod method) async {
     final tx = WalletTransaction(
       id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
-      userId: _user?.id ?? 'guest',
       amount: amount,
       type: TransactionType.credit,
       method: method,
@@ -253,7 +252,6 @@ class AppState extends ChangeNotifier {
 
     final tx = WalletTransaction(
       id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
-      userId: _user?.id ?? 'guest',
       amount: amount,
       type: TransactionType.debit,
       method: PaymentMethod.wallet,
@@ -280,10 +278,9 @@ class AppState extends ChangeNotifier {
 
     final tx = WalletTransaction(
       id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
-      userId: _user?.id ?? 'guest',
       amount: amount,
       type: TransactionType.debit,
-      method: PaymentMethod.mobileMoneyMTN,
+      method: PaymentMethod.mobileMoney,
       status: TransactionStatus.processing,
       description: 'Withdrawal to mobile money',
       date: DateTime.now(),
@@ -306,7 +303,7 @@ class AppState extends ChangeNotifier {
   Future<bool> redeemReward(String rewardId) async {
     final reward = _loyalty.availableRewards.firstWhere(
       (r) => r.id == rewardId,
-      orElse: () => LoyaltyReward(id: '', title: '', pointsCost: 0),
+      orElse: () => LoyaltyReward(id: '', title: '', description: '', pointsCost: 0, category: ''),
     );
 
     if (reward.id.isEmpty || _loyalty.currentPoints < reward.pointsCost) {
@@ -323,6 +320,7 @@ class AppState extends ChangeNotifier {
           return LoyaltyReward(
             id: r.id,
             title: r.title,
+            description: r.description,
             pointsCost: r.pointsCost,
             category: r.category,
             isRedeemed: true,
@@ -442,10 +440,10 @@ class AppState extends ChangeNotifier {
     switch (method.toLowerCase()) {
       case 'mobile_money_mtn':
       case 'mtn':
-        return PaymentMethod.mobileMoneyMTN;
+        return PaymentMethod.mobileMoney;
       case 'mobile_money_airtel':
       case 'airtel':
-        return PaymentMethod.mobileMoneyAirtel;
+        return PaymentMethod.mobileMoney;
       case 'card':
         return PaymentMethod.card;
       case 'bank':
@@ -453,7 +451,7 @@ class AppState extends ChangeNotifier {
       case 'ussd':
         return PaymentMethod.ussd;
       default:
-        return PaymentMethod.mobileMoneyMTN;
+        return PaymentMethod.mobileMoney;
     }
   }
 
@@ -475,17 +473,15 @@ class AppState extends ChangeNotifier {
     return [
       WalletTransaction(
         id: 'tx_001',
-        userId: 'user_demo',
         amount: 500.0,
         type: TransactionType.credit,
-        method: PaymentMethod.mobileMoneyMTN,
+        method: PaymentMethod.mobileMoney,
         status: TransactionStatus.completed,
         description: 'Added funds via MTN',
         date: DateTime.now().subtract(const Duration(days: 2)),
       ),
       WalletTransaction(
         id: 'tx_002',
-        userId: 'user_demo',
         amount: 150.0,
         type: TransactionType.debit,
         method: PaymentMethod.wallet,
@@ -501,18 +497,21 @@ class AppState extends ChangeNotifier {
       LoyaltyReward(
         id: 'reward_001',
         title: 'Free Bus Ride',
+        description: 'Redeem for one free bus journey',
         pointsCost: 500,
         category: 'Travel',
       ),
       LoyaltyReward(
         id: 'reward_002',
         title: '50% Hotel Discount',
+        description: 'Get 50% off your next hotel booking',
         pointsCost: 1000,
         category: 'Accommodation',
       ),
       LoyaltyReward(
         id: 'reward_003',
         title: 'Free Meal',
+        description: 'Enjoy a complimentary meal at partner restaurants',
         pointsCost: 300,
         category: 'Food',
       ),
@@ -597,10 +596,39 @@ class AppState extends ChangeNotifier {
         distance: 8.5,
         fee: 12.0,
         customerName: 'Bwalya Mvula',
-        phone: '+260 97 123 4567',
+        customerPhone: '+260 97 123 4567',
         status: DeliveryStatus.available,
         createdAt: DateTime.now(),
         itemDescription: 'Food order - 2 items',
+      ),
+    ];
+  }
+
+  List<MenuItem> getDemoMenuItems() {
+    return [
+      MenuItem(
+        id: 'menu_001',
+        name: 'Nshima & Chicken',
+        category: 'Main',
+        price: 65.0,
+        description: 'Traditional Zambian nshima with grilled chicken',
+        prepTimeMinutes: 20,
+      ),
+      MenuItem(
+        id: 'menu_002',
+        name: 'Ifisashi',
+        category: 'Main',
+        price: 45.0,
+        description: 'Vegetables cooked in peanut sauce',
+        prepTimeMinutes: 15,
+      ),
+      MenuItem(
+        id: 'menu_003',
+        name: 'Freshly Squeezed Juice',
+        category: 'Drinks',
+        price: 20.0,
+        description: 'Orange, mango or passion fruit',
+        prepTimeMinutes: 5,
       ),
     ];
   }
