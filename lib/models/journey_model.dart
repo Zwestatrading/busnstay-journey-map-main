@@ -1,5 +1,6 @@
 import 'package:geolocator/geolocator.dart';
 import 'dart:math' as Math;
+import 'package:collection/collection.dart';
 
 /// Town status in a journey
 enum TownStatus {
@@ -183,8 +184,8 @@ class BusJourney {
 
   /// Get the next upcoming town (not locked)
   JourneyTown? get nextTown => towns
-      .cast<JourneyTown?>()
-      .firstWhereOrNull((t) => t != null && t.status != TownStatus.locked);
+      .where((t) => t.status != TownStatus.locked)
+      .firstOrNull;
 
   /// Get all towns still open for orders
   List<JourneyTown> get openTowns => towns
@@ -271,9 +272,9 @@ class BusJourney {
 
   /// Mark a town as locked (bus passed)
   void lockTown(String townId) {
-    final town = towns.firstWhereOrNull(
-      (t) => t.townId == townId,
-    );
+    final town = towns
+        .where((t) => t.townId == townId)
+        .firstOrNull;
     town?.lockTown();
   }
 

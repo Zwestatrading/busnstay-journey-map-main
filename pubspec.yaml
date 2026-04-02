@@ -49,6 +49,9 @@ dependencies:
   # HTTP client for external APIs
   http: ^1.1.0
   
+  # Collection utilities
+  collection: ^1.18.0
+  
   # Offline database
   sqflite: ^2.2.0
   path_provider: ^2.0.0

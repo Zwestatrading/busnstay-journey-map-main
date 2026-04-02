@@ -6,6 +6,7 @@ import 'models/wallet_model.dart';
 import 'models/order_model.dart';
 import 'models/booking_model.dart';
 import 'models/journey_model.dart';
+import 'models/delivery_model.dart';
 import 'services/app_state.dart';
 import 'services/database_service.dart';
 import 'services/order_management_service.dart';
