@@ -79,7 +79,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         title: const Text('Reset Password'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: onBackToLogin,
+          onPressed: widget.onBackToLogin,
         ),
       ),
       body: SingleChildScrollView(
@@ -208,7 +208,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: onBackToLogin,
+                  onPressed: widget.onBackToLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade600,
                     shape: RoundedRectangleBorder(
@@ -230,7 +230,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             const SizedBox(height: 16),
             Center(
               child: TextButton(
-                onPressed: onBackToLogin,
+                onPressed: widget.onBackToLogin,
                 child: Text(
                   'Back to Login',
                   style: TextStyle(color: Colors.blue.shade600),
