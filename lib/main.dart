@@ -49,6 +49,15 @@ class AppServices {
       );
       print('✅ [INIT] Notification service initialized');
 
+      // ============= WATI CONFIGURATION ✅ =============
+      // WhatsApp notifications enabled via Wati
+      RestaurantNotificationService.initializeWati(
+        apiKey: 'wati_e4b6420d-a195-4dcb-afb8-e7a614387c50.vByJfCujf5OGX92okV8tBLLI7m71EvyNVip_AqDe7WRyCyYfqLnuM-iNf0BTWqpE44VAGryNw9lVXFoanhcQV0v217H5uydTBiRwNIDMueyqFwPS-k_G8Yh5ajv-uEsm',
+        phoneNumberId: '27696469651', // +27696469651
+      );
+      
+      print('📱 [WATI] Status: ${RestaurantNotificationService.isWatiConfigured() ? 'Configured ✅' : 'Not configured ⚠️'}');
+
       // Initialize town service
       townService = TownOrderManagementService(
         supabaseClient: supabaseClient,

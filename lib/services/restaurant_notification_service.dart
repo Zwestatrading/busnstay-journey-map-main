@@ -2,17 +2,47 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/order_model.dart';
 import '../models/journey_model.dart';
 import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 /// Service for managing restaurant notifications
-/// Handles in-app, WhatsApp, SMS, and email notifications
+/// Handles in-app, WhatsApp (via Wati), SMS, and email notifications
 class RestaurantNotificationService {
   final SupabaseClient supabaseClient;
+  
+  // ============= WATI CONFIGURATION =============
+  // Get your API key from https://www.wati.io/
+  // Set these environment variables or update here:
+  static const String WATI_API_BASE_URL = 'https://api.wati.io/api/v1';
+  
+  // TODO: Get these from environment or secure storage
+  // For testing, you can hardcode or use a config file
+  static String watiApiKey = ''; // Set your Wati API key here
+  static String watiPhoneNumberId = ''; // Your WhatsApp Business Account phone number ID
   
   // Notification queues
   final List<RestaurantNotification> _pendingNotifications = [];
   StreamSubscription? _notificationStreamSubscription;
   
   RestaurantNotificationService({required this.supabaseClient});
+
+  /// ============= WATI INITIALIZATION =============
+  
+  /// Initialize Wati with API credentials
+  /// Call this from AppServices.initialize() before using notifications
+  static void initializeWati({
+    required String apiKey,
+    required String phoneNumberId,
+  }) {
+    watiApiKey = apiKey;
+    watiPhoneNumberId = phoneNumberId;
+    print('✅ [WATI] Initialized with phone number ID: $phoneNumberId');
+  }
+
+  /// Check if Wati is properly configured
+  static bool isWatiConfigured() {
+    return watiApiKey.isNotEmpty && watiPhoneNumberId.isNotEmpty;
+  }
 
   /// ============= INSTANT ORDER NOTIFICATION =============
   
@@ -265,48 +295,91 @@ Sent from *BusNStay* 🍽️🚌''';
 
   /// ============= EXTERNAL API CALLS =============
 
-  /// Call WhatsApp Business API (implement with your provider)
+  /// Call WhatsApp via Wati API
+  /// Wati is a WhatsApp Business API platform (supports SMS + WhatsApp)
+  /// Sign up at https://www.wati.io/ to get API key
   Future<void> _sendViaWhatsAppAPI(String phoneNumber, String message) async {
-    // Implement with Twilio, Wati, MessageBird, or your WhatsApp provider
-    // Example using Twilio:
-    /*
-    final response = await http.post(
-      Uri.parse('https://api.twilio.com/2010-04-01/Accounts/YOUR_ACCOUNT_SID/Messages.json'),
-      headers: {
-        'Authorization': 'Basic ${base64Encode(utf8.encode('YOUR_ACCOUNT_SID:YOUR_AUTH_TOKEN'))}',
-      },
-      body: {
-        'From': 'whatsapp:+1234567890',
-        'To': 'whatsapp:+$phoneNumber',
-        'Body': message,
-      },
-    );
-    */
-    
-    // Mock implementation
-    await Future.delayed(Duration(milliseconds: 500));
+    try {
+      // Check if Wati is configured
+      if (!isWatiConfigured()) {
+        print('⚠️ [WATI] Not configured. Skipping WhatsApp notification.');
+        print('   To enable: Call RestaurantNotificationService.initializeWati()');
+        return;
+      }
+
+      // Normalize phone number (remove spaces, dashes, etc)
+      final cleanNumber = phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+      final formattedNumber = cleanNumber.startsWith('+') ? cleanNumber : '+$cleanNumber';
+
+      print('💬 [WATI] Sending WhatsApp to $formattedNumber...');
+
+      // Call Wati API
+      final response = await http.post(
+        Uri.parse('$WATI_API_BASE_URL/sendSessionMessage/$watiPhoneNumberId'),
+        headers: {
+          'Authorization': 'Bearer $watiApiKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'phoneNumber': formattedNumber,
+          'message': message,
+        }),
+      ).timeout(
+        Duration(seconds: 10),
+        onTimeout: () => throw Exception('Wati API timeout'),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        print('✅ [WATI] WhatsApp sent successfully. Message ID: ${data['messageId'] ?? 'N/A'}');
+      } else {
+        print('❌ [WATI] API error ${response.statusCode}: ${response.body}');
+        throw Exception('Wati API error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ [WATI] Failed to send WhatsApp: $e');
+      // Don't throw - let SMS serve as fallback
+    }
   }
 
-  /// Call SMS API (implement with your provider)
+  /// Call SMS API (Wati also supports SMS)
+  /// Or use a separate SMS provider like Twilio
   Future<void> _sendViaSMSAPI(String phoneNumber, String message) async {
-    // Implement with Twilio, Vonage, or your SMS provider
-    // Example using Twilio:
-    /*
-    final response = await http.post(
-      Uri.parse('https://api.twilio.com/2010-04-01/Accounts/YOUR_ACCOUNT_SID/Messages.json'),
-      headers: {
-        'Authorization': 'Basic ${base64Encode(utf8.encode('YOUR_ACCOUNT_SID:YOUR_AUTH_TOKEN'))}',
-      },
-      body: {
-        'From': '+1234567890',
-        'To': '+$phoneNumber',
-        'Body': message,
-      },
-    );
-    */
-    
-    // Mock implementation
-    await Future.delayed(Duration(milliseconds: 500));
+    try {
+      // Option 1: Use Wati for SMS (if configured)
+      if (isWatiConfigured()) {
+        print('📱 [SMS via WATI] Sending SMS to $phoneNumber...');
+        
+        final cleanNumber = phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+        final formattedNumber = cleanNumber.startsWith('+') ? cleanNumber : '+$cleanNumber';
+
+        final response = await http.post(
+          Uri.parse('$WATI_API_BASE_URL/sendMessage'),
+          headers: {
+            'Authorization': 'Bearer $watiApiKey',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'phoneNumber': formattedNumber,
+            'message': message,
+            'messageType': 'sms', // Wati supports SMS too
+          }),
+        ).timeout(Duration(seconds: 10));
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          print('✅ [SMS via WATI] SMS sent to $phoneNumber');
+        } else {
+          print('⚠️ [SMS via WATI] Failed: ${response.statusCode}');
+        }
+      } else {
+        // Mock SMS (no provider configured)
+        print('📧 [SMS] Mock sending to $phoneNumber (configure SMS provider to enable)');
+        await Future.delayed(Duration(milliseconds: 300));
+      }
+    } catch (e) {
+      print('⚠️ [SMS] Failed: $e');
+      // Don't throw - SMS is optional
+    }
   }
 
   /// ============= UTILITY HELPERS =============
