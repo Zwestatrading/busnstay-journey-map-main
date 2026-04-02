@@ -13,6 +13,9 @@ import 'services/database_service.dart';
 import 'services/order_management_service.dart';
 import 'services/restaurant_notification_service.dart';
 import 'services/town_order_management_service.dart';
+import 'services/passenger_service.dart';
+import 'services/restaurant_service.dart';
+import 'services/bus_operator_service.dart';
 import 'widgets/payment_modal.dart';
 import 'widgets/status_badge.dart';
 import 'pages/forgot_password_page.dart';
@@ -23,6 +26,9 @@ class AppServices {
   static late RestaurantNotificationService notificationService;
   static late TownOrderManagementService townService;
   static late DatabaseService databaseService;
+  static late PassengerService passengerService;
+  static late RestaurantService restaurantService;
+  static late BusOperatorService busOperatorService;
 
   static bool _initialized = false;
 
@@ -74,6 +80,22 @@ class AppServices {
         townService: townService,
       );
       print('✅ [INIT] Order management service initialized');
+
+      // ============= PHASE 1: NEW SERVICES ✅ =============
+      // Initialize Passenger Service (bookings + tracking)
+      passengerService = PassengerService(supabase: supabaseClient);
+      print('✅ [INIT] Passenger service initialized');
+
+      // Initialize Restaurant Service (orders + WATI notifications)
+      restaurantService = RestaurantService(
+        supabase: supabaseClient,
+        notificationService: notificationService,
+      );
+      print('✅ [INIT] Restaurant service initialized');
+
+      // Initialize Bus Operator Service (journeys + seats)
+      busOperatorService = BusOperatorService(supabase: supabaseClient);
+      await busOperatorService.testConnection();
 
       _initialized = true;
       print('✅ [INIT] All services initialized successfully!');
