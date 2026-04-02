@@ -390,106 +390,230 @@ class _AuthScreenState extends State<AuthScreen> {
     }
 
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 24),
-                Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.asset('assets/images/logo.jpg', width: 120, height: 120, fit: BoxFit.cover),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFFAFAFA),
+              Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white,
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 24),
+                  Center(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF3B82F6).withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.asset('assets/images/logo.jpg', width: 120, height: 120, fit: BoxFit.cover),
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text('BusNStay', style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF3B82F6))),
-                const SizedBox(height: 8),
-                Text(_isLogin ? 'Welcome Back' : 'Create Account', style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 32),
-                Text('Select your role:', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 12),
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  children: [
-                    _buildRoleCard('Passenger', Icons.person, UserRole.passenger),
-                    _buildRoleCard('Bus Operator', Icons.directions_bus, UserRole.busOperator),
-                    _buildRoleCard('Restaurant', Icons.restaurant, UserRole.restaurantAdmin),
-                    _buildRoleCard('Delivery Agent', Icons.local_shipping, UserRole.deliveryAgent),
-                    _buildRoleCard('Hotel Manager', Icons.hotel, UserRole.hotelManager),
-                    _buildRoleCard('Admin', Icons.admin_panel_settings, UserRole.platformAdmin),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    prefixIcon: const Icon(Icons.email),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: Column(
+                      children: [
+                        Text('BusNStay', style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF3B82F6),
+                          letterSpacing: -0.5,
+                        )),
+                        const SizedBox(height: 12),
+                        Text(
+                          _isLogin ? 'Welcome Back' : 'Join Us',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _isLogin ? 'Select your role to continue' : 'Choose your role to get started',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    prefixIcon: const Icon(Icons.lock),
+                  const SizedBox(height: 32),
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.05,
+                    children: [
+                      _buildRoleCard('Passenger', Icons.person, UserRole.passenger),
+                      _buildRoleCard('Bus Operator', Icons.directions_bus, UserRole.busOperator),
+                      _buildRoleCard('Restaurant', Icons.restaurant, UserRole.restaurantAdmin),
+                      _buildRoleCard('Delivery', Icons.local_shipping, UserRole.deliveryAgent),
+                      _buildRoleCard('Hotel', Icons.hotel, UserRole.hotelManager),
+                      _buildRoleCard('Admin', Icons.admin_panel_settings, UserRole.platformAdmin),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 8),
-                // Forgot Password Link
-                if (_isLogin)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () => setState(() => _showForgotPassword = true),
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          color: Color(0xFF3B82F6),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                  const SizedBox(height: 32),
+                  Text('Credentials', style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: Colors.grey,
+                    letterSpacing: 0.5,
+                    fontWeight: FontWeight.w600,
+                  )),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF3B82F6).withOpacity(0.3),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: TextField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email Address',
+                        labelStyle: TextStyle(
+                          color: Colors.grey.withOpacity(0.7),
+                          fontSize: 13,
+                          letterSpacing: 0.3,
+                        ),
+                        border: InputBorder.none,
+                        prefixIcon: Icon(Icons.email, color: const Color(0xFF3B82F6).withOpacity(0.6), size: 20),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF3B82F6).withOpacity(0.3),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        labelStyle: TextStyle(
+                          color: Colors.grey.withOpacity(0.7),
+                          fontSize: 13,
+                          letterSpacing: 0.3,
+                        ),
+                        border: InputBorder.none,
+                        prefixIcon: Icon(Icons.lock, color: const Color(0xFF3B82F6).withOpacity(0.6), size: 20),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (_isLogin)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => setState(() => _showForgotPassword = true),
+                        child: Text(
+                          'Forgot Password?',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: const Color(0xFF3B82F6),
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF3B82F6).withOpacity(0.4),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          final email = _emailController.text.isNotEmpty ? _emailController.text : 'user@busnstay.com';
+                          context.read<AppState>().demoLogin(email, _selectedRole);
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          child: Center(
+                            child: Text(
+                              _isLogin ? 'Login' : 'Register',
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      final email = _emailController.text.isNotEmpty ? _emailController.text : 'user@busnstay.com';
-                      context.read<AppState>().demoLogin(email, _selectedRole);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B82F6),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _isLogin ? "Don't have an account? " : 'Already have an account? ',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => setState(() => _isLogin = !_isLogin),
+                          child: Text(
+                            _isLogin ? 'Register' : 'Login',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF3B82F6),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Text(_isLogin ? 'Login' : 'Register', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(_isLogin ? "Don't have an account? " : 'Already have an account? '),
-                    GestureDetector(
-                      onTap: () => setState(() => _isLogin = !_isLogin),
-                      child: Text(_isLogin ? 'Register' : 'Login', style: const TextStyle(color: Color(0xFF3B82F6), fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-              ],
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
           ),
         ),
@@ -499,21 +623,97 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Widget _buildRoleCard(String label, IconData icon, UserRole role) {
     final isSelected = _selectedRole == role;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedRole = role),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: isSelected ? const Color(0xFF3B82F6).withOpacity(0.2) : Colors.grey.withOpacity(0.1),
-          border: Border.all(color: isSelected ? const Color(0xFF3B82F6) : Colors.grey, width: isSelected ? 2 : 1),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 32, color: const Color(0xFF3B82F6)),
-            const SizedBox(height: 8),
-            Text(label, textAlign: TextAlign.center, style: Theme.of(context).textTheme.labelSmall),
-          ],
+    return MouseRegion(
+      cursor: SystemMouseCursor.click,
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedRole = role),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: isSelected
+                ? const LinearGradient(
+                    colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : LinearGradient(
+                    colors: [
+                      Colors.grey.withOpacity(0.06),
+                      Colors.grey.withOpacity(0.02),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFF3B82F6)
+                  : Colors.grey.withOpacity(0.2),
+              width: isSelected ? 2 : 1.5,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF3B82F6).withOpacity(0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedScale(
+                scale: isSelected ? 1.15 : 1.0,
+                duration: const Duration(milliseconds: 300),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: isSelected
+                        ? LinearGradient(
+                            colors: [
+                              Colors.white.withOpacity(0.3),
+                              Colors.white.withOpacity(0.1),
+                            ],
+                          )
+                        : LinearGradient(
+                            colors: [
+                              const Color(0xFF3B82F6).withOpacity(0.15),
+                              const Color(0xFF3B82F6).withOpacity(0.05),
+                            ],
+                          ),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 28,
+                    color: isSelected
+                        ? Colors.white
+                        : const Color(0xFF3B82F6).withOpacity(0.7),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: isSelected ? Colors.white : Colors.grey.shade700,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  fontSize: 11,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
