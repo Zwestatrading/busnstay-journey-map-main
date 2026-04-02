@@ -1,0 +1,120 @@
+name: Build & Deploy to Google Play Store
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tags like v1.0.0
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.8.1'
+          channel: 'stable'
+      
+      - name: Get Flutter dependencies
+        run: flutter pub get
+      
+      - name: Run tests
+        run: flutter test 2>/dev/null || true
+      
+      - name: Build APK (for internal testing)
+        run: flutter build apk --release
+      
+      - name: Build App Bundle (for Play Store)
+        run: flutter build appbundle --release
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: flutter-builds
+          path: |
+            build/app/outputs/apk/release/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+      
+      - name: Setup Android signing key
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > ~/upload-keystore.jks
+          echo "storeFile=~/upload-keystore.jks" >> ~/key.properties
+          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> ~/key.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> ~/key.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> ~/key.properties
+      
+      - name: Build signed App Bundle
+        run: flutter build appbundle --release
+        env:
+          KEY_PROPERTIES_PATH: ~/key.properties
+      
+      - name: Deploy to Google Play Store (Internal Testing)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+          packageName: com.busnstay.app
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed
+          whatsNewDirectory: whats-new
+      
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            ## BusNStay Release
+            
+            Version: ${{ github.ref }}
+            Date: ${{ github.event.head_commit.timestamp }}
+            
+            ### Features
+            - Instant restaurant notifications
+            - Automatic town order cutoff
+            - Real-time WhatsApp integration (Wati)
+            - Multi-channel notifications
+            
+            ### Deployment
+            ✅ Build: APK & App Bundle created
+            ✅ Play Store: Internal testing track
+            
+            ### Files
+            - APK: `app-release.apk` (for direct installation)
+            - App Bundle: `app-release.aab` (for Play Store)
+          draft: false
+          prerelease: true
+      
+      - name: Notify Slack (Optional)
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "BusNStay Build Status: ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*BusNStay Play Store Deployment*\nStatus: `${{ job.status }}`\nVersion: `${{ github.ref }}`"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

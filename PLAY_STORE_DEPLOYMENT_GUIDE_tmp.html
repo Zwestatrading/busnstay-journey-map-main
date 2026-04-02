@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>PLAY_STORE_DEPLOYMENT_GUIDE.md</title>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+    
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+html,footer,header{
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Custom MD PDF CSS
+ */
+html,footer,header{
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+
+ }
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+<link rel="stylesheet" href="file:///r%3A/2.Travail/1.Enseignement/Cours/_1.Outils/2.Developpement/1.SCSS/main.css" type="text/css"><link rel="stylesheet" href="file:///d%3A/rdaros/Cours/_1.Outils/2.Developpement/1.SCSS/main.css" type="text/css">
+</head>
+
+<body>
+    <h1 id="google-play-store-deployment-setup-guide">Google Play Store Deployment Setup Guide</h1>
+<h2 id="%F0%9F%8E%AF-overview">🎯 Overview</h2>
+<p>Your BusNStay app can now be automatically built and deployed to Google Play Store using GitHub Actions. This guide walks you through the setup process.</p>
+<h2 id="%F0%9F%93%8B-prerequisites">📋 Prerequisites</h2>
+<ol>
+<li>✅ GitHub repository with Flutter code</li>
+<li>⏳ Google Play Developer Account ($25 one-time fee)</li>
+<li>⏳ Android App Signing Key (keystore)</li>
+<li>⏳ Play Store Service Account credentials</li>
+</ol>
+<h2 id="%F0%9F%94%91-step-1-create-android-signing-key-keystore">🔑 Step 1: Create Android Signing Key (Keystore)</h2>
+<p>Your Android app needs to be signed with a certificate. Generate it locally:</p>
+<h3 id="on-windows-powershell">On Windows (PowerShell):</h3>
+<pre class="hljs"><code><div>cd ~ <span class="hljs-comment"># or your desired directory</span>
+keytool <span class="hljs-literal">-genkey</span> <span class="hljs-literal">-v</span> <span class="hljs-literal">-keystore</span> busnstay<span class="hljs-literal">-key</span>.jks <span class="hljs-literal">-keyalg</span> RSA <span class="hljs-literal">-keysize</span> <span class="hljs-number">2048</span> <span class="hljs-literal">-validity</span> <span class="hljs-number">10000</span> <span class="hljs-literal">-alias</span> busnstay_key
+</div></code></pre>
+<h3 id="on-maclinux">On Mac/Linux:</h3>
+<pre class="hljs"><code><div>keytool -genkey -v -keystore ~/busnstay-key.jks -keyalg RSA -keysize 2048 -validity 10000 -<span class="hljs-built_in">alias</span> busnstay_key
+</div></code></pre>
+<p><strong>When prompted, enter:</strong></p>
+<pre class="hljs"><code><div>Keystore password: [YOUR_STRONG_PASSWORD]
+First and last name: Zwesta Empire Records
+Organizational unit: BusNStay
+Organization: Zwesta
+City/Locality: Lusaka
+State/Province: Lusaka
+Country code: ZM
+</div></code></pre>
+<p><strong>Save these values:</strong></p>
+<ul>
+<li>Keystore file: <code>busnstay-key.jks</code></li>
+<li>Keystore password: <code>[YOUR_STRONG_PASSWORD]</code></li>
+<li>Key alias: <code>busnstay_key</code></li>
+<li>Key password: <code>[YOUR_STRONG_PASSWORD]</code> (usually same as keystore)</li>
+</ul>
+<h2 id="%F0%9F%94%90-step-2-encode-keystore-for-github-secrets">🔐 Step 2: Encode Keystore for GitHub Secrets</h2>
+<p>Convert your keystore to Base64 for storage in GitHub:</p>
+<h3 id="windows-powershell">Windows (PowerShell):</h3>
+<pre class="hljs"><code><div><span class="hljs-variable">$keystore</span> = [<span class="hljs-type">Convert</span>]::ToBase64String([<span class="hljs-type">IO.File</span>]::ReadAllBytes(<span class="hljs-string">"<span class="hljs-variable">$HOME</span>\busnstay-key.jks"</span>))
+<span class="hljs-variable">$keystore</span> | <span class="hljs-built_in">Set-Clipboard</span>
+<span class="hljs-comment"># Now paste in GitHub Secrets</span>
+</div></code></pre>
+<h3 id="maclinux">Mac/Linux:</h3>
+<pre class="hljs"><code><div>cat ~/busnstay-key.jks | base64 | pbcopy  <span class="hljs-comment"># Mac</span>
+cat ~/busnstay-key.jks | base64 | xclip -selection clipboard  <span class="hljs-comment"># Linux</span>
+</div></code></pre>
+<h2 id="%F0%9F%8E%AE-step-3-google-play-console-setup">🎮 Step 3: Google Play Console Setup</h2>
+<h3 id="31-create-play-store-account">3.1 Create Play Store Account</h3>
+<ol>
+<li>Go to https://play.google.com/console/</li>
+<li>Sign up with your Google account</li>
+<li>Pay $25 one-time developer fee</li>
+<li>Accept all agreements</li>
+</ol>
+<h3 id="32-create-app-project">3.2 Create App Project</h3>
+<ol>
+<li><strong>Create app</strong> → Name: <code>BusNStay</code></li>
+<li><strong>App type</strong>: App</li>
+<li><strong>Category</strong>: Food &amp; Drink</li>
+<li><strong>Default language</strong>: English</li>
+</ol>
+<h3 id="33-create-service-account">3.3 Create Service Account</h3>
+<ol>
+<li>Go to <strong>Setup</strong> → <strong>API Access</strong></li>
+<li>Create a new service account on Google Cloud Console:
+<ul>
+<li>Project: Your Play Console project</li>
+<li>Service account name: <code>busnstay-github</code></li>
+<li>Role: <code>Editor</code></li>
+<li>Create JSON key</li>
+</ul>
+</li>
+<li>Download the JSON file (keep safe!)</li>
+<li>Grant permission in Play Console:
+<ul>
+<li>Go back to Play Console</li>
+<li>Link the service account</li>
+<li>Grant <code>Release to production</code> permission</li>
+</ul>
+</li>
+</ol>
+<h2 id="%F0%9F%94%92-step-4-github-secrets-configuration">🔒 Step 4: GitHub Secrets Configuration</h2>
+<p>Add these secrets to your GitHub repository:</p>
+<ol>
+<li>Go to <strong>Settings</strong> → <strong>Secrets and variables</strong> → <strong>Actions</strong></li>
+<li>Click <strong>New repository secret</strong> for each:</li>
+</ol>
+<h3 id="required-secrets">Required Secrets:</h3>
+<p><strong>1. ANDROID_KEYSTORE_BASE64</strong></p>
+<ul>
+<li>Value: Your Base64-encoded keystore from Step 2</li>
+<li>Description: &quot;Base64 encoded Android keystore file&quot;</li>
+</ul>
+<p><strong>2. ANDROID_KEYSTORE_PASSWORD</strong></p>
+<ul>
+<li>Value: Password you created for the keystore</li>
+<li>Description: &quot;Password for Android keystore&quot;</li>
+</ul>
+<p><strong>3. ANDROID_KEY_PASSWORD</strong></p>
+<ul>
+<li>Value: Password for the key inside keystore (usually same)</li>
+<li>Description: &quot;Password for Android key&quot;</li>
+</ul>
+<p><strong>4. ANDROID_KEY_ALIAS</strong></p>
+<ul>
+<li>Value: <code>busnstay_key</code></li>
+<li>Description: &quot;Alias of the key in keystore&quot;</li>
+</ul>
+<p><strong>5. PLAY_STORE_SERVICE_ACCOUNT_JSON</strong></p>
+<ul>
+<li>Value: Entire contents of the JSON file from Step 3.3 (raw JSON)</li>
+<li>Description: &quot;Service account JSON for Play Store deployment&quot;</li>
+</ul>
+<h3 id="optional-secrets">Optional Secrets:</h3>
+<p><strong>SLACK_WEBHOOK_URL</strong> (optional)</p>
+<ul>
+<li>For Slack notifications on deployment status</li>
+<li>Get from your Slack workspace → Apps → Incoming Webhooks</li>
+</ul>
+<h2 id="%F0%9F%93%9D-step-5-update-pubspecyaml">📝 Step 5: Update pubspec.yaml</h2>
+<p>Ensure your app identifier matches Google Play Store:</p>
+<pre class="hljs"><code><div><span class="hljs-attr">android:</span>
+  <span class="hljs-attr">package:</span> <span class="hljs-string">com.busnstay.app</span>
+</div></code></pre>
+<p>Update version in <code>pubspec.yaml</code>:</p>
+<pre class="hljs"><code><div><span class="hljs-attr">version:</span> <span class="hljs-number">1.0</span><span class="hljs-number">.0</span><span class="hljs-string">+1</span>
+<span class="hljs-comment"># Format: version+buildNumber</span>
+</div></code></pre>
+<h2 id="%F0%9F%9A%80-step-6-test-the-workflow">🚀 Step 6: Test the Workflow</h2>
+<h3 id="trigger-deployment">Trigger Deployment:</h3>
+<ol>
+<li>
+<p><strong>Create a Git tag</strong> on main branch:</p>
+<pre class="hljs"><code><div>git tag v1.0.0
+git push origin v1.0.0
+</div></code></pre>
+</li>
+<li>
+<p><strong>Watch GitHub Actions</strong>:</p>
+<ul>
+<li>Go to Actions tab in your repo</li>
+<li>&quot;Build &amp; Deploy to Google Play Store&quot; workflow starts</li>
+<li>It will:
+<ul>
+<li>✅ Build Flutter app</li>
+<li>✅ Create APK &amp; App Bundle</li>
+<li>✅ Sign with your keystore</li>
+<li>✅ Upload to Play Store (Internal Testing track)</li>
+<li>✅ Create GitHub Release</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Manual Trigger</strong> (optional):</p>
+<ul>
+<li>Go to Actions</li>
+<li>Select &quot;Build &amp; Deploy to Google Play Store&quot;</li>
+<li>Click &quot;Run workflow&quot;</li>
+</ul>
+</li>
+</ol>
+<h2 id="%F0%9F%93%8A-deployment-tracks">📊 Deployment Tracks</h2>
+<p>The workflow deploys to <strong>Internal Testing</strong> track first:</p>
+<table>
+<thead>
+<tr>
+<th>Track</th>
+<th>Visibility</th>
+<th>Users</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Internal</td>
+<td>Private</td>
+<td>Team only</td>
+<td>QA, internal testing</td>
+</tr>
+<tr>
+<td>Closed (Beta)</td>
+<td>Limited</td>
+<td>1,000 testers</td>
+<td>Beta testing</td>
+</tr>
+<tr>
+<td>Open Testing</td>
+<td>Limited</td>
+<td>Public</td>
+<td>Public beta</td>
+</tr>
+<tr>
+<td>Production</td>
+<td>Public</td>
+<td>Everyone</td>
+<td>Live release</td>
+</tr>
+</tbody>
+</table>
+<h3 id="to-promote-to-production">To Promote to Production:</h3>
+<ol>
+<li>Log into Play Console</li>
+<li>Go to <strong>Release</strong> → <strong>Internal testing</strong></li>
+<li>Click the build</li>
+<li><strong>Promote to Production</strong></li>
+<li>Review &amp; publish (takes 1-3 hours to go live)</li>
+</ol>
+<h2 id="%F0%9F%A7%AA-testing-the-build-locally">🧪 Testing the Build Locally</h2>
+<p>Before deploying to Play Store, test locally:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># Build APK (for testing on device)</span>
+flutter build apk --release
+
+<span class="hljs-comment"># Build App Bundle (for Play Store submission)</span>
+flutter build appbundle --release
+
+<span class="hljs-comment"># Install APK on connected device</span>
+flutter install build/app/outputs/apk/release/app-release.apk
+</div></code></pre>
+<h2 id="%F0%9F%93%B1-what-gets-built">📱 What Gets Built</h2>
+<p>The workflow creates:</p>
+<ol>
+<li>
+<p><strong>APK</strong> (<code>app-release.apk</code>)</p>
+<ul>
+<li>Direct Android installation file</li>
+<li>For manual testing or direct distribution</li>
+<li>Size: ~50-100MB</li>
+</ul>
+</li>
+<li>
+<p><strong>App Bundle</strong> (<code>app-release.aab</code>)</p>
+<ul>
+<li>Optimized for Play Store</li>
+<li>Smaller downloads (dynamic delivery)</li>
+<li>Size: ~30-50MB</li>
+</ul>
+</li>
+</ol>
+<h2 id="%E2%9C%85-workflow-steps-explained">✅ Workflow Steps Explained</h2>
+<ol>
+<li><strong>Checkout</strong> - Downloads your code</li>
+<li><strong>Setup Java</strong> - Installs Java 17 (required for Android)</li>
+<li><strong>Setup Flutter</strong> - Installs Flutter 3.8.1</li>
+<li><strong>Get dependencies</strong> - Runs <code>flutter pub get</code></li>
+<li><strong>Run tests</strong> - Executes unit tests (optional)</li>
+<li><strong>Build APK</strong> - Creates APK file</li>
+<li><strong>Build App Bundle</strong> - Creates store-ready bundle</li>
+<li><strong>Setup signing</strong> - Decodes your keystore and configures signing</li>
+<li><strong>Upload to Play Store</strong> - Deploys to Internal Testing track</li>
+<li><strong>Create Release</strong> - Creates GitHub Release with artifacts</li>
+<li><strong>Notify Slack</strong> - Sends status to Slack (if configured)</li>
+</ol>
+<h2 id="%F0%9F%90%9B-troubleshooting">🐛 Troubleshooting</h2>
+<h3 id="%22invalid-keystore%22">&quot;Invalid keystore&quot;</h3>
+<ul>
+<li>Verify Base64 encoding is correct</li>
+<li>Check keystore file is valid: <code>keytool -list -v -keystore ~/busnstay-key.jks</code></li>
+</ul>
+<h3 id="%22service-account-not-authorized%22">&quot;Service account not authorized&quot;</h3>
+<ul>
+<li>Verify service account has Play Console permissions</li>
+<li>Go to <strong>Setup</strong> → <strong>User and permissions</strong></li>
+<li>Add service account with <code>Release to production</code> role</li>
+</ul>
+<h3 id="%22build-failed-package-name-mismatch%22">&quot;Build failed: package name mismatch&quot;</h3>
+<ul>
+<li>Ensure <code>pubspec.yaml</code> has correct package: <code>com.busnstay.app</code></li>
+<li>Verify it matches Play Store app ID</li>
+</ul>
+<h3 id="%22workflow-didnt-trigger%22">&quot;Workflow didn't trigger&quot;</h3>
+<ul>
+<li>Check tag format: must be <code>v*</code> (e.g., <code>v1.0.0</code>)</li>
+<li>Verify workflow file is in <code>.github/workflows/play-store-deploy.yml</code></li>
+<li>Push tag to GitHub: <code>git push origin v1.0.0</code></li>
+</ul>
+<h2 id="%F0%9F%93%88-version-numbers">📈 Version Numbers</h2>
+<p>Format: <code>version: X.Y.Z+buildNumber</code></p>
+<p><strong>Increment strategy:</strong></p>
+<ul>
+<li><strong>Major</strong> (X): Breaking changes, big features</li>
+<li><strong>Minor</strong> (Y): New features, backwards compatible</li>
+<li><strong>Patch</strong> (Z): Bug fixes</li>
+<li><strong>Build</strong> (buildNumber): Auto-increment for Play Store</li>
+</ul>
+<p>Example progression:</p>
+<pre class="hljs"><code><div>1.0.0+1   -&gt; Initial release
+1.0.1+2   -&gt; Bug fix
+1.1.0+3   -&gt; New features
+2.0.0+4   -&gt; Major rewrite
+</div></code></pre>
+<h2 id="%E2%8F%B0-timeout-notes">⏰ Timeout Notes</h2>
+<p>Play Store builds can take 10-20 minutes. GitHub Actions has a default 360-minute timeout, so you're safe.</p>
+<h2 id="%F0%9F%8E%AF-next-steps-after-setup">🎯 Next Steps After Setup</h2>
+<ol>
+<li>✅ Create keystore and add to GitHub Secrets</li>
+<li>✅ Create Play Store Developer Account</li>
+<li>✅ Create Service Account and credentials</li>
+<li>✅ Add all 5 secrets to GitHub</li>
+<li>✅ Push a version tag: <code>git tag v1.0.0 &amp;&amp; git push origin v1.0.0</code></li>
+<li>✅ Watch workflow run in GitHub Actions</li>
+<li>✅ Verify build in Play Console</li>
+<li>✅ Promote to Production when ready</li>
+<li>✅ Monitor ratings and reviews</li>
+<li>✅ Update app for new features/fixes</li>
+</ol>
+<h2 id="%F0%9F%93%9E-support-resources">📞 Support Resources</h2>
+<ul>
+<li><strong>Flutter Build</strong>: https://docs.flutter.dev/deployment/android</li>
+<li><strong>Play Console</strong>: https://support.google.com/googleplay/android-developer/</li>
+<li><strong>GitHub Actions</strong>: https://docs.github.com/en/actions</li>
+<li><strong>Key Tool</strong>: https://docs.oracle.com/javase/8/docs/technotes/tools/windows/keytool.html</li>
+</ul>
+<h2 id="%F0%9F%92%A1-pro-tips">💡 Pro Tips</h2>
+<ol>
+<li><strong>Test on device first</strong> before committing and pushing tags</li>
+<li><strong>Use semantic versioning</strong> for clear version history</li>
+<li><strong>Keep keystore file offline</strong> (don't commit to git)</li>
+<li><strong>Rotate service account credentials</strong> annually</li>
+<li><strong>Monitor crash reports</strong> in Play Console</li>
+<li><strong>Use internal testing track</strong> for QA before promotion</li>
+<li><strong>Set up beta testers</strong> for feedback before production release</li>
+</ol>
+<hr>
+<p><strong>Status</strong>: ✅ Ready for Play Store deployment!</p>
+<p>Once you complete these steps, every time you create a version tag (e.g., <code>git tag v1.0.0</code>), your app will automatically build and deploy to Play Store Internal Testing track.</p>
+
+</body>
+
+</html>
