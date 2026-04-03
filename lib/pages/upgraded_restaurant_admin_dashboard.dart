@@ -1,9 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../services/app_state.dart';
 import '../main.dart';
 import '../services/menu_management_service.dart';
 import '../services/order_document_service.dart';
@@ -108,10 +111,10 @@ class _UpgradedRestaurantAdminDashboardState
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.read<AppState>().logout(),
         ),
         title: const Text('Restaurant Manager'),
-        backgroundColor: const Color(0xFFFD5E14),
+        backgroundColor: AppColors.accent,
         actions: [
           IconButton(
             icon: _isGeneratingDocuments
@@ -129,9 +132,7 @@ class _UpgradedRestaurantAdminDashboardState
           ),
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              Navigator.popUntil(context, (route) => route.isFirst);
-            },
+            onPressed: () => context.read<AppState>().logout(),
           ),
         ],
       ),
@@ -165,15 +166,15 @@ class _UpgradedRestaurantAdminDashboardState
   Widget _buildOperationalHeader() {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF111827), Color(0xFFFD5E14)],
+          colors: [AppColors.darkBg, AppColors.accent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,61 +182,47 @@ class _UpgradedRestaurantAdminDashboardState
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Restaurant operations hub',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Match the web restaurant dashboard with order flow, menu publishing, and storefront controls in one mobile shell.',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white70,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Restaurant operations',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    _isStorefrontOpen ? 'Accepting orders' : 'Paused',
+                    _isStorefrontOpen ? 'Orders on' : 'Paused',
                     style: GoogleFonts.poppins(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
                   ),
-                  Switch.adaptive(
-                    value: _isStorefrontOpen,
-                    activeColor: Colors.white,
-                    activeTrackColor: Colors.green,
-                    onChanged: (value) =>
-                        setState(() => _isStorefrontOpen = value),
+                  SizedBox(
+                    height: 32,
+                    child: Switch.adaptive(
+                      value: _isStorefrontOpen,
+                      activeColor: Colors.white,
+                      activeTrackColor: Colors.green,
+                      onChanged: (value) =>
+                          setState(() => _isStorefrontOpen = value),
+                    ),
                   ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 6,
             children: const [
-              _ControlPill(label: 'Station-linked fulfillment'),
-              _ControlPill(label: 'Invoice generation ready'),
-              _ControlPill(label: 'Menu image uploads live'),
+              _ControlPill(label: 'Station fulfillment'),
+              _ControlPill(label: 'Invoices ready'),
             ],
           ),
         ],
@@ -252,7 +239,7 @@ class _UpgradedRestaurantAdminDashboardState
         children: [
           Icon(
             icon,
-            color: isSelected ? const Color(0xFFFD5E14) : Colors.grey,
+            color: isSelected ? AppColors.accent : Colors.grey,
             size: 24,
           ),
           const SizedBox(height: 4),
@@ -261,7 +248,7 @@ class _UpgradedRestaurantAdminDashboardState
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? const Color(0xFFFD5E14) : Colors.grey,
+              color: isSelected ? AppColors.accent : Colors.grey,
             ),
           ),
           if (isSelected)
@@ -269,7 +256,7 @@ class _UpgradedRestaurantAdminDashboardState
               height: 2,
               width: 40,
               margin: const EdgeInsets.only(top: 8),
-              color: const Color(0xFFFD5E14),
+              color: AppColors.accent,
             ),
         ],
       ),
@@ -298,7 +285,7 @@ class _UpgradedRestaurantAdminDashboardState
                 value: 'K4,860',
                 subtitle: '34 completed baskets',
                 icon: Icons.payments_outlined,
-                color: Color(0xFFFD5E14),
+                color: AppColors.accent,
               ),
             ),
             SizedBox(
@@ -321,7 +308,7 @@ class _UpgradedRestaurantAdminDashboardState
             ElevatedButton.icon(
               onPressed: _isGeneratingDocuments ? null : _generateDailyReport,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFD5E14),
+                backgroundColor: AppColors.accent,
                 foregroundColor: Colors.white,
               ),
               icon: const Icon(Icons.description_outlined),
@@ -341,7 +328,7 @@ class _UpgradedRestaurantAdminDashboardState
           title: 'Kitchen and handoff board',
           originLabel: 'Kitchen',
           destinationLabel: 'Pickup',
-          accentColor: const Color(0xFFFD5E14),
+          accentColor: AppColors.accent,
           entities: const [
             TrackingBoardEntity(
               id: 'kit-1',
@@ -505,9 +492,9 @@ class _UpgradedRestaurantAdminDashboardState
       child: Column(
         children: [
           const TabBar(
-            labelColor: Color(0xFFFD5E14),
+            labelColor: AppColors.accent,
             unselectedLabelColor: Colors.grey,
-            indicatorColor: Color(0xFFFD5E14),
+            indicatorColor: AppColors.accent,
             tabs: [
               Tab(text: 'View Menu'),
               Tab(text: 'Add Item'),
@@ -630,10 +617,10 @@ class _UpgradedRestaurantAdminDashboardState
       width: 50,
       height: 50,
       decoration: BoxDecoration(
-        color: const Color(0xFFFD5E14).withOpacity(0.1),
+        color: AppColors.accent.withOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: const Icon(Icons.fastfood, color: Color(0xFFFD5E14)),
+      child: const Icon(Icons.fastfood, color: AppColors.accent),
     );
   }
 
@@ -732,7 +719,7 @@ class _UpgradedRestaurantAdminDashboardState
                         style: GoogleFonts.poppins(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFFFD5E14),
+                          color: AppColors.accent,
                         ),
                       ),
                       CountdownBadge(
@@ -759,7 +746,7 @@ class _UpgradedRestaurantAdminDashboardState
               children: [
                 Switch.adaptive(
                   value: item.isAvailable,
-                  activeColor: const Color(0xFFFD5E14),
+                  activeColor: AppColors.accent,
                   onChanged: (_) => _toggleMenuAvailability(item),
                 ),
                 GestureDetector(
@@ -767,13 +754,13 @@ class _UpgradedRestaurantAdminDashboardState
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFD5E14).withOpacity(0.1),
+                      color: AppColors.accent.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Icon(
                       Icons.edit,
                       size: 18,
-                      color: Color(0xFFFD5E14),
+                      color: AppColors.accent,
                     ),
                   ),
                 ),
@@ -1006,14 +993,14 @@ class _UpgradedRestaurantAdminDashboardState
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: const Color(0xFFFD5E14).withOpacity(0.28),
+                    color: AppColors.accent.withOpacity(0.28),
                     width: 1.4,
                   ),
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      const Color(0xFFFD5E14).withOpacity(0.08),
+                      AppColors.accent.withOpacity(0.08),
                       Colors.white,
                     ],
                   ),
@@ -1025,7 +1012,7 @@ class _UpgradedRestaurantAdminDashboardState
                           const Icon(
                             Icons.add_a_photo_outlined,
                             size: 42,
-                            color: Color(0xFFFD5E14),
+                            color: AppColors.accent,
                           ),
                           const SizedBox(height: 10),
                           Text(
@@ -1033,7 +1020,7 @@ class _UpgradedRestaurantAdminDashboardState
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFFFD5E14),
+                              color: AppColors.accent,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -1180,7 +1167,7 @@ class _UpgradedRestaurantAdminDashboardState
             ElevatedButton.icon(
               onPressed: _isSubmitting ? null : _submitNewMenuItem,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFD5E14),
+                backgroundColor: AppColors.accent,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -1333,7 +1320,7 @@ class _UpgradedRestaurantAdminDashboardState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Edit flow for ${item.name} can be wired next.'),
-        backgroundColor: const Color(0xFFFD5E14),
+        backgroundColor: AppColors.accent,
       ),
     );
   }
@@ -1550,3 +1537,7 @@ class _ControlPill extends StatelessWidget {
     );
   }
 }
+
+
+
+

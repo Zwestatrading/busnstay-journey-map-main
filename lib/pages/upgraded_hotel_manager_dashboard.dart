@@ -1,9 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/app_state.dart';
 
 import '../services/hotel_enhanced_service.dart';
 import '../widgets/operations_tracking_board.dart';
@@ -121,7 +124,7 @@ class _UpgradedHotelManagerDashboardState
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.read<AppState>().logout(),
         ),
         title: const Text('Hotel Manager Dashboard'),
         backgroundColor: const Color(0xFF14B8A6),
@@ -129,9 +132,7 @@ class _UpgradedHotelManagerDashboardState
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              Navigator.popUntil(context, (route) => route.isFirst);
-            },
+            onPressed: () => context.read<AppState>().logout(),
           ),
         ],
       ),
@@ -164,15 +165,15 @@ class _UpgradedHotelManagerDashboardState
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF0F172A), Color(0xFF14B8A6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,65 +181,47 @@ class _UpgradedHotelManagerDashboardState
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Hotel operations command',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Mobile now surfaces the same booking readiness, room visibility, and service monitoring intent as the web dashboard.',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white70,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Hotel operations',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    _acceptingBookings ? 'Accepting bookings' : 'Paused',
+                    _acceptingBookings ? 'Bookings on' : 'Paused',
                     style: GoogleFonts.poppins(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
                   ),
-                  Switch.adaptive(
-                    value: _acceptingBookings,
-                    activeColor: Colors.white,
-                    activeTrackColor: const Color(0xFF14B8A6),
-                    onChanged: (value) =>
-                        setState(() => _acceptingBookings = value),
+                  SizedBox(
+                    height: 32,
+                    child: Switch.adaptive(
+                      value: _acceptingBookings,
+                      activeColor: Colors.white,
+                      activeTrackColor: const Color(0xFF14B8A6),
+                      onChanged: (value) =>
+                          setState(() => _acceptingBookings = value),
+                    ),
                   ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 6,
             children: [
-              _HotelStatusPill('${_orders.length} service orders'),
-              _HotelStatusPill('$occupiedRooms occupied rooms'),
-              _HotelStatusPill(
-                _acceptingBookings
-                    ? 'Check-in flow live'
-                    : 'New reservations paused',
-              ),
+              _HotelStatusPill('${_orders.length} orders'),
+              _HotelStatusPill('$occupiedRooms rooms occupied'),
             ],
           ),
         ],
@@ -567,9 +550,9 @@ class _UpgradedHotelManagerDashboardState
             padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.98,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 0.72,
             ),
             itemCount: _rooms.length,
             itemBuilder: (context, index) {
@@ -599,14 +582,14 @@ class _UpgradedHotelManagerDashboardState
         border: Border.all(color: color.withOpacity(0.16)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (room.imageUrl != null)
               Expanded(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                   child: Image.network(
                     room.imageUrl!,
                     width: double.infinity,
@@ -618,31 +601,33 @@ class _UpgradedHotelManagerDashboardState
               )
             else
               Expanded(child: _roomImageFallback(color)),
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
             Text(
               'Room ${room.number}',
               style: GoogleFonts.poppins(
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),
             ),
             Text(
               room.roomType,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.poppins(
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: FontWeight.w500,
                 color: Colors.grey,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildStatusPill(room.status, color),
+                Flexible(child: _buildStatusPill(room.status, color)),
                 Text(
                   'K${room.nightlyRate.toStringAsFixed(0)}',
                   style: GoogleFonts.poppins(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: color,
                   ),
@@ -650,13 +635,13 @@ class _UpgradedHotelManagerDashboardState
               ],
             ),
             if (room.guest.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Text(
                 room.guest,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.poppins(
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1179,3 +1164,7 @@ class _HotelStatusPill extends StatelessWidget {
     );
   }
 }
+
+
+
+

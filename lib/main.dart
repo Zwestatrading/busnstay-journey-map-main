@@ -20,10 +20,12 @@ import 'services/hotel_service.dart';
 import 'services/live_location_service.dart';
 import 'services/menu_management_service.dart';
 import 'services/transaction_fee_service.dart';
+import 'theme/app_colors.dart';
 import 'widgets/payment_modal.dart';
 import 'widgets/operations_tracking_board.dart';
 import 'widgets/status_badge.dart';
 import 'pages/forgot_password_page.dart';
+import 'pages/map_front_page.dart';
 import 'pages/passenger_experience_page.dart';
 import 'pages/upgraded_bus_operator_dashboard.dart';
 import 'pages/upgraded_delivery_agent_dashboard.dart';
@@ -473,16 +475,16 @@ class BusNStayApp extends StatelessWidget {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      // KFC-inspired crimson primary
-      primaryColor: const Color(0xFFDC143C),
-      secondaryHeaderColor: const Color(0xFFFD5E14),
+      // Dark yellow / green transport theme
+      primaryColor: AppColors.primary,
+      secondaryHeaderColor: AppColors.accent,
       scaffoldBackgroundColor: brightness == Brightness.light
-          ? const Color(0xFFFAFAFA)
-          : const Color(0xFF1A1A2E),
+          ? AppColors.lightBg
+          : AppColors.darkBg,
       appBarTheme: AppBarTheme(
         backgroundColor: brightness == Brightness.light
-            ? const Color(0xFFFFFFFF)
-            : const Color(0xFF1A1A2E),
+            ? AppColors.lightSurface
+            : AppColors.darkBg,
         foregroundColor: brightness == Brightness.light
             ? const Color(0xFF000000)
             : Colors.white,
@@ -490,10 +492,10 @@ class BusNStayApp extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
       ),
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFFDC143C),
+        seedColor: AppColors.primary,
         brightness: brightness,
-        secondary: const Color(0xFFFD5E14),
-        tertiary: const Color(0xFF10B981),
+        secondary: AppColors.accent,
+        tertiary: AppColors.emerald,
       ),
       cardTheme: CardThemeData(
         elevation: 2,
@@ -503,17 +505,30 @@ class BusNStayApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool _showAuth = false;
+
+  void _openAuth() => setState(() => _showAuth = true);
+  void _closeAuth() => setState(() => _showAuth = false);
 
   @override
   Widget build(BuildContext context) {
     return Consumer<AppState>(
       builder: (context, state, _) {
-        if (!state.isLoggedIn) {
-          return const AuthScreen();
+        if (state.isLoggedIn) {
+          return _buildRoleScreen(state.user!.role, state);
         }
-        return _buildRoleScreen(state.user!.role, state);
+        if (_showAuth) {
+          return AuthScreen(onBackToMap: _closeAuth);
+        }
+        return MapFrontPage(onSignInTap: _openAuth);
       },
     );
   }
@@ -551,7 +566,8 @@ class HomePage extends StatelessWidget {
 
 // ============ AUTHENTICATION SCREEN ============
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({Key? key}) : super(key: key);
+  final VoidCallback? onBackToMap;
+  const AuthScreen({Key? key, this.onBackToMap}) : super(key: key);
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -676,10 +692,10 @@ class _AuthScreenState extends State<AuthScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF151B2F)
-            : const Color(0xFFFFF4EB),
+            ? AppColors.darkCard
+            : const Color(0xFFF0F7E8),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFD5E14).withOpacity(0.18)),
+        border: Border.all(color: AppColors.accent.withOpacity(0.18)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -688,7 +704,7 @@ class _AuthScreenState extends State<AuthScreen> {
             'System check demo account',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
-              color: const Color(0xFFDC143C),
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(height: 8),
@@ -749,11 +765,11 @@ class _AuthScreenState extends State<AuthScreen> {
           gradient: LinearGradient(
             colors: [
               Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF1A1A2E)
-                  : const Color(0xFFFFF5F5),
+                  ? AppColors.darkBg
+                  : const Color(0xFFF0F7E8),
               Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF16213E)
-                  : Colors.white,
+                  ? AppColors.darkSurface
+                  : AppColors.lightBg,
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -766,14 +782,22 @@ class _AuthScreenState extends State<AuthScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 24),
+                  if (widget.onBackToMap != null)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back_rounded),
+                        onPressed: widget.onBackToMap,
+                        tooltip: 'Back to map',
+                      ),
+                    ),
                   Center(
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFDC143C).withOpacity(0.3),
+                            color: AppColors.primary.withOpacity(0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -799,7 +823,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           style: Theme.of(context).textTheme.displaySmall
                               ?.copyWith(
                                 fontWeight: FontWeight.w800,
-                                color: const Color(0xFFDC143C),
+                                color: AppColors.primary,
                                 letterSpacing: -0.5,
                               ),
                         ),
@@ -831,14 +855,10 @@ class _AuthScreenState extends State<AuthScreen> {
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF111827), Color(0xFF1D4ED8)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      gradient: AppColors.heroGradient,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF1D4ED8).withOpacity(0.22),
+                          color: AppColors.accentDark.withOpacity(0.22),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
@@ -959,11 +979,11 @@ class _AuthScreenState extends State<AuthScreen> {
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       color: Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFF111827)
+                          ? AppColors.darkSurface
                           : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: const Color(0xFFDC143C).withOpacity(0.12),
+                        color: AppColors.primary.withOpacity(0.12),
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -986,7 +1006,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           _roleLabel(_selectedRole),
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(
-                                color: const Color(0xFFDC143C),
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w800,
                               ),
                         ),
@@ -1052,7 +1072,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFFFD5E14).withOpacity(0.3),
+                        color: AppColors.accent.withOpacity(0.3),
                         width: 1.5,
                       ),
                     ),
@@ -1069,7 +1089,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         border: InputBorder.none,
                         prefixIcon: Icon(
                           Icons.email,
-                          color: const Color(0xFFFD5E14).withOpacity(0.6),
+                          color: AppColors.accent.withOpacity(0.6),
                           size: 20,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
@@ -1084,7 +1104,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFFFD5E14).withOpacity(0.3),
+                        color: AppColors.accent.withOpacity(0.3),
                         width: 1.5,
                       ),
                     ),
@@ -1102,7 +1122,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         border: InputBorder.none,
                         prefixIcon: Icon(
                           Icons.lock,
-                          color: const Color(0xFFFD5E14).withOpacity(0.6),
+                          color: AppColors.accent.withOpacity(0.6),
                           size: 20,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
@@ -1123,7 +1143,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           'Forgot Password?',
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
-                                color: const Color(0xFFFD5E14),
+                                color: AppColors.accent,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.3,
                               ),
@@ -1134,14 +1154,14 @@ class _AuthScreenState extends State<AuthScreen> {
                   Container(
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFDC143C), Color(0xFFFD5E14)],
+                        colors: [AppColors.primary, AppColors.accent],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFDC143C).withOpacity(0.4),
+                          color: AppColors.primary.withOpacity(0.4),
                           blurRadius: 16,
                           offset: const Offset(0, 4),
                         ),
@@ -1204,7 +1224,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             _isLogin ? 'Register' : 'Login',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
-                                  color: const Color(0xFFFD5E14),
+                                  color: AppColors.accent,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.3,
                                 ),
@@ -1234,17 +1254,17 @@ class _AuthScreenState extends State<AuthScreen> {
           curve: Curves.easeInOut,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: const Color(0xFF1F2740),
+            color: AppColors.darkCard,
             border: Border.all(
               color: isSelected
-                  ? const Color(0xFFDC143C)
+                  ? AppColors.primary
                   : Colors.grey.withOpacity(0.2),
               width: isSelected ? 2 : 1.5,
             ),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFDC143C).withOpacity(0.3),
+                      color: AppColors.primary.withOpacity(0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -1269,9 +1289,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     end: Alignment.bottomCenter,
                     colors: isSelected
                         ? [
-                            const Color(0xFFDC143C).withOpacity(0.16),
-                            const Color(0xFF0F172A).withOpacity(0.20),
-                            const Color(0xFFDC143C).withOpacity(0.38),
+                            AppColors.primary.withOpacity(0.16),
+                            AppColors.darkBg.withOpacity(0.20),
+                            AppColors.primary.withOpacity(0.38),
                           ]
                         : [
                             Colors.black.withOpacity(0.04),
@@ -1291,7 +1311,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFDC143C),
+                      color: AppColors.primary,
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
@@ -1345,19 +1365,19 @@ class _AuthScreenState extends State<AuthScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFDC143C)
-              : const Color(0xFFDC143C).withOpacity(0.08),
+              ? AppColors.primary
+              : AppColors.primary.withOpacity(0.08),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFFDC143C)
-                : const Color(0xFFDC143C).withOpacity(0.14),
+                ? AppColors.primary
+                : AppColors.primary.withOpacity(0.14),
           ),
         ),
         child: Text(
           label,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: isSelected ? Colors.white : const Color(0xFFDC143C),
+            color: isSelected ? Colors.white : AppColors.primary,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -2051,7 +2071,7 @@ class _BusOperatorDashboardState extends State<BusOperatorDashboard> {
         title: const Text('Transport Operator'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.auto_awesome, color: Color(0xFFFD5E14)),
+            icon: const Icon(Icons.auto_awesome, color: AppColors.accent),
             tooltip: 'Pro Dashboard',
             onPressed: () => Navigator.push(
               context,
@@ -2371,7 +2391,7 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
         title: const Text('Restaurant Manager'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.auto_awesome, color: Color(0xFFFD5E14)),
+            icon: const Icon(Icons.auto_awesome, color: AppColors.accent),
             tooltip: 'Pro Dashboard',
             onPressed: () => Navigator.push(
               context,
@@ -3823,11 +3843,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF111827), Color(0xFF3B82F6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: AppColors.heroGradient,
         borderRadius: BorderRadius.circular(22),
       ),
       child: Column(

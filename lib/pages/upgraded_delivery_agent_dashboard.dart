@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -74,13 +75,16 @@ class _UpgradedDeliveryAgentDashboardState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.read<AppState>().logout(),
+        ),
         title: const Text('Delivery Agent Dashboard'),
         backgroundColor: const Color(0xFF3B82F6),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () =>
-                Navigator.popUntil(context, (route) => route.isFirst),
+            onPressed: () => context.read<AppState>().logout(),
           ),
         ],
       ),
@@ -126,15 +130,15 @@ class _UpgradedDeliveryAgentDashboardState
   Widget _buildStatusHeader() {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF0F172A), Color(0xFF3B82F6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,60 +146,47 @@ class _UpgradedDeliveryAgentDashboardState
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Delivery control centre',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Mobile now carries the web dashboard essentials: live run queue, payout visibility, and online or offline readiness.',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white70,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Delivery control',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
                     _isOnline ? 'Online' : 'Offline',
                     style: GoogleFonts.poppins(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
                   ),
-                  Switch.adaptive(
-                    value: _isOnline,
-                    activeColor: Colors.white,
-                    activeTrackColor: const Color(0xFF14B8A6),
-                    onChanged: (value) => setState(() => _isOnline = value),
+                  SizedBox(
+                    height: 32,
+                    child: Switch.adaptive(
+                      value: _isOnline,
+                      activeColor: Colors.white,
+                      activeTrackColor: const Color(0xFF14B8A6),
+                      onChanged: (value) => setState(() => _isOnline = value),
+                    ),
                   ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 6,
             children: [
-              _DeliveryPill('${_activeRuns.length} active runs'),
-              _DeliveryPill('${_availableRuns.length} jobs ready'),
-              _DeliveryPill(_isOnline ? 'GPS heartbeat good' : 'Standby mode'),
+              _DeliveryPill('${_activeRuns.length} active'),
+              _DeliveryPill('${_availableRuns.length} ready'),
+              _DeliveryPill(_isOnline ? 'GPS good' : 'Standby'),
             ],
           ),
         ],
@@ -315,7 +306,7 @@ class _UpgradedDeliveryAgentDashboardState
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF111827), Color(0xFF7C3AED)],
+              colors: [AppColors.darkBg, Color(0xFF7C3AED)],
             ),
             borderRadius: BorderRadius.circular(22),
           ),
@@ -679,3 +670,7 @@ class DeliveryRun {
     required this.progress,
   });
 }
+
+
+
+

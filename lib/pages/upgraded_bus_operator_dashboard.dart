@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/app_state.dart';
 
 import '../widgets/operations_tracking_board.dart';
 
@@ -71,17 +74,15 @@ class _UpgradedBusOperatorDashboardState
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.read<AppState>().logout(),
         ),
         title: const Text('Transport Operator Dashboard'),
-        backgroundColor: const Color(0xFFFD5E14),
+        backgroundColor: AppColors.accent,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              Navigator.popUntil(context, (route) => route.isFirst);
-            },
+            onPressed: () => context.read<AppState>().logout(),
           ),
         ],
       ),
@@ -120,15 +121,15 @@ class _UpgradedBusOperatorDashboardState
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF111827), Color(0xFFFD5E14)],
+          colors: [AppColors.darkBg, AppColors.accent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,64 +137,51 @@ class _UpgradedBusOperatorDashboardState
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Fleet control centre',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Bring the web transport dashboard into mobile with dispatch readiness, route health, and live fleet visibility in one shell.',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white70,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Fleet control',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    _dispatchBoardOpen ? 'Dispatch live' : 'Dispatch paused',
+                    _dispatchBoardOpen ? 'Dispatch live' : 'Paused',
                     style: GoogleFonts.poppins(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
                   ),
-                  Switch.adaptive(
-                    value: _dispatchBoardOpen,
-                    activeColor: Colors.white,
-                    activeTrackColor: const Color(0xFF10B981),
-                    onChanged: (value) =>
-                        setState(() => _dispatchBoardOpen = value),
+                  SizedBox(
+                    height: 32,
+                    child: Switch.adaptive(
+                      value: _dispatchBoardOpen,
+                      activeColor: Colors.white,
+                      activeTrackColor: const Color(0xFF10B981),
+                      onChanged: (value) =>
+                          setState(() => _dispatchBoardOpen = value),
+                    ),
                   ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 6,
             children: [
-              _BusOpsPill('$movingBuses vehicles moving now'),
+              _BusOpsPill('$movingBuses moving'),
               _BusOpsPill(
-                '${occupiedSeats.toString()}/$totalSeats seats occupied',
+                '${occupiedSeats.toString()}/$totalSeats seats',
               ),
               _BusOpsPill(
-                _acceptingBookings ? 'New bookings open' : 'Bookings paused',
+                _acceptingBookings ? 'Bookings open' : 'Paused',
               ),
             ],
           ),
@@ -226,7 +214,7 @@ class _UpgradedBusOperatorDashboardState
         children: [
           Icon(
             icon,
-            color: isSelected ? const Color(0xFFFD5E14) : Colors.grey,
+            color: isSelected ? AppColors.accent : Colors.grey,
             size: 22,
           ),
           const SizedBox(height: 4),
@@ -235,7 +223,7 @@ class _UpgradedBusOperatorDashboardState
             style: GoogleFonts.poppins(
               fontSize: 11,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? const Color(0xFFFD5E14) : Colors.grey,
+              color: isSelected ? AppColors.accent : Colors.grey,
             ),
           ),
           if (isSelected)
@@ -243,7 +231,7 @@ class _UpgradedBusOperatorDashboardState
               height: 2,
               width: 34,
               margin: const EdgeInsets.only(top: 8),
-              color: const Color(0xFFFD5E14),
+              color: AppColors.accent,
             ),
         ],
       ),
@@ -267,7 +255,7 @@ class _UpgradedBusOperatorDashboardState
                 value: '$activeCount / ${_buses.length}',
                 subtitle: 'Vehicles currently moving or boarding',
                 icon: Icons.directions_bus_filled_outlined,
-                color: const Color(0xFFFD5E14),
+                color: AppColors.accent,
               ),
             ),
             const SizedBox(
@@ -373,7 +361,7 @@ class _UpgradedBusOperatorDashboardState
               child: ElevatedButton.icon(
                 onPressed: () => _trackBusLive(bus),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFD5E14),
+                  backgroundColor: AppColors.accent,
                   foregroundColor: Colors.white,
                 ),
                 icon: const Icon(Icons.location_searching_outlined),
@@ -394,7 +382,7 @@ class _UpgradedBusOperatorDashboardState
           title: 'Uber-style fleet movement board',
           originLabel: 'Depot',
           destinationLabel: 'Destination',
-          accentColor: const Color(0xFFFD5E14),
+          accentColor: AppColors.accent,
           entities: _buses
               .asMap()
               .entries
@@ -458,7 +446,7 @@ class _UpgradedBusOperatorDashboardState
                         CountdownBadge(
                           label: 'ETA',
                           duration: bus.countdown,
-                          color: const Color(0xFFFD5E14),
+                          color: AppColors.accent,
                         ),
                       ],
                     ),
@@ -575,7 +563,7 @@ class _UpgradedBusOperatorDashboardState
                 value: 'K412,000',
                 subtitle: 'Ticketing and cargo combined',
                 icon: Icons.account_balance_wallet_outlined,
-                color: Color(0xFFFD5E14),
+                color: AppColors.accent,
               ),
             ),
             SizedBox(
@@ -646,7 +634,7 @@ class _UpgradedBusOperatorDashboardState
                 value: '$boardingBuses active',
                 subtitle: 'Vehicles loading passengers',
                 icon: Icons.meeting_room_outlined,
-                color: const Color(0xFFFD5E14),
+                color: AppColors.accent,
               ),
             ),
             SizedBox(
@@ -918,3 +906,7 @@ class _BusOpsPill extends StatelessWidget {
     );
   }
 }
+
+
+
+

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../models/journey_model.dart';
@@ -24,10 +25,10 @@ class PassengerExperiencePage extends StatefulWidget {
 class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
   int _tabIndex = 0;
 
-  static const Color _crimson = Color(0xFFDC143C);
-  static const Color _orange = Color(0xFFFD5E14);
-  static const Color _navy = Color(0xFF111827);
-  static const Color _teal = Color(0xFF14B8A6);
+  static const Color _crimson = AppColors.primary;
+  static const Color _orange = AppColors.accent;
+  static const Color _navy = AppColors.darkBg;
+  static const Color _teal = AppColors.teal;
 
   late final List<JourneyTown> _journeyTowns = [
     JourneyTown(
@@ -162,6 +163,10 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
         return Scaffold(
           backgroundColor: const Color(0xFFF7F4EF),
           appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => widget.state.logout(),
+            ),
             title: Text(
               _tabIndex == 0
                   ? 'BusNStay Passenger'
@@ -270,19 +275,19 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
 
   Widget _buildHero(AppUser? user) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [_navy, _crimson, _orange],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: const [
           BoxShadow(
             color: Color(0x33111827),
-            blurRadius: 24,
-            offset: Offset(0, 12),
+            blurRadius: 18,
+            offset: Offset(0, 8),
           ),
         ],
       ),
@@ -296,53 +301,52 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Built for travel, food, and stays in one flow',
+                      'Travel, food & stays',
                       style: GoogleFonts.dmSerifDisplay(
-                        fontSize: 30,
+                        fontSize: 22,
                         color: Colors.white,
-                        height: 1.05,
+                        height: 1.1,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Text(
-                      'Hello ${user?.name ?? 'Traveler'}. Your wallet, route alerts, restaurant ordering, and hotel discovery now sit in one passenger hub.',
+                      'Hello ${user?.name ?? 'Traveler'}. Wallet, routes, food ordering, and hotels in one hub.',
                       style: GoogleFonts.inter(
-                        fontSize: 14,
+                        fontSize: 12,
                         color: Colors.white.withValues(alpha: 0.86),
-                        height: 1.45,
+                        height: 1.4,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Container(
-                height: 82,
-                width: 82,
+                height: 56,
+                width: 56,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.white24),
                 ),
                 child: const Icon(
                   Icons.travel_explore,
-                  size: 42,
+                  size: 30,
                   color: Colors.white,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 6,
             children: [
               _heroChip(
                 'Wallet ${FlutterwaveService.formatZMW(widget.state.wallet.balance)}',
               ),
-              _heroChip('${widget.state.loyalty.currentPoints} loyalty points'),
-              _heroChip('6 payment rails live'),
-              _heroChip('Offline sync queue ready'),
+              _heroChip('${widget.state.loyalty.currentPoints} pts'),
+              _heroChip('6 rails live'),
             ],
           ),
         ],
@@ -433,26 +437,26 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1.18,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 1.35,
       ),
       itemBuilder: (context, index) {
         final action = actions[index];
         return InkWell(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(18),
           onTap: action.onTap,
           child: Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(color: action.color.withValues(alpha: 0.18)),
               boxShadow: [
                 BoxShadow(
                   color: action.color.withValues(alpha: 0.10),
-                  blurRadius: 18,
-                  offset: const Offset(0, 10),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
@@ -498,37 +502,28 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       children: [
         Container(
-          padding: const EdgeInsets.all(22),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF111827), Color(0xFF7C3AED)],
+              colors: [AppColors.darkBg, Color(0xFF7C3AED)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Order and booking history',
-                style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+                'Order history',
+                style: GoogleFonts.inter(color: Colors.white70, fontSize: 12),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Text(
-                '${_recentOrders.length} live records',
+                '${_recentOrders.length} records',
                 style: GoogleFonts.dmSerifDisplay(
-                  fontSize: 34,
+                  fontSize: 26,
                   color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'This tab mirrors the web order-history surface for food orders, hotel bookings, and recurring route requests.',
-                style: GoogleFonts.inter(
-                  color: Colors.white70,
-                  fontSize: 12,
-                  height: 1.4,
                 ),
               ),
             ],
@@ -671,10 +666,10 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
         .where((town) => town.status == TownStatus.open)
         .length;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
@@ -689,17 +684,17 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
                     Text(
                       'Ndola to Lusaka',
                       style: GoogleFonts.dmSerifDisplay(
-                        fontSize: 28,
+                        fontSize: 22,
                         color: _navy,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
-                      'Real route validation is enabled. Ordering locks automatically when the bus approaches a town.',
+                      'Route validation enabled. Ordering locks near towns.',
                       style: GoogleFonts.inter(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: Colors.black54,
-                        height: 1.45,
+                        height: 1.3,
                       ),
                     ),
                   ],
@@ -1990,3 +1985,7 @@ class _PassengerSavedAddress {
     required this.accent,
   });
 }
+
+
+
+
