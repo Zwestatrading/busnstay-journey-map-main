@@ -22,6 +22,7 @@ class PaymentModal extends StatefulWidget {
 class _PaymentModalState extends State<PaymentModal> {
   int _step = 0; // 0=method, 1=details, 2=processing, 3=success
   PaymentMethod _selectedMethod = PaymentMethod.mobileMoney;
+  String _selectedChannel = 'mobile_money_mtn';
   final _amountController = TextEditingController();
   final _phoneController = TextEditingController();
   final _presetAmounts = [25.0, 50.0, 100.0, 250.0, 500.0];
@@ -129,10 +130,12 @@ class _PaymentModalState extends State<PaymentModal> {
         ],
         Text('Payment Method', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
-        _buildMethodTile('Mobile Money', 'MTN, Airtel, Zamtel', Icons.phone_android, PaymentMethod.mobileMoney),
-        _buildMethodTile('Card', 'Visa, Mastercard', Icons.credit_card, PaymentMethod.card),
-        _buildMethodTile('Bank Transfer', 'Direct bank payment', Icons.account_balance, PaymentMethod.bankTransfer),
-        _buildMethodTile('USSD', 'Dial to pay', Icons.dialpad, PaymentMethod.ussd),
+        _buildMethodTile('MTN Mobile Money', 'Fastest for MTN Zambia users', Icons.phone_android, 'mobile_money_mtn'),
+        _buildMethodTile('Airtel Money', 'Use Airtel wallet approval flow', Icons.sim_card_outlined, 'mobile_money_airtel'),
+        _buildMethodTile('Zamtel Money', 'Zamtel mobile money collection', Icons.mobile_friendly_outlined, 'mobile_money_zamtel'),
+        _buildMethodTile('Card', 'Visa and Mastercard', Icons.credit_card, 'card'),
+        _buildMethodTile('Bank Transfer', 'Direct bank payment', Icons.account_balance, 'bank'),
+        _buildMethodTile('USSD', 'Dial to pay', Icons.dialpad, 'ussd'),
         const SizedBox(height: 20),
         SizedBox(
           width: double.infinity,
@@ -159,10 +162,13 @@ class _PaymentModalState extends State<PaymentModal> {
     );
   }
 
-  Widget _buildMethodTile(String title, String subtitle, IconData icon, PaymentMethod method) {
-    final selected = _selectedMethod == method;
+  Widget _buildMethodTile(String title, String subtitle, IconData icon, String channel) {
+    final selected = _selectedChannel == channel;
     return GestureDetector(
-      onTap: () => setState(() => _selectedMethod = method),
+      onTap: () => setState(() {
+        _selectedChannel = channel;
+        _selectedMethod = _methodForChannel(channel);
+      }),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(14),
@@ -189,6 +195,19 @@ class _PaymentModalState extends State<PaymentModal> {
         ),
       ),
     );
+  }
+
+  PaymentMethod _methodForChannel(String channel) {
+    switch (channel) {
+      case 'card':
+        return PaymentMethod.card;
+      case 'bank':
+        return PaymentMethod.bankTransfer;
+      case 'ussd':
+        return PaymentMethod.ussd;
+      default:
+        return PaymentMethod.mobileMoney;
+    }
   }
 
   Widget _buildDetailsStep() {
@@ -220,7 +239,11 @@ class _PaymentModalState extends State<PaymentModal> {
             decoration: InputDecoration(
               prefixText: '+260 ',
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              hintText: '97 XXX XXXX',
+              hintText: _selectedChannel == 'mobile_money_mtn'
+                  ? '96 or 76 XXX XXXX'
+                  : _selectedChannel == 'mobile_money_airtel'
+                      ? '97 or 77 XXX XXXX'
+                      : '95 XXX XXXX',
             ),
           ),
         ] else if (_selectedMethod == PaymentMethod.card) ...[

@@ -52,11 +52,17 @@ dependencies:
   # Typography
   google_fonts: ^6.0.0
   
+  # Image handling (menu photos)
+  image_picker: ^1.0.0
+  cached_network_image: ^3.2.0
+  
   # Collection utilities
   collection: ^1.18.0
   
   # Offline database
   sqflite: ^2.2.0
+  sqflite_common_ffi: ^2.3.3
+  sqflite_common_ffi_web: ^1.0.0
   path_provider: ^2.0.0
   path: ^1.8.0
 

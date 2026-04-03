@@ -139,6 +139,10 @@ class _RestaurantDashboardPageState extends State<RestaurantDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(widget.restaurantName),
         backgroundColor: Colors.green.shade600,
         elevation: 0,

@@ -151,11 +151,15 @@ class RestaurantService {
   RealtimeChannel subscribeToOrders(String restaurantId) {
     return supabase
         .channel('orders:$restaurantId')
-        .onPostgresChange(
+        .onPostgresChanges(
           event: PostgresChangeEvent.insert,
           schema: 'public',
           table: 'orders',
-          filter: 'restaurant_id=eq.$restaurantId',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'restaurant_id',
+            value: restaurantId,
+          ),
           callback: (payload) {
             print('🔔 [NEW ORDER] ${payload.newRecord}');
           },

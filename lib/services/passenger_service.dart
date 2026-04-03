@@ -88,7 +88,7 @@ class PassengerService {
 
   // Real-time trip tracking
   RealtimeChannel trackTrip(String bookingId) {
-    return supabase.channel('booking:$bookingId').onPostgresChange(
+    return supabase.channel('booking:$bookingId').onPostgresChanges(
       event: PostgresChangeEvent.update,
       schema: 'public',
       table: 'journeys',

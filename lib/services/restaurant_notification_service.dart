@@ -403,4 +403,22 @@ Sent from *BusNStay* 🍽️🚌''';
   Future<void> dispose() async {
     await _notificationStreamSubscription?.cancel();
   }
+
+  /// Send a simple order status notification to a customer
+  Future<bool> sendOrderNotification({
+    required String phone,
+    required String orderId,
+    required String message,
+  }) async {
+    try {
+      print('📱 [NOTIFICATION] Sending to $phone: $message');
+      if (isWatiConfigured()) {
+        await _sendViaWhatsAppAPI(phone, message);
+      }
+      return true;
+    } catch (e) {
+      print('❌ [NOTIFICATION] Failed to send: $e');
+      return false;
+    }
+  }
 }

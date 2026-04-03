@@ -18,7 +18,7 @@ class BusOperatorDashboardPage extends StatefulWidget {
 }
 
 class _BusOperatorDashboardPageState extends State<BusOperatorDashboardPage> {
-  BusJourney? _journey;
+  ActiveBusJourney? _journey;
   bool _isInitialized = false;
   String? _errorMessage;
 
@@ -133,6 +133,10 @@ class _BusOperatorDashboardPageState extends State<BusOperatorDashboardPage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(widget.routeName),
         backgroundColor: Colors.green.shade600,
         elevation: 0,
@@ -302,7 +306,7 @@ class _BusOperatorDashboardPageState extends State<BusOperatorDashboardPage> {
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        border: Border.left(color: statusColor, width: 4),
+        border: Border(left: BorderSide(color: statusColor, width: 4)),
         color: statusColor.withOpacity(0.05),
         borderRadius: BorderRadius.circular(8),
       ),

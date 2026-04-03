@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'models/user_model.dart';
 import 'models/wallet_model.dart';
-import 'models/order_model.dart';
-import 'models/booking_model.dart';
-import 'models/journey_model.dart';
-import 'models/delivery_model.dart';
 import 'services/app_state.dart';
 import 'services/database_service.dart';
 import 'services/order_management_service.dart';
@@ -16,9 +14,17 @@ import 'services/town_order_management_service.dart';
 import 'services/passenger_service.dart';
 import 'services/restaurant_service.dart';
 import 'services/bus_operator_service.dart';
+import 'services/delivery_service.dart';
+import 'services/hotel_service.dart';
+import 'services/live_location_service.dart';
+import 'services/menu_management_service.dart';
 import 'widgets/payment_modal.dart';
 import 'widgets/status_badge.dart';
 import 'pages/forgot_password_page.dart';
+import 'pages/passenger_experience_page.dart';
+import 'pages/upgraded_bus_operator_dashboard.dart';
+import 'pages/upgraded_hotel_manager_dashboard.dart';
+import 'pages/upgraded_restaurant_admin_dashboard.dart';
 
 // ============ APP SERVICES SINGLETON ============
 class AppServices {
@@ -29,6 +35,10 @@ class AppServices {
   static late PassengerService passengerService;
   static late RestaurantService restaurantService;
   static late BusOperatorService busOperatorService;
+  static late HotelService hotelService;
+  static late LiveLocationService liveLocationService;
+  static late MenuManagementService menuService;
+  static late DeliveryService deliveryService;
 
   static bool _initialized = false;
 
@@ -97,6 +107,22 @@ class AppServices {
       busOperatorService = BusOperatorService(supabase: supabaseClient);
       await busOperatorService.testConnection();
 
+      // Initialize Hotel Service (bookings + rooms)
+      hotelService = HotelService(supabase: supabaseClient);
+      print('✅ [INIT] Hotel service initialized');
+
+      // Initialize Live Location Service (GPS tracking)
+      liveLocationService = LiveLocationService(supabase: supabaseClient);
+      print('✅ [INIT] Live location service initialized');
+
+      // Initialize Menu Management Service (pro menus + images)
+      menuService = MenuManagementService(supabase: supabaseClient);
+      print('✅ [INIT] Menu management service initialized');
+
+      // Initialize Delivery Service (delivery agents)
+      deliveryService = DeliveryService(supabase: supabaseClient);
+      print('✅ [INIT] Delivery service initialized');
+
       _initialized = true;
       print('✅ [INIT] All services initialized successfully!');
     } catch (e) {
@@ -108,11 +134,32 @@ class AppServices {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  _configureDatabaseFactory();
   
   // Initialize all services
   await AppServices.initialize();
   
   runApp(const BusNStayApp());
+}
+
+void _configureDatabaseFactory() {
+  if (kIsWeb) {
+    databaseFactory = databaseFactoryFfiWeb;
+    return;
+  }
+
+  switch (defaultTargetPlatform) {
+    case TargetPlatform.windows:
+    case TargetPlatform.linux:
+    case TargetPlatform.macOS:
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+      break;
+    case TargetPlatform.android:
+    case TargetPlatform.iOS:
+    case TargetPlatform.fuchsia:
+      break;
+  }
 }
 
 // ============ INLINE WIDGETS ============
@@ -312,17 +359,16 @@ class BusNStayApp extends StatelessWidget {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      // Vibrant primary orange (like KFC)
-      primaryColor: const Color(0xFFE74C3C),
-      // Colorful secondary
-      secondaryHeaderColor: const Color(0xFF9B59B6),
+      // KFC-inspired crimson primary
+      primaryColor: const Color(0xFFDC143C),
+      secondaryHeaderColor: const Color(0xFFFD5E14),
       scaffoldBackgroundColor: brightness == Brightness.light 
         ? const Color(0xFFFAFAFA) 
-        : const Color(0xFF121212),
+        : const Color(0xFF1A1A2E),
       appBarTheme: AppBarTheme(
         backgroundColor: brightness == Brightness.light 
           ? const Color(0xFFFFFFFF) 
-          : const Color(0xFF1F2937),
+          : const Color(0xFF1A1A2E),
         foregroundColor: brightness == Brightness.light 
           ? const Color(0xFF000000) 
           : Colors.white,
@@ -330,10 +376,10 @@ class BusNStayApp extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
       ),
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFFE74C3C),
+        seedColor: const Color(0xFFDC143C),
         brightness: brightness,
-        secondary: const Color(0xFFFF9800),
-        tertiary: const Color(0xFF4CAF50),
+        secondary: const Color(0xFFFD5E14),
+        tertiary: const Color(0xFF10B981),
       ),
       cardTheme: CardThemeData(
         elevation: 2,
@@ -363,15 +409,19 @@ class HomePage extends StatelessWidget {
   Widget _buildRoleScreen(UserRole role, AppState state) {
     switch (role) {
       case UserRole.passenger:
-        return PassengerDashboard(state: state);
+        return PassengerExperiencePage(state: state);
       case UserRole.busOperator:
-        return BusOperatorDashboard(state: state);
+        return UpgradedBusOperatorDashboard(
+          busOperatorId: state.user?.id ?? 'operator_001',
+        );
       case UserRole.restaurantAdmin:
         return RestaurantAdminDashboard(state: state);
       case UserRole.deliveryAgent:
         return DeliveryAgentDashboard(state: state);
       case UserRole.hotelManager:
-        return HotelManagerDashboard(state: state);
+        return UpgradedHotelManagerDashboard(
+          hotelId: state.user?.id ?? 'hotel_001',
+        );
       case UserRole.platformAdmin:
         return AdminDashboard(state: state);
       default:
@@ -416,8 +466,8 @@ class _AuthScreenState extends State<AuthScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFFAFAFA),
-              Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white,
+              Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1A1A2E) : const Color(0xFFFFF5F5),
+              Theme.of(context).brightness == Brightness.dark ? const Color(0xFF16213E) : Colors.white,
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -437,7 +487,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF3B82F6).withOpacity(0.3),
+                            color: const Color(0xFFDC143C).withOpacity(0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -455,7 +505,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       children: [
                         Text('BusNStay', style: Theme.of(context).textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF3B82F6),
+                          color: const Color(0xFFDC143C),
                           letterSpacing: -0.5,
                         )),
                         const SizedBox(height: 12),
@@ -505,7 +555,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFF3B82F6).withOpacity(0.3),
+                        color: const Color(0xFFFD5E14).withOpacity(0.3),
                         width: 1.5,
                       ),
                     ),
@@ -519,7 +569,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           letterSpacing: 0.3,
                         ),
                         border: InputBorder.none,
-                        prefixIcon: Icon(Icons.email, color: const Color(0xFF3B82F6).withOpacity(0.6), size: 20),
+                        prefixIcon: Icon(Icons.email, color: const Color(0xFFFD5E14).withOpacity(0.6), size: 20),
                         contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
                       ),
                     ),
@@ -529,7 +579,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFF3B82F6).withOpacity(0.3),
+                        color: const Color(0xFFFD5E14).withOpacity(0.3),
                         width: 1.5,
                       ),
                     ),
@@ -544,7 +594,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           letterSpacing: 0.3,
                         ),
                         border: InputBorder.none,
-                        prefixIcon: Icon(Icons.lock, color: const Color(0xFF3B82F6).withOpacity(0.6), size: 20),
+                        prefixIcon: Icon(Icons.lock, color: const Color(0xFFFD5E14).withOpacity(0.6), size: 20),
                         contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
                       ),
                     ),
@@ -558,7 +608,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         child: Text(
                           'Forgot Password?',
                           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: const Color(0xFF3B82F6),
+                            color: const Color(0xFFFD5E14),
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.3,
                           ),
@@ -569,14 +619,14 @@ class _AuthScreenState extends State<AuthScreen> {
                   Container(
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                        colors: [Color(0xFFDC143C), Color(0xFFFD5E14)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF3B82F6).withOpacity(0.4),
+                          color: const Color(0xFFDC143C).withOpacity(0.4),
                           blurRadius: 16,
                           offset: const Offset(0, 4),
                         ),
@@ -624,7 +674,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           child: Text(
                             _isLogin ? 'Register' : 'Login',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFF3B82F6),
+                              color: const Color(0xFFFD5E14),
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.3,
                             ),
@@ -646,7 +696,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget _buildRoleCard(String label, IconData icon, UserRole role) {
     final isSelected = _selectedRole == role;
     return MouseRegion(
-      cursor: SystemMouseCursor.click,
+      cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: () => setState(() => _selectedRole = role),
         child: AnimatedContainer(
@@ -656,7 +706,7 @@ class _AuthScreenState extends State<AuthScreen> {
             borderRadius: BorderRadius.circular(16),
             gradient: isSelected
                 ? const LinearGradient(
-                    colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                    colors: [Color(0xFFDC143C), Color(0xFFFD5E14)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
@@ -670,14 +720,14 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
             border: Border.all(
               color: isSelected
-                  ? const Color(0xFF3B82F6)
+                  ? const Color(0xFFDC143C)
                   : Colors.grey.withOpacity(0.2),
               width: isSelected ? 2 : 1.5,
             ),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF3B82F6).withOpacity(0.3),
+                      color: const Color(0xFFDC143C).withOpacity(0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -709,8 +759,8 @@ class _AuthScreenState extends State<AuthScreen> {
                           )
                         : LinearGradient(
                             colors: [
-                              const Color(0xFF3B82F6).withOpacity(0.15),
-                              const Color(0xFF3B82F6).withOpacity(0.05),
+                              const Color(0xFFFD5E14).withOpacity(0.15),
+                              const Color(0xFFFD5E14).withOpacity(0.05),
                             ],
                           ),
                   ),
@@ -719,7 +769,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     size: 28,
                     color: isSelected
                         ? Colors.white
-                        : const Color(0xFF3B82F6).withOpacity(0.7),
+                        : const Color(0xFFFD5E14).withOpacity(0.7),
                   ),
                 ),
               ),
@@ -1218,41 +1268,170 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
 }
 
 // ============ BUS OPERATOR DASHBOARD ============
-class BusOperatorDashboard extends StatelessWidget {
+class BusOperatorDashboard extends StatefulWidget {
   final AppState state;
   const BusOperatorDashboard({Key? key, required this.state}) : super(key: key);
+
+  @override
+  State<BusOperatorDashboard> createState() => _BusOperatorDashboardState();
+}
+
+class _BusOperatorDashboardState extends State<BusOperatorDashboard> {
+  late BusOperatorService _busService;
+  List<Map<String, dynamic>> _journeys = [];
+  List<Map<String, dynamic>> _buses = [];
+  double _todayRevenue = 0;
+  bool _loading = true;
+  late RealtimeChannel _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _busService = AppServices.busOperatorService;
+    _loadData();
+    _subscribeToUpdates();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      setState(() => _loading = true);
+      
+      // Load buses
+      _buses = await _busService.getBuses('operator_001'); // Replace with real operator ID
+      
+      // Load journeys
+      _journeys = await _busService.getActiveJourneys('operator_001');
+      
+      // Load today's revenue
+      _todayRevenue = await _busService.getOperatorRevenue('operator_001', DateTime.now());
+      
+      setState(() => _loading = false);
+    } catch (e) {
+      print('❌ Error loading data: $e');
+      setState(() => _loading = false);
+    }
+  }
+
+  void _subscribeToUpdates() {
+    if (_journeys.isNotEmpty) {
+      _subscription = _busService.subscribeToJourney(_journeys.first['id']);
+    }
+  }
+
+  @override
+  void dispose() {
+    _subscription.unsubscribe();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bus Operator'),
-        actions: [IconButton(icon: const Icon(Icons.logout), onPressed: () => context.read<AppState>().logout())],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome, color: Color(0xFFFD5E14)),
+            tooltip: 'Pro Dashboard',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const UpgradedBusOperatorDashboard(busOperatorId: 'operator_001'),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadData,
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => context.read<AppState>().logout(),
+          ),
+        ],
       ),
-      body: Consumer<AppState>(
-        builder: (context, state, _) => ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            StatCard(title: 'Total Buses', value: '5', icon: Icons.directions_bus, color: const Color(0xFF3B82F6)),
-            const SizedBox(height: 12),
-            StatCard(title: 'Active Journeys', value: '3', icon: Icons.map, color: const Color(0xFF10B981)),
-            const SizedBox(height: 12),
-            StatCard(title: 'Revenue Today', value: 'K45,000', icon: Icons.attach_money, color: const Color(0xFFF59E0B)),
-            const SizedBox(height: 12),
-            StatCard(title: 'Bookings Pending', value: '8', icon: Icons.pending_actions, color: const Color(0xFF8B5CF6)),
-            const SizedBox(height: 20),
-            ...state.getDemoJourneys().map((j) => _buildJourneyCard(context, j)).toList(),
-          ],
-        ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: 0,
+        onDestinationSelected: (i) {
+          if (i == 1) {
+            Navigator.push(context, MaterialPageRoute(
+              builder: (_) => const UpgradedBusOperatorDashboard(busOperatorId: 'operator_001'),
+            ));
+          }
+        },
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+          NavigationDestination(icon: Icon(Icons.auto_awesome), label: 'Pro View'),
+        ],
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  StatCard(
+                    title: 'Total Buses',
+                    value: '${_buses.length}',
+                    icon: Icons.directions_bus,
+                    color: const Color(0xFF3B82F6),
+                  ),
+                  const SizedBox(height: 12),
+                  StatCard(
+                    title: 'Active Journeys',
+                    value: '${_journeys.length}',
+                    icon: Icons.map,
+                    color: const Color(0xFF10B981),
+                  ),
+                  const SizedBox(height: 12),
+                  StatCard(
+                    title: 'Revenue Today',
+                    value: 'K${_todayRevenue.toStringAsFixed(0)}',
+                    icon: Icons.attach_money,
+                    color: const Color(0xFFF59E0B),
+                  ),
+                  const SizedBox(height: 12),
+                  StatCard(
+                    title: 'Bookings',
+                    value: _journeys.fold<int>(0, (sum, j) => sum + ((j['bookings'] as List?)?.length ?? 0)).toString(),
+                    icon: Icons.pending_actions,
+                    color: const Color(0xFF8B5CF6),
+                  ),
+                  const SizedBox(height: 20),
+                  Text('Active Journeys', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 12),
+                  ..._journeys.map((j) => _buildJourneyCard(context, j)).toList(),
+                  if (_journeys.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Text(
+                          'No active journeys',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showNewJourneyDialog(context),
+        tooltip: 'Create Journey',
+        child: const Icon(Icons.add),
       ),
     );
   }
 
-  Widget _buildJourneyCard(BuildContext context, BusJourney j) {
+  Widget _buildJourneyCard(BuildContext context, Map<String, dynamic> j) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.withOpacity(0.2))),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        color: Colors.grey.withOpacity(0.02),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1260,15 +1439,97 @@ class BusOperatorDashboard extends StatelessWidget {
             children: [
               const Icon(Icons.directions_bus, color: Color(0xFF3B82F6)),
               const SizedBox(width: 8),
-              Text('${j.origin} ÔåÆ ${j.destination}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              const Spacer(),
-              Text('K${j.price}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3B82F6))),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${j['origin']} → ${j['destination']}', 
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    Text(j['journey_date'] ?? 'N/A',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('K${j['price']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3B82F6), fontSize: 16)),
+                  Text(j['status'] ?? 'active', 
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.green)),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 8),
-          Text('${j.bookedSeats}/${j.totalSeats} seats booked', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
-          const SizedBox(height: 8),
-          ClipRRect(borderRadius: BorderRadius.circular(4), child: LinearProgressIndicator(value: j.bookedSeats / j.totalSeats, minHeight: 6)),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Seats Booked', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey)),
+                    Text('${j['total_seats'] - j['available_seats']}/${j['total_seats']}', 
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: (j['total_seats'] - j['available_seats']) / j['total_seats'],
+                    minHeight: 6,
+                    valueColor: const AlwaysStoppedAnimation(Color(0xFF3B82F6)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _updateJourneyStatus(j['id'], 'active'),
+                  child: const Text('Start'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _updateJourneyStatus(j['id'], 'completed'),
+                  child: const Text('Complete'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _updateJourneyStatus(String journeyId, String status) async {
+    final success = await _busService.updateJourneyStatus(journeyId, status);
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Journey updated to $status ✅')),
+      );
+      _loadData();
+    }
+  }
+
+  void _showNewJourneyDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create New Journey'),
+        content: const Text('Feature coming soon! Use mobile app to create journeys.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
         ],
       ),
     );
@@ -1287,107 +1548,270 @@ class RestaurantAdminDashboard extends StatefulWidget {
 class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
   int _tabIndex = 0;
   bool _isOpen = true;
+  late RestaurantService _restaurantService;
+  List<Map<String, dynamic>> _pendingOrders = [];
+  List<Map<String, dynamic>> _menuItems = [];
+  bool _loading = true;
+  late RealtimeChannel _orderSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _restaurantService = AppServices.restaurantService;
+    _loadData();
+    _subscribeToOrders();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      setState(() => _loading = true);
+      
+      _pendingOrders = await _restaurantService.getPendingOrders('restaurant_001');
+      _menuItems = await _restaurantService.getMenuItems('restaurant_001');
+      
+      setState(() => _loading = false);
+    } catch (e) {
+      print('❌ Error loading restaurant data: $e');
+      setState(() => _loading = false);
+    }
+  }
+
+  void _subscribeToOrders() {
+    _orderSubscription = _restaurantService.subscribeToOrders('restaurant_001');
+  }
+
+  @override
+  void dispose() {
+    _orderSubscription.unsubscribe();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Restaurant Manager'),
-        actions: [IconButton(icon: const Icon(Icons.logout), onPressed: () => context.read<AppState>().logout())],
-      ),
-      body: Consumer<AppState>(
-        builder: (context, state, _) => SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Manager Dashboard', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                  OpenClosedToggle(isOpen: _isOpen, onChanged: (v) => setState(() => _isOpen = v)),
-                ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome, color: Color(0xFFFD5E14)),
+            tooltip: 'Pro Dashboard',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const UpgradedRestaurantAdminDashboard(restaurantId: 'restaurant_001'),
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: MiniStatCard(title: 'Orders', value: '24', icon: Icons.receipt, color: const Color(0xFFF59E0B))),
-                  const SizedBox(width: 12),
-                  Expanded(child: MiniStatCard(title: 'Revenue', value: 'K125K', icon: Icons.attach_money, color: const Color(0xFF10B981))),
-                  const SizedBox(width: 12),
-                  Expanded(child: MiniStatCard(title: 'Menu', value: '42', icon: Icons.restaurant_menu, color: const Color(0xFF3B82F6))),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _tabIndex = 0),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          border: Border(bottom: BorderSide(color: _tabIndex == 0 ? const Color(0xFF3B82F6) : Colors.transparent, width: 2)),
-                        ),
-                        child: Text('Orders', textAlign: TextAlign.center, style: TextStyle(fontWeight: _tabIndex == 0 ? FontWeight.bold : FontWeight.normal)),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _tabIndex = 1),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          border: Border(bottom: BorderSide(color: _tabIndex == 1 ? const Color(0xFF3B82F6) : Colors.transparent, width: 2)),
-                        ),
-                        child: Text('Menu', textAlign: TextAlign.center, style: TextStyle(fontWeight: _tabIndex == 1 ? FontWeight.bold : FontWeight.normal)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (_tabIndex == 0) ...[
-                Text('Pending Orders', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 12),
-                ...state.getDemoOrders().map((o) => _buildOrderCard(context, o)).toList(),
-              ] else ...[
-                Text('Menu Items', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 12),
-                ...state.getDemoMenuItems().map((m) => _buildMenuItemTile(context, m)).toList(),
-              ],
-            ],
+            ),
           ),
-        ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadData,
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => context.read<AppState>().logout(),
+          ),
+        ],
       ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: 0,
+        onDestinationSelected: (i) {
+          if (i == 1) {
+            Navigator.push(context, MaterialPageRoute(
+              builder: (_) => const UpgradedRestaurantAdminDashboard(restaurantId: 'restaurant_001'),
+            ));
+          }
+        },
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+          NavigationDestination(icon: Icon(Icons.auto_awesome), label: 'Pro View'),
+        ],
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Manager Dashboard', 
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _isOpen ? const Color(0xFF10B981).withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: _isOpen ? const Color(0xFF10B981) : Colors.grey,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: GestureDetector(
+                            onTap: () => setState(() => _isOpen = !_isOpen),
+                            child: Text(
+                              _isOpen ? '🟢 Open' : '🔴 Closed',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: _isOpen ? const Color(0xFF10B981) : Colors.grey,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: MiniStatCard(
+                            title: 'Pending',
+                            value: '${_pendingOrders.length}',
+                            icon: Icons.receipt,
+                            color: const Color(0xFFF59E0B),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: MiniStatCard(
+                            title: 'Menu Items',
+                            value: '${_menuItems.length}',
+                            icon: Icons.restaurant_menu,
+                            color: const Color(0xFF3B82F6),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _tabIndex = 0),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: _tabIndex == 0 ? const Color(0xFF3B82F6) : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                'Orders',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: _tabIndex == 0 ? FontWeight.bold : FontWeight.normal,
+                                  color: _tabIndex == 0 ? const Color(0xFF3B82F6) : Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _tabIndex = 1),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: _tabIndex == 1 ? const Color(0xFF3B82F6) : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                'Menu',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: _tabIndex == 1 ? FontWeight.bold : FontWeight.normal,
+                                  color: _tabIndex == 1 ? const Color(0xFF3B82F6) : Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (_tabIndex == 0) ...[
+                      Text('Pending Orders', style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 12),
+                      ..._pendingOrders.map((o) => _buildOrderCard(context, o)).toList(),
+                      if (_pendingOrders.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Text('No pending orders', 
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                          ),
+                        ),
+                    ] else ...[
+                      Text('Menu Items', style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 12),
+                      ..._menuItems.map((m) => _buildMenuItemTile(context, m)).toList(),
+                    ],
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
-  Widget _buildOrderCard(BuildContext context, FoodOrder o) {
+  Widget _buildOrderCard(BuildContext context, Map<String, dynamic> o) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.withOpacity(0.3))),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+        color: Colors.grey.withOpacity(0.02),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(o.id, style: const TextStyle(fontWeight: FontWeight.w600)),
-              StatusBadge(label: o.statusLabel, color: const Color(0xFFF59E0B)),
+              Text('Order #${o['id']?.toString().substring(0, 8) ?? 'N/A'}',
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+              StatusBadge(label: o['status'] ?? 'pending', color: const Color(0xFFF59E0B)),
             ],
           ),
           const SizedBox(height: 8),
-          Text('Customer: ${o.customerName}', style: Theme.of(context).textTheme.bodySmall),
-          ...o.items.map((i) => Text('  ÔÇó ${i.quantity}x ${i.name} - K${(i.total).toStringAsFixed(0)}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey))).toList(),
+          Text('Customer: ${o['customer_name'] ?? 'N/A'}',
+            style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 8),
           Row(
             children: [
-              ElevatedButton(onPressed: () {}, child: const Text('Accept')),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => _acceptOrder(o),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                  ),
+                  child: const Text('Accept'),
+                ),
+              ),
               const SizedBox(width: 8),
-              OutlinedButton(onPressed: () {}, child: const Text('Decline')),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _rejectOrder(o),
+                  child: const Text('Decline'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _markReady(o),
+                  child: const Text('Ready'),
+                ),
+              ),
             ],
           ),
         ],
@@ -1395,26 +1819,96 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
     );
   }
 
-  Widget _buildMenuItemTile(BuildContext context, MenuItem m) {
+  Widget _buildMenuItemTile(BuildContext context, Map<String, dynamic> m) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.withOpacity(0.2))),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+      ),
       child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(m.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text('${m.category} ÔÇó K${m.price} ÔÇó ${m.prepTimeMinutes}min', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                Text(m['name'] ?? 'N/A', style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text('${m['category'] ?? 'N/A'} • K${m['price']}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
               ],
             ),
           ),
-          Checkbox(value: m.isAvailable, onChanged: (v) {}),
+          InkWell(
+            onTap: () => _toggleItemAvailability(m),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: (m['is_available'] ?? false)
+                    ? LinearGradient(colors: [const Color(0xFF10B981).withOpacity(0.2), Colors.transparent])
+                    : LinearGradient(colors: [Colors.grey.withOpacity(0.2), Colors.transparent]),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                (m['is_available'] ?? false) ? Icons.check_circle : Icons.cancel,
+                color: (m['is_available'] ?? false) ? const Color(0xFF10B981) : Colors.grey,
+              ),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  void _acceptOrder(Map<String, dynamic> order) async {
+    final success = await _restaurantService.acceptOrder(
+      order['id'],
+      order['customer_phone'] ?? '+27696469651',
+    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Order accepted & customer notified ✅')),
+      );
+      _loadData();
+    }
+  }
+
+  void _rejectOrder(Map<String, dynamic> order) async {
+    final success = await _restaurantService.rejectOrder(
+      order['id'],
+      order['customer_phone'] ?? '+27696469651',
+      'Item not available',
+    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Order declined & customer notified')),
+      );
+      _loadData();
+    }
+  }
+
+  void _markReady(Map<String, dynamic> order) async {
+    final success = await _restaurantService.markOrderReady(
+      order['id'],
+      order['customer_phone'] ?? '+27696469651',
+    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Order marked ready & customer notified 🎉')),
+      );
+      _loadData();
+    }
+  }
+
+  void _toggleItemAvailability(Map<String, dynamic> item) async {
+    final newAvailability = !(item['is_available'] ?? false);
+    final success = await _restaurantService.updateMenuItemAvailability(
+      item['id'],
+      newAvailability,
+    );
+    if (success) {
+      _loadData();
+    }
   }
 }
 
@@ -1428,103 +1922,365 @@ class DeliveryAgentDashboard extends StatefulWidget {
 }
 
 class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
-  bool _isOnline = true;
+  bool _isOnline = false;
+  late DeliveryService _deliveryService;
+  List<Map<String, dynamic>> _availableDeliveries = [];
+  List<Map<String, dynamic>> _activeDeliveries = [];
+  bool _loading = true;
+  double _todayEarnings = 0;
+  late RealtimeChannel _deliverySubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _deliveryService = AppServices.deliveryService;
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      setState(() => _loading = true);
+      
+      if (_isOnline) {
+        _availableDeliveries = await _deliveryService.getAvailableDeliveries();
+        _activeDeliveries = await _deliveryService.getAgentDeliveries('agent_001');
+        _todayEarnings = await _deliveryService.getAgentEarnings('agent_001', DateTime.now());
+        _subscribeToDeliveries();
+      }
+      
+      setState(() => _loading = false);
+    } catch (e) {
+      print('❌ Error loading delivery data: $e');
+      setState(() => _loading = false);
+    }
+  }
+
+  void _subscribeToDeliveries() {
+    if (_activeDeliveries.isNotEmpty) {
+      _deliverySubscription = _deliveryService.subscribeToDelivery(_activeDeliveries.first['id']);
+    }
+  }
+
+  @override
+  void dispose() {
+    _deliverySubscription.unsubscribe();
+    super.dispose();
+  }
+
+  void _toggleOnline() async {
+    setState(() => _isOnline = !_isOnline);
+    
+    try {
+      if (_isOnline) {
+        await _deliveryService.setAgentOnline('agent_001', true);
+        _loadData();
+      } else {
+        await _deliveryService.setAgentOnline('agent_001', false);
+        setState(() {
+          _availableDeliveries = [];
+          _activeDeliveries = [];
+        });
+      }
+    } catch (e) {
+      print('❌ Error toggling online status: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating status: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Delivery Agent'),
-        actions: [IconButton(icon: const Icon(Icons.logout), onPressed: () => context.read<AppState>().logout())],
-      ),
-      body: Consumer<AppState>(
-        builder: (context, state, _) => SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Delivery Dashboard', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                  GestureDetector(
-                    onTap: () => setState(() => _isOnline = !_isOnline),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: _isOnline ? const Color(0xFF10B981).withOpacity(0.15) : Color.fromARGB(255, 239, 68, 68).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(_isOnline ? '­ƒƒó Online' : '­ƒö┤ Offline', style: TextStyle(fontWeight: FontWeight.w600, color: _isOnline ? const Color(0xFF10B981) : Color.fromARGB(255, 239, 68, 68))),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: MiniStatCard(title: 'Today', value: '12', icon: Icons.local_shipping, color: const Color(0xFF3B82F6))),
-                  const SizedBox(width: 12),
-                  Expanded(child: MiniStatCard(title: 'Earnings', value: 'K525', icon: Icons.attach_money, color: const Color(0xFF10B981))),
-                  const SizedBox(width: 12),
-                  Expanded(child: MiniStatCard(title: 'Rating', value: '4.8Ôÿà', icon: Icons.star, color: const Color(0xFFF59E0B))),
-                ],
-              ),
-              const SizedBox(height: 24),
-              if (_isOnline) ...[
-                Text('Available Deliveries', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 12),
-                ...state.getDemoDeliveries().map((d) => _buildDeliveryCard(context, d)).toList(),
-              ] else ...[
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: Colors.grey.withOpacity(0.1)),
-                  child: Column(
-                    children: [
-                      Icon(Icons.info_outline, size: 48, color: Colors.grey),
-                      const SizedBox(height: 12),
-                      const Text('Go online to see available deliveries', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
-                    ],
-                  ),
-                ),
-              ],
-            ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loading ? null : _loadData,
           ),
-        ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => context.read<AppState>().logout(),
+          ),
+        ],
       ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: 0,
+        onDestinationSelected: (i) {},
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+          NavigationDestination(icon: Icon(Icons.map), label: 'Map'),
+          NavigationDestination(icon: Icon(Icons.history), label: 'History'),
+        ],
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Delivery Dashboard', 
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                        GestureDetector(
+                          onTap: _toggleOnline,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: _isOnline ? const Color(0xFF10B981).withOpacity(0.15) : Colors.red.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: _isOnline ? const Color(0xFF10B981) : Colors.red,
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              _isOnline ? '🟢 Online' : '🔴 Offline',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: _isOnline ? const Color(0xFF10B981) : Colors.red,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (_isOnline) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: MiniStatCard(
+                              title: 'Available',
+                              value: '${_availableDeliveries.length}',
+                              icon: Icons.local_shipping,
+                              color: const Color(0xFF3B82F6),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: MiniStatCard(
+                              title: 'Active',
+                              value: '${_activeDeliveries.length}',
+                              icon: Icons.delivery_dining,
+                              color: const Color(0xFFF59E0B),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: MiniStatCard(
+                              title: 'Earnings',
+                              value: 'K${_todayEarnings.toStringAsFixed(0)}',
+                              icon: Icons.attach_money,
+                              color: const Color(0xFF10B981),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Text('Available Deliveries', style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 12),
+                      ..._availableDeliveries.map((d) => _buildDeliveryCard(context, d)).toList(),
+                      if (_availableDeliveries.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Text('No available deliveries',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                          ),
+                        ),
+                      const SizedBox(height: 24),
+                      if (_activeDeliveries.isNotEmpty) ...[
+                        Text('Active Deliveries', style: Theme.of(context).textTheme.titleMedium),
+                        const SizedBox(height: 12),
+                        ..._activeDeliveries.map((d) => _buildActiveDeliveryCard(context, d)).toList(),
+                      ],
+                    ] else ...[
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.grey.withOpacity(0.1),
+                        ),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.info_outline, size: 48, color: Colors.grey),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Go online to see available deliveries',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.grey, fontSize: 16),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _toggleOnline,
+                              child: const Text('Go Online'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
-  Widget _buildDeliveryCard(BuildContext context, DeliveryJob d) {
+  Widget _buildDeliveryCard(BuildContext context, Map<String, dynamic> d) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.withOpacity(0.2))),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        color: Colors.grey.withOpacity(0.02),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(d.id, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF8B5CF6))),
-              Text('K${d.fee.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF10B981), fontSize: 16)),
+              Text('Order #${d['id']?.toString().substring(0, 8) ?? 'N/A'}',
+                style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF8B5CF6))),
+              Text('K${d['fee']}',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF10B981), fontSize: 16)),
             ],
           ),
           const SizedBox(height: 8),
           Row(
-            children: [const Icon(Icons.location_on, size: 16, color: Colors.grey), const SizedBox(width: 4), Expanded(child: Text(d.pickupAddress, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)))],
+            children: [
+              const Icon(Icons.location_on, size: 16, color: Colors.grey),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  d['pickup_address'] ?? 'N/A',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           Row(
-            children: [const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey), const SizedBox(width: 4), Expanded(child: Text(d.deliveryAddress, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)))],
+            children: [
+              const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  d['delivery_address'] ?? 'N/A',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
-          Text('${d.distance} km ÔÇó ${d.customerName}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+          Text(
+            '${d['distance']} km • ${d['customer_name'] ?? 'N/A'}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+          ),
           const SizedBox(height: 8),
-          ElevatedButton(onPressed: () {}, child: const Text('Accept'), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6))),
+          ElevatedButton(
+            onPressed: () => _acceptDelivery(d),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6)),
+            child: const Text('Accept'),
+          ),
         ],
       ),
     );
+  }
+
+  Widget _buildActiveDeliveryCard(BuildContext context, Map<String, dynamic> d) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF8B5CF6)),
+        color: const Color(0xFF8B5CF6).withOpacity(0.05),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Order #${d['id']?.toString().substring(0, 8) ?? 'N/A'}',
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+              StatusBadge(label: d['status'] ?? 'in-transit', color: const Color(0xFF8B5CF6)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text('To: ${d['delivery_address'] ?? 'N/A'}',
+            style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _markDelivered(d),
+                  child: const Text('Delivered'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _cancelDelivery(d),
+                  child: const Text('Cancel'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _acceptDelivery(Map<String, dynamic> delivery) async {
+    final success = await _deliveryService.acceptDelivery(
+      delivery['id'],
+      'agent_001',
+      delivery['customer_phone'] ?? '+27696469651',
+    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Delivery accepted! 🚗')),
+      );
+      _loadData();
+    }
+  }
+
+  void _markDelivered(Map<String, dynamic> delivery) async {
+    final success = await _deliveryService.markDelivered(
+      delivery['id'],
+      delivery['customer_phone'] ?? '+27696469651',
+    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Delivery completed! ✅')),
+      );
+      _loadData();
+    }
+  }
+
+  void _cancelDelivery(Map<String, dynamic> delivery) async {
+    final success = await _deliveryService.cancelDelivery(
+      delivery['id'],
+      delivery['customer_phone'] ?? '+27696469651',
+      'Unable to complete',
+    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Delivery cancelled')),
+      );
+      _loadData();
+    }
   }
 }
 
@@ -1540,84 +2296,254 @@ class HotelManagerDashboard extends StatefulWidget {
 class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
   int _tabIndex = 0;
   bool _isOpen = true;
+  late HotelService _hotelService;
+  List<Map<String, dynamic>> _pendingBookings = [];
+  List<Map<String, dynamic>> _confirmedBookings = [];
+  List<Map<String, dynamic>> _rooms = [];
+  bool _loading = true;
+  double _occupancyRate = 0;
+  double _todayRevenue = 0;
+  late RealtimeChannel _bookingSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _hotelService = AppServices.hotelService;
+    _loadData();
+    _subscribeToBookings();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      setState(() => _loading = true);
+      
+      _pendingBookings = await _hotelService.getPendingBookings('hotel_001');
+      _confirmedBookings = await _hotelService.getConfirmedBookings('hotel_001', DateTime.now());
+      _rooms = await _hotelService.getRooms('hotel_001');
+      _occupancyRate = await _hotelService.getOccupancyRate('hotel_001');
+      _todayRevenue = await _hotelService.getTodayRevenue('hotel_001');
+      
+      setState(() => _loading = false);
+    } catch (e) {
+      print('❌ Error loading hotel data: $e');
+      setState(() => _loading = false);
+    }
+  }
+
+  void _subscribeToBookings() {
+    _bookingSubscription = _hotelService.subscribeToBookings('hotel_001');
+  }
+
+  @override
+  void dispose() {
+    _bookingSubscription.unsubscribe();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Hotel Manager'),
-        actions: [IconButton(icon: const Icon(Icons.logout), onPressed: () => context.read<AppState>().logout())],
-      ),
-      body: Consumer<AppState>(
-        builder: (context, state, _) => SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Hotel Manager', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                  OpenClosedToggle(isOpen: _isOpen, onChanged: (v) => setState(() => _isOpen = v)),
-                ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome, color: Color(0xFF14B8A6)),
+            tooltip: 'Pro Dashboard',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const UpgradedHotelManagerDashboard(hotelId: 'hotel_001'),
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: MiniStatCard(title: 'Rooms', value: '8/25', icon: Icons.hotel, color: const Color(0xFF14B8A6))),
-                  const SizedBox(width: 12),
-                  Expanded(child: MiniStatCard(title: 'Check-ins', value: '5', icon: Icons.login, color: const Color(0xFF10B981))),
-                  const SizedBox(width: 12),
-                  Expanded(child: MiniStatCard(title: 'Revenue', value: 'K1.2M', icon: Icons.attach_money, color: const Color(0xFF10B981))),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _tabIndex = 0),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: _tabIndex == 0 ? const Color(0xFF3B82F6) : Colors.transparent, width: 2))),
-                        child: Text('Bookings', textAlign: TextAlign.center, style: TextStyle(fontWeight: _tabIndex == 0 ? FontWeight.bold : FontWeight.normal)),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _tabIndex = 1),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: _tabIndex == 1 ? const Color(0xFF3B82F6) : Colors.transparent, width: 2))),
-                        child: Text('Rooms', textAlign: TextAlign.center, style: TextStyle(fontWeight: _tabIndex == 1 ? FontWeight.bold : FontWeight.normal)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (_tabIndex == 0) ...[
-                Text("Today's Bookings", style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 12),
-                ...state.getDemoBookings().map((b) => _buildBookingCard(context, b)).toList(),
-              ] else ...[
-                Text('Available Rooms', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 12),
-                ...state.getDemoRooms().map((r) => _buildRoomTile(context, r)).toList(),
-              ],
-            ],
+            ),
           ),
-        ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loading ? null : _loadData,
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => context.read<AppState>().logout(),
+          ),
+        ],
       ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: 0,
+        onDestinationSelected: (i) {
+          if (i == 1) {
+            Navigator.push(context, MaterialPageRoute(
+              builder: (_) => const UpgradedHotelManagerDashboard(hotelId: 'hotel_001'),
+            ));
+          }
+        },
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+          NavigationDestination(icon: Icon(Icons.auto_awesome), label: 'Pro View'),
+        ],
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Hotel Manager',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _isOpen ? const Color(0xFF10B981).withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: _isOpen ? const Color(0xFF10B981) : Colors.grey,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: GestureDetector(
+                            onTap: () => setState(() => _isOpen = !_isOpen),
+                            child: Text(
+                              _isOpen ? '🟢 Open' : '🔴 Closed',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: _isOpen ? const Color(0xFF10B981) : Colors.grey,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: MiniStatCard(
+                            title: 'Occupancy',
+                            value: '${_occupancyRate.toStringAsFixed(0)}%',
+                            icon: Icons.hotel,
+                            color: const Color(0xFF14B8A6),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: MiniStatCard(
+                            title: 'Pending',
+                            value: '${_pendingBookings.length}',
+                            icon: Icons.pending_actions,
+                            color: const Color(0xFFF59E0B),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: MiniStatCard(
+                            title: 'Today Revenue',
+                            value: 'K${_todayRevenue.toStringAsFixed(0)}',
+                            icon: Icons.attach_money,
+                            color: const Color(0xFF10B981),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _tabIndex = 0),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: _tabIndex == 0 ? const Color(0xFF3B82F6) : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                'Bookings',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: _tabIndex == 0 ? FontWeight.bold : FontWeight.normal,
+                                  color: _tabIndex == 0 ? const Color(0xFF3B82F6) : Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _tabIndex = 1),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: _tabIndex == 1 ? const Color(0xFF3B82F6) : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                'Rooms',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: _tabIndex == 1 ? FontWeight.bold : FontWeight.normal,
+                                  color: _tabIndex == 1 ? const Color(0xFF3B82F6) : Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (_tabIndex == 0) ...[
+                      if (_pendingBookings.isNotEmpty) ...[
+                        Text('Pending Confirmations',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: const Color(0xFFF59E0B))),
+                        const SizedBox(height: 12),
+                        ..._pendingBookings.map((b) => _buildBookingCard(context, b, isPending: true)).toList(),
+                        const SizedBox(height: 20),
+                      ],
+                      Text("Today's Check-ins",
+                        style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 12),
+                      ..._confirmedBookings.map((b) => _buildBookingCard(context, b, isPending: false)).toList(),
+                      if (_confirmedBookings.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Text('No bookings for today',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                          ),
+                        ),
+                    ] else ...[
+                      Text('Available Rooms',
+                        style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 12),
+                      ..._rooms.map((r) => _buildRoomTile(context, r)).toList(),
+                    ],
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
-  Widget _buildBookingCard(BuildContext context, HotelBooking b) {
+  Widget _buildBookingCard(BuildContext context, Map<String, dynamic> b, {bool isPending = false}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.withOpacity(0.2))),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        color: isPending ? const Color(0xFFF59E0B).withOpacity(0.05) : Colors.grey.withOpacity(0.02),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1627,58 +2553,136 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Room ${b.roomNumber} - ${b.roomType}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text(b.guestName, style: Theme.of(context).textTheme.bodySmall),
+                  Text('Room ${b['room_number']} - ${b['room_type'] ?? 'N/A'}',
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(b['guest_name'] ?? 'N/A',
+                    style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
-              StatusBadge(label: b.statusLabel, color: const Color(0xFF14B8A6)),
+              StatusBadge(
+                label: b['status'] ?? 'pending',
+                color: isPending ? const Color(0xFFF59E0B) : const Color(0xFF14B8A6),
+              ),
             ],
           ),
           const SizedBox(height: 8),
-          Text('${b.nights} nights ÔÇó ${b.guests} guest(s) ÔÇó K${b.totalPrice.toStringAsFixed(0)}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+          Text('${b['nights']} nights • ${b['guests']} guest(s) • K${b['total_price']}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              ElevatedButton(onPressed: () {}, child: const Text('Confirm'), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981))),
-              if (b.status == BookingStatus.confirmed) ElevatedButton(onPressed: () {}, child: const Text('Check In'), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6))),
-            ],
-          ),
+          if (isPending)
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => _confirmBooking(b),
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
+                    child: const Text('Confirm'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _rejectBooking(b),
+                    child: const Text('Reject'),
+                  ),
+                ),
+              ],
+            )
+          else
+            ElevatedButton(
+              onPressed: () => _checkIn(b),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6)),
+              child: const Text('Check In'),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildRoomTile(BuildContext context, HotelRoom r) {
+  Widget _buildRoomTile(BuildContext context, Map<String, dynamic> r) {
+    final isAvailable = r['status'] == 'available';
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.withOpacity(0.2))),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+      ),
       child: Row(
         children: [
           Container(
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: r.isAvailable ? const Color(0xFF10B981).withOpacity(0.15) : Colors.grey.withOpacity(0.15),
+              color: isAvailable ? const Color(0xFF10B981).withOpacity(0.15) : Colors.grey.withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Center(child: Icon(Icons.hotel, color: r.isAvailable ? const Color(0xFF10B981) : Colors.grey)),
+            child: Center(
+              child: Icon(
+                Icons.hotel,
+                color: isAvailable ? const Color(0xFF10B981) : Colors.grey,
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(r.number, style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text('${r.type} ÔÇó K${r.pricePerNight} per night', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                Text(r['number'] ?? 'N/A',
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text('${r['type'] ?? 'N/A'} • K${r['price_per_night']}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
               ],
             ),
           ),
-          StatusBadge(label: r.isAvailable ? 'Available' : 'Occupied', color: r.isAvailable ? const Color(0xFF10B981) : Colors.grey),
+          StatusBadge(
+            label: isAvailable ? 'Available' : 'Occupied',
+            color: isAvailable ? const Color(0xFF10B981) : Colors.grey,
+          ),
         ],
       ),
     );
+  }
+
+  void _confirmBooking(Map<String, dynamic> booking) async {
+    final success = await _hotelService.confirmBooking(
+      booking['id'],
+      booking['guest_phone'] ?? '+27696469651',
+    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Booking confirmed & guest notified ✅')),
+      );
+      _loadData();
+    }
+  }
+
+  void _rejectBooking(Map<String, dynamic> booking) async {
+    final success = await _hotelService.rejectBooking(
+      booking['id'],
+      booking['guest_phone'] ?? '+27696469651',
+      'Room unavailable',
+    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Booking rejected & guest notified')),
+      );
+      _loadData();
+    }
+  }
+
+  void _checkIn(Map<String, dynamic> booking) async {
+    final success = await _hotelService.checkIn(
+      booking['id'],
+      booking['guest_phone'] ?? '+27696469651',
+    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Guest checked in! Welcome 🎉')),
+      );
+      _loadData();
+    }
   }
 }
 
@@ -1700,6 +2704,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
       appBar: AppBar(
         title: const Text('Platform Admin'),
         actions: [IconButton(icon: const Icon(Icons.logout), onPressed: () => context.read<AppState>().logout())],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _tabIndex,
+        onDestinationSelected: (i) => setState(() => _tabIndex = i),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.approval), label: 'Approvals'),
+          NavigationDestination(icon: Icon(Icons.gps_fixed), label: 'Tracking'),
+          NavigationDestination(icon: Icon(Icons.analytics), label: 'Analytics'),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

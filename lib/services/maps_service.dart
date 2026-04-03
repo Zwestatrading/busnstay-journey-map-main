@@ -189,17 +189,15 @@ class MapsService {
   }
 
   // Get map bounds from a list of locations
-  static CameraUpdateOptions getBoundsFromLocations(List<LatLng> locations) {
+  static CameraUpdate getBoundsFromLocations(List<LatLng> locations) {
     if (locations.isEmpty) {
       // Default to Lusaka
-      return CameraUpdateOptions(
-        bounds: CameraUpdateBounds(
-          bounds: LatLngBounds(
-            southwest: const LatLng(-15.4500, 28.2500),
-            northeast: const LatLng(-15.3500, 28.4000),
-          ),
-          padding: 100,
+      return CameraUpdate.newLatLngBounds(
+        LatLngBounds(
+          southwest: const LatLng(-15.4500, 28.2500),
+          northeast: const LatLng(-15.3500, 28.4000),
         ),
+        100,
       );
     }
 
@@ -215,66 +213,12 @@ class MapsService {
       maxLng = maxLng < location.longitude ? location.longitude : maxLng;
     }
 
-    return CameraUpdateOptions(
-      bounds: CameraUpdateBounds(
-        bounds: LatLngBounds(
-          southwest: LatLng(minLat, minLng),
-          northeast: LatLng(maxLat, maxLng),
-        ),
-        padding: 150,
+    return CameraUpdate.newLatLngBounds(
+      LatLngBounds(
+        southwest: LatLng(minLat, minLng),
+        northeast: LatLng(maxLat, maxLng),
       ),
+      150,
     );
   }
 }
-  static double calculateDistance(
-    double lat1,
-    double lon1,
-    double lat2,
-    double lon2,
-  ) {
-    const R = 6371; // Earth's radius in km
-    final dLat = _toRad(lat2 - lat1);
-    final dLon = _toRad(lon2 - lon1);
-    final a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(_toRad(lat1)) *
-            Math.cos(_toRad(lat2)) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
-    final c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
-
-  static double _toRad(double deg) => deg * (3.141592653589793 / 180);
-
-  // Demo locations (Lusaka, Zambia area)
-  static Map<String, dynamic> getDemoLocation(String name) {
-    const locations = {
-      'lusaka_city': {'latitude': -15.3875, 'longitude': 28.3228, 'name': 'Lusaka City Center'},
-      'airport': {'latitude': -15.2833, 'longitude': 28.6167, 'name': 'Harry Mwabu Airport'},
-      'ridgeway': {'latitude': -15.4167, 'longitude': 28.2833, 'name': 'Ridgeway'},
-      'livingstone': {'latitude': -17.8252, 'longitude': 25.8711, 'name': 'Livingstone'},
-      'ndola': {'latitude': -12.9626, 'longitude': 28.6391, 'name': 'Ndola'},
-      'kitwe': {'latitude': -12.8085, 'longitude': 28.2469, 'name': 'Kitwe'},
-    };
-
-    return locations[name.toLowerCase()] ?? locations['lusaka_city']!;
-  }
-
-  // Check if delivery is nearby (within 100m for pickup/dropoff)
-  static bool isNearby(Position current, double targetLat, double targetLon) {
-    final distance = calculateDistance(
-      current.latitude,
-      current.longitude,
-      targetLat,
-      targetLon,
-    );
-    return distance < 0.1; // 100 meters
-  }
-
-  // Format location for display
-  static String formatLocation({required double latitude, required double longitude}) {
-    return '$latitude°, $longitude°';
-  }
-}
-
-import 'dart:math' as Math;

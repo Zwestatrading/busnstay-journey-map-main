@@ -152,11 +152,15 @@ class BusOperatorService {
   RealtimeChannel subscribeToJourney(String journeyId) {
     return supabase
         .channel('journey:$journeyId')
-        .onPostgresChange(
+        .onPostgresChanges(
           event: PostgresChangeEvent.update,
           schema: 'public',
           table: 'journeys',
-          filter: 'id=eq.$journeyId',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'id',
+            value: journeyId,
+          ),
           callback: (payload) {
             print('📊 [JOURNEY UPDATE] ${payload.newRecord}');
           },

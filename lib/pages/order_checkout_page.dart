@@ -345,7 +345,7 @@ class _OrderCheckoutPageState extends State<OrderCheckoutPage> {
                                   vertical: 12,
                                 ),
                                 child: Row(
-                                  justify: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Column(
                                       crossAxisAlignment:

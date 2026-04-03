@@ -25,3 +25,14 @@ dist-ssr
 
 .vercel
 .env*.local
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+build/
+
+# Generated report artifacts
+*_tmp.html
