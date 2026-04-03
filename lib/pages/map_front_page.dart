@@ -1,19 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
+import '../models/user_model.dart';
+import '../services/app_state.dart';
 import '../theme/app_colors.dart';
+import 'forgot_password_page.dart';
 
-/// Uber-style map landing page shown before authentication.
-/// Displays a full-screen map with route selection, service cards,
-/// and a floating "Sign In" button.
+/// Uber-style map landing page with inline role selection and sign-in.
+/// Everything lives on one screen — no separate auth page.
 class MapFrontPage extends StatefulWidget {
-  final VoidCallback onSignInTap;
   final void Function(String service)? onServiceTap;
 
   const MapFrontPage({
     super.key,
-    required this.onSignInTap,
     this.onServiceTap,
   });
 
@@ -31,6 +33,13 @@ class _MapFrontPageState extends State<MapFrontPage>
   String _pickupText = '';
   String _destinationText = '';
   int _selectedServiceIndex = 0;
+
+  // Auth state
+  bool _isLogin = true;
+  bool _showForgotPassword = false;
+  UserRole _selectedRole = UserRole.passenger;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   // Default center: Lusaka, Zambia
   static const LatLng _defaultCenter = LatLng(-15.3875, 28.3228);
@@ -159,11 +168,19 @@ class _MapFrontPageState extends State<MapFrontPage>
   void dispose() {
     _panelController.dispose();
     _mapController?.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_showForgotPassword) {
+      return ForgotPasswordScreen(
+        onBackToLogin: () => setState(() => _showForgotPassword = false),
+      );
+    }
+
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
@@ -210,32 +227,157 @@ class _MapFrontPageState extends State<MapFrontPage>
             child: _buildSearchBar(context),
           ),
 
-          // ── Bottom panel ──
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: AnimatedBuilder(
-              animation: _panelAnimation,
-              builder: (context, child) => Transform.translate(
-                offset: Offset(0, (1 - _panelAnimation.value) * 300),
-                child: Opacity(opacity: _panelAnimation.value, child: child),
-              ),
-              child: _buildBottomPanel(context, bottomInset),
-            ),
-          ),
+          // ── Scrollable bottom panel (routes + role grid + sign in) ──
+          DraggableScrollableSheet(
+            initialChildSize: 0.42,
+            minChildSize: 0.18,
+            maxChildSize: 0.88,
+            snap: true,
+            snapSizes: const [0.18, 0.42, 0.88],
+            builder: (context, scrollController) {
+              return Container(
+                decoration: const BoxDecoration(
+                  color: AppColors.darkBg,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: ListView(
+                  controller: scrollController,
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, 12 + bottomInset),
+                  children: [
+                    const SizedBox(height: 10),
+                    // Handle
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
 
-          // ── Sign In FAB ──
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 12,
-            right: 16,
-            child: _buildSignInButton(context),
+                    // Service categories
+                    SizedBox(
+                      height: 72,
+                      child: Row(
+                        children: List.generate(_services.length, (i) {
+                          final s = _services[i];
+                          final isSelected = _selectedServiceIndex == i;
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() => _selectedServiceIndex = i);
+                                widget.onServiceTap?.call(s.label);
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 250),
+                                margin: const EdgeInsets.symmetric(horizontal: 4),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? s.color.withOpacity(0.15) : AppColors.darkCard,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isSelected ? s.color : Colors.white10,
+                                    width: isSelected ? 1.5 : 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(s.icon, color: isSelected ? s.color : Colors.white54, size: 24),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      s.label,
+                                      style: TextStyle(
+                                        color: isSelected ? s.color : Colors.white54,
+                                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Popular routes
+                    Text(
+                      'Popular routes',
+                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: 0.3),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 60,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _popularRoutes.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemBuilder: (context, i) => _buildRouteChip(_popularRoutes[i]),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ── Role selection grid ──
+                    Text(
+                      'Choose your role',
+                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: 0.3),
+                    ),
+                    const SizedBox(height: 10),
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 1.05,
+                      children: [
+                        _buildRoleCard('Passenger', 'Icons/Passenger.jpg', UserRole.passenger),
+                        _buildRoleCard('Transport', 'Icons/Bus operator Icon.jpg', UserRole.busOperator),
+                        _buildRoleCard('Restaurant', 'Icons/Restaurant_icon.jpg', UserRole.restaurantAdmin),
+                        _buildRoleCard('Delivery', 'Icons/Delivery_icon.jpg', UserRole.deliveryAgent),
+                        _buildRoleCard('Hotel', 'Icons/Hotel_icon.jpg', UserRole.hotelManager),
+                        _buildRoleCard('Admin', 'Icons/Admin icon.jpg', UserRole.platformAdmin),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // ── Selected role summary ──
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.darkCard,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.18)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Selected role experience', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
+                          const SizedBox(height: 6),
+                          Text(_roleLabel(_selectedRole), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w800, fontSize: 14)),
+                          const SizedBox(height: 4),
+                          Text(_roleSummary(_selectedRole), style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12, height: 1.4)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ── Sign in form ──
+                    _buildSignInForm(context, bottomInset),
+                  ],
+                ),
+              );
+            },
           ),
 
           // ── My-location button ──
           Positioned(
             right: 16,
-            bottom: (_routeSelected ? 360 : 280) + bottomInset,
+            top: MediaQuery.of(context).padding.top + 70,
             child: _buildMyLocationButton(),
           ),
         ],
@@ -323,128 +465,6 @@ class _MapFrontPageState extends State<MapFrontPage>
     );
   }
 
-  Widget _buildBottomPanel(BuildContext context, double bottomInset) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(16, 14, 16, 12 + bottomInset),
-      decoration: const BoxDecoration(
-        color: AppColors.darkBg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Service categories
-          SizedBox(
-            height: 72,
-            child: Row(
-              children: List.generate(_services.length, (i) {
-                final s = _services[i];
-                final isSelected = _selectedServiceIndex == i;
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() => _selectedServiceIndex = i);
-                      widget.onServiceTap?.call(s.label);
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isSelected ? s.color.withOpacity(0.15) : AppColors.darkCard,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isSelected ? s.color : Colors.white10,
-                          width: isSelected ? 1.5 : 1,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(s.icon, color: isSelected ? s.color : Colors.white54, size: 24),
-                          const SizedBox(height: 4),
-                          Text(
-                            s.label,
-                            style: TextStyle(
-                              color: isSelected ? s.color : Colors.white54,
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // Popular routes
-          Text(
-            'Popular routes',
-            style: TextStyle(color: Colors.white.withOpacity(0.7), fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: 0.3),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 60,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _popularRoutes.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, i) => _buildRouteChip(_popularRoutes[i]),
-            ),
-          ),
-
-          if (_routeSelected) ...[
-            const SizedBox(height: 18),
-            // Continue / Book button
-            SizedBox(
-              width: double.infinity,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: AppColors.buttonGradient,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(color: AppColors.primary.withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 4)),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: widget.onSignInTap,
-                    borderRadius: BorderRadius.circular(14),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                      child: Center(
-                        child: Text(
-                          'Continue — Sign in to book',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15, letterSpacing: 0.3),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
   Widget _buildRouteChip(_RouteOption route) {
     final isActive = _pickupText == route.from && _destinationText == route.to;
     return GestureDetector(
@@ -452,9 +472,9 @@ class _MapFrontPageState extends State<MapFrontPage>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.accent.withOpacity(0.18) : AppColors.darkCard,
+          color: isActive ? AppColors.primary.withOpacity(0.18) : AppColors.darkCard,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: isActive ? AppColors.accent : Colors.white10),
+          border: Border.all(color: isActive ? AppColors.primary : Colors.white10),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -463,7 +483,7 @@ class _MapFrontPageState extends State<MapFrontPage>
             Text(
               '${route.from} → ${route.to}',
               style: TextStyle(
-                color: isActive ? AppColors.accentLight : Colors.white,
+                color: isActive ? AppColors.primaryLight : Colors.white,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
               ),
@@ -479,28 +499,287 @@ class _MapFrontPageState extends State<MapFrontPage>
     );
   }
 
-  Widget _buildSignInButton(BuildContext context) {
+  // ── Role helpers ──
+
+  String _roleLabel(UserRole role) {
+    switch (role) {
+      case UserRole.passenger: return 'Passenger';
+      case UserRole.busOperator: return 'Bus or Taxi Operator';
+      case UserRole.restaurantAdmin: return 'Restaurant';
+      case UserRole.deliveryAgent: return 'Delivery';
+      case UserRole.hotelManager: return 'Hotel';
+      case UserRole.platformAdmin: return 'Admin';
+      default: return 'User';
+    }
+  }
+
+  String _roleSummary(UserRole role) {
+    switch (role) {
+      case UserRole.passenger: return 'Access journeys, orders, saved places, wallet activity, and profile tools.';
+      case UserRole.busOperator: return 'Monitor bus or taxi movement, route windows, dispatch readiness, and occupancy.';
+      case UserRole.restaurantAdmin: return 'Control storefront availability, orders, menu publishing, and restaurant reporting.';
+      case UserRole.deliveryAgent: return 'Manage delivery runs, online status, wallet payouts, and recent transactions.';
+      case UserRole.hotelManager: return 'Track bookings, room service, room inventory, and hotel performance.';
+      case UserRole.platformAdmin: return 'Review approvals, watch fleet operations, and monitor system health.';
+      default: return 'Choose a role to continue.';
+    }
+  }
+
+  String _defaultEmailFor(UserRole role) {
+    switch (role) {
+      case UserRole.passenger: return 'traveler@busnstay.demo';
+      case UserRole.busOperator: return 'operator@busnstay.demo';
+      case UserRole.restaurantAdmin: return 'restaurant@busnstay.demo';
+      case UserRole.deliveryAgent: return 'rider@busnstay.demo';
+      case UserRole.hotelManager: return 'hotel@busnstay.demo';
+      case UserRole.platformAdmin: return 'admin@busnstay.demo';
+      default: return AppState.demoEmail;
+    }
+  }
+
+  Future<void> _submitAuth() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter your email and password.')),
+      );
+      return;
+    }
+
+    final appState = context.read<AppState>();
+    final success = _isLogin
+        ? await appState.signIn(email: email, password: password, role: _selectedRole)
+        : await appState.signUp(email: email, password: password, name: _roleLabel(_selectedRole), role: _selectedRole);
+
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(appState.authError ?? 'Authentication failed.')),
+      );
+    }
+  }
+
+  Widget _buildRoleCard(String label, String imagePath, UserRole role) {
+    final isSelected = _selectedRole == role;
     return GestureDetector(
-      onTap: widget.onSignInTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      onTap: () {
+        setState(() => _selectedRole = role);
+        if (kDebugMode) {
+          _emailController.text = _defaultEmailFor(role);
+          _passwordController.text = AppState.demoPassword;
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
         decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
           color: AppColors.darkCard,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 3)),
-          ],
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.white.withOpacity(0.1),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 14, offset: const Offset(0, 5))]
+              : [],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            Icon(Icons.person_outline_rounded, color: AppColors.primary, size: 18),
-            const SizedBox(width: 6),
-            const Text('Sign In', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+            Image.asset(imagePath, fit: BoxFit.cover),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: isSelected
+                      ? [AppColors.primary.withOpacity(0.16), AppColors.darkBg.withOpacity(0.12), AppColors.primary.withOpacity(0.35)]
+                      : [Colors.black.withOpacity(0.04), Colors.black.withOpacity(0.18), Colors.black.withOpacity(0.50)],
+                ),
+              ),
+            ),
+            if (isSelected)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(999)),
+                  child: const Text('Selected', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 10)),
+                ),
+              ),
+            Positioned(
+              left: 10,
+              right: 10,
+              bottom: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.36),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white.withOpacity(0.14)),
+                ),
+                child: Text(label, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSignInForm(BuildContext context, double bottomInset) {
+    final appState = context.watch<AppState>();
+    final isBusy = appState.isAuthenticating;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Demo credentials (debug only)
+        if (kDebugMode) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.primary.withOpacity(0.18)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Demo credentials', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 13)),
+                const SizedBox(height: 4),
+                Text('Email: ${AppState.demoEmail}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                Text('Password: ${AppState.demoPassword}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () => setState(() {
+                    _emailController.text = AppState.demoEmail;
+                    _passwordController.text = AppState.demoPassword;
+                  }),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text('Use demo credentials', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
+
+        // Email
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.darkCard,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+          ),
+          child: TextField(
+            controller: _emailController,
+            enabled: !isBusy,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+            decoration: InputDecoration(
+              labelText: 'Email Address',
+              labelStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13),
+              border: InputBorder.none,
+              prefixIcon: Icon(Icons.email, color: AppColors.primary.withOpacity(0.6), size: 20),
+              contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Password
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.darkCard,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+          ),
+          child: TextField(
+            controller: _passwordController,
+            enabled: !isBusy,
+            obscureText: true,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+            decoration: InputDecoration(
+              labelText: 'Password',
+              labelStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13),
+              border: InputBorder.none,
+              prefixIcon: Icon(Icons.lock, color: AppColors.primary.withOpacity(0.6), size: 20),
+              contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Forgot password
+        if (_isLogin)
+          Align(
+            alignment: Alignment.centerRight,
+            child: GestureDetector(
+              onTap: () => setState(() => _showForgotPassword = true),
+              child: const Text('Forgot Password?', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12)),
+            ),
+          ),
+        const SizedBox(height: 14),
+
+        // Sign in button
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: AppColors.buttonGradient,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.4), blurRadius: 14, offset: const Offset(0, 4))],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: isBusy ? null : _submitAuth,
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Center(
+                  child: isBusy
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
+                      : Text(
+                          _isLogin ? 'Login' : 'Register',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15, letterSpacing: 0.4),
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Toggle login/register
+        Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _isLogin ? "Don't have an account? " : 'Already have an account? ',
+                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+              ),
+              GestureDetector(
+                onTap: () => setState(() => _isLogin = !_isLogin),
+                child: Text(
+                  _isLogin ? 'Register' : 'Login',
+                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
     );
   }
 

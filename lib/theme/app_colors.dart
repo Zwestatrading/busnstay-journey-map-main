@@ -1,33 +1,33 @@
 import 'package:flutter/material.dart';
 
-/// BusNStay brand color palette — dark yellow / green transport theme
+/// BusNStay brand color palette — dark / solid yellow transport theme
 class AppColors {
   AppColors._();
 
-  // ── Primary: Dark Yellow / Goldenrod ──
-  static const Color primary = Color(0xFFDAA520);
-  static const Color primaryDark = Color(0xFFB8860B);
-  static const Color primaryLight = Color(0xFFFFD54F);
+  // ── Primary: Dark Solid Yellow ──
+  static const Color primary = Color(0xFFD4A017);      // dark goldenrod
+  static const Color primaryDark = Color(0xFFB8860B);   // deep dark yellow
+  static const Color primaryLight = Color(0xFFE8C547);  // lighter gold
 
-  // ── Secondary: Forest Green ──
-  static const Color accent = Color(0xFF2E7D32);
-  static const Color accentDark = Color(0xFF1B5E20);
-  static const Color accentLight = Color(0xFF4CAF50);
+  // ── Secondary: Amber / Darker Yellow ──
+  static const Color accent = Color(0xFFC49000);        // dark amber yellow
+  static const Color accentDark = Color(0xFF9E7700);    // very dark yellow
+  static const Color accentLight = Color(0xFFDDA51F);   // warm yellow
 
-  // ── Tertiary: Emerald ──
-  static const Color emerald = Color(0xFF10B981);
+  // ── Tertiary: Orange-gold ──
+  static const Color emerald = Color(0xFFE6A817);
 
-  // ── Neutrals ──
-  static const Color darkBg = Color(0xFF0D1A0D);
-  static const Color darkSurface = Color(0xFF142014);
-  static const Color darkCard = Color(0xFF1A2E1A);
-  static const Color lightBg = Color(0xFFF5F7F0);
+  // ── Neutrals: Dark warm tones ──
+  static const Color darkBg = Color(0xFF1A1400);        // near-black warm
+  static const Color darkSurface = Color(0xFF231B05);   // dark brown-yellow
+  static const Color darkCard = Color(0xFF2A2008);      // dark card warm
+  static const Color lightBg = Color(0xFFFFF8E1);       // cream
   static const Color lightSurface = Color(0xFFFFFFFF);
 
   // ── Utility ──
   static const Color gold = Color(0xFFFFD700);
   static const Color navy = Color(0xFF111827);
-  static const Color teal = Color(0xFF14B8A6);
+  static const Color teal = Color(0xFFD4A017);
   static const Color blue = Color(0xFF3B82F6);
   static const Color purple = Color(0xFF8B5CF6);
   static const Color amber = Color(0xFFF59E0B);
@@ -41,19 +41,19 @@ class AppColors {
   );
 
   static const LinearGradient heroGradient = LinearGradient(
-    colors: [Color(0xFF0D1A0D), Color(0xFF1B5E20)],
+    colors: [Color(0xFF1A1400), Color(0xFF3D2E00)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient buttonGradient = LinearGradient(
-    colors: [primary, accent],
+    colors: [primary, accentDark],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient mapOverlayGradient = LinearGradient(
-    colors: [Color(0x00000000), Color(0xCC0D1A0D)],
+    colors: [Color(0x00000000), Color(0xCC1A1400)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
