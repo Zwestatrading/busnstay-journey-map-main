@@ -13,6 +13,8 @@ import '../services/order_document_service.dart';
 import '../services/restaurant_service.dart';
 import '../services/transaction_fee_service.dart';
 import '../widgets/operations_tracking_board.dart';
+import '../models/order_chat_model.dart';
+import 'order_chat_page.dart';
 
 class UpgradedRestaurantAdminDashboard extends StatefulWidget {
   final String restaurantId;
@@ -480,6 +482,41 @@ class _UpgradedRestaurantAdminDashboardState
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => OrderChatPage(
+                      orderId: order.code,
+                      orderCode: order.code,
+                      mySide: ChatSender.store,
+                      myName: 'Restaurant',
+                      otherName: order.customerName,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.chat_outlined, size: 16),
+              label: Text(
+                'Chat with ${order.customerName.split(' ').first}',
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: color,
+                side: BorderSide(color: color.withOpacity(0.4)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+            ),
           ),
         ],
       ),

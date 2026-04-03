@@ -10,6 +10,8 @@ import '../services/app_state.dart';
 import '../services/flutterwave_service.dart';
 import '../widgets/payment_modal.dart';
 import 'order_checkout_page.dart';
+import 'order_chat_page.dart';
+import '../models/order_chat_model.dart';
 import 'professional_restaurant_page.dart';
 
 class PassengerExperiencePage extends StatefulWidget {
@@ -634,6 +636,41 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
               Expanded(child: _historyMeta('Total', order.totalLabel)),
               Expanded(child: _historyMeta('Status note', order.etaLabel)),
             ],
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => OrderChatPage(
+                      orderId: order.code,
+                      orderCode: order.code,
+                      mySide: ChatSender.passenger,
+                      myName: 'Passenger',
+                      otherName: order.title.split(' order').first,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.chat_outlined, size: 16),
+              label: Text(
+                'Chat with store',
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: BorderSide(color: AppColors.primary.withOpacity(0.4)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+            ),
           ),
         ],
       ),

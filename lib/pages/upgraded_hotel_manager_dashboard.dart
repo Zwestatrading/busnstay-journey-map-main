@@ -10,6 +10,9 @@ import '../services/app_state.dart';
 
 import '../services/hotel_enhanced_service.dart';
 import '../widgets/operations_tracking_board.dart';
+import '../models/order_chat_model.dart';
+import 'order_chat_page.dart';
+import '../main.dart';
 
 class UpgradedHotelManagerDashboard extends StatefulWidget {
   final String hotelId;
@@ -421,6 +424,41 @@ class _UpgradedHotelManagerDashboardState
                 ),
               ),
             ],
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => OrderChatPage(
+                        orderId: order.id,
+                        orderCode: 'Room ${order.roomNumber}',
+                        mySide: ChatSender.store,
+                        myName: 'Hotel Staff',
+                        otherName: order.guestName,
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.chat_outlined, size: 16),
+                label: Text(
+                  'Chat with ${order.guestName.split(' ').first}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: statusColor,
+                  side: BorderSide(color: statusColor.withOpacity(0.4)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+              ),
+            ),
           ],
         ),
       ),

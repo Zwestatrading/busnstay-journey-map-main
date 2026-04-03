@@ -20,6 +20,7 @@ import 'services/hotel_service.dart';
 import 'services/live_location_service.dart';
 import 'services/menu_management_service.dart';
 import 'services/transaction_fee_service.dart';
+import 'services/order_chat_service.dart';
 import 'theme/app_colors.dart';
 import 'widgets/payment_modal.dart';
 import 'widgets/operations_tracking_board.dart';
@@ -47,6 +48,7 @@ class AppServices {
   static late MenuManagementService menuService;
   static late DeliveryService deliveryService;
   static late TransactionFeeService transactionFeeService;
+  static late OrderChatService orderChatService;
 
   static bool _initialized = false;
 
@@ -136,6 +138,10 @@ class AppServices {
       // Initialize Delivery Service (delivery agents)
       deliveryService = DeliveryService(supabase: supabaseClient);
       print('✅ [INIT] Delivery service initialized');
+
+      // Initialize Order Chat Service (live chat between passenger & store)
+      orderChatService = OrderChatService(supabaseClient: supabaseClient);
+      print('✅ [INIT] Order chat service initialized');
 
       _initialized = true;
       print('✅ [INIT] All services initialized successfully!');
