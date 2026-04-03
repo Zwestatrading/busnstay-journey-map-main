@@ -363,6 +363,55 @@ class _FrontDoorPill extends StatelessWidget {
   }
 }
 
+class _FrontDoorRolePreview extends StatelessWidget {
+  final String label;
+  final String imagePath;
+
+  const _FrontDoorRolePreview({
+    required this.label,
+    required this.imagePath,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 84,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Image.asset(
+              imagePath,
+              width: 56,
+              height: 56,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 
 class BusNStayApp extends StatelessWidget {
   const BusNStayApp({Key? key}) : super(key: key);
@@ -605,6 +654,43 @@ class _AuthScreenState extends State<AuthScreen> {
                             _FrontDoorPill(label: 'Delivery earnings'),
                           ],
                         ),
+                        const SizedBox(height: 16),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: const [
+                              _FrontDoorRolePreview(
+                                label: 'Passenger',
+                                imagePath: 'Icons/Passenger.jpg',
+                              ),
+                              SizedBox(width: 10),
+                              _FrontDoorRolePreview(
+                                label: 'Bus Operator',
+                                imagePath: 'Icons/Bus operator Icon.jpg',
+                              ),
+                              SizedBox(width: 10),
+                              _FrontDoorRolePreview(
+                                label: 'Restaurant',
+                                imagePath: 'Icons/Restaurant_icon.jpg',
+                              ),
+                              SizedBox(width: 10),
+                              _FrontDoorRolePreview(
+                                label: 'Delivery',
+                                imagePath: 'Icons/Delivery_icon.jpg',
+                              ),
+                              SizedBox(width: 10),
+                              _FrontDoorRolePreview(
+                                label: 'Hotel',
+                                imagePath: 'Icons/Hotel_icon.jpg',
+                              ),
+                              SizedBox(width: 10),
+                              _FrontDoorRolePreview(
+                                label: 'Admin',
+                                imagePath: 'Icons/Admin icon.jpg',
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -617,12 +703,12 @@ class _AuthScreenState extends State<AuthScreen> {
                     mainAxisSpacing: 12,
                     childAspectRatio: 1.05,
                     children: [
-                      _buildRoleCard('Passenger', Icons.person, UserRole.passenger),
-                      _buildRoleCard('Bus Operator', Icons.directions_bus, UserRole.busOperator),
-                      _buildRoleCard('Restaurant', Icons.restaurant, UserRole.restaurantAdmin),
-                      _buildRoleCard('Delivery', Icons.local_shipping, UserRole.deliveryAgent),
-                      _buildRoleCard('Hotel', Icons.hotel, UserRole.hotelManager),
-                      _buildRoleCard('Admin', Icons.admin_panel_settings, UserRole.platformAdmin),
+                      _buildRoleCard('Passenger', 'Icons/Passenger.jpg', UserRole.passenger),
+                      _buildRoleCard('Bus Operator', 'Icons/Bus operator Icon.jpg', UserRole.busOperator),
+                      _buildRoleCard('Restaurant', 'Icons/Restaurant_icon.jpg', UserRole.restaurantAdmin),
+                      _buildRoleCard('Delivery', 'Icons/Delivery_icon.jpg', UserRole.deliveryAgent),
+                      _buildRoleCard('Hotel', 'Icons/Hotel_icon.jpg', UserRole.hotelManager),
+                      _buildRoleCard('Admin', 'Icons/Admin icon.jpg', UserRole.platformAdmin),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -774,7 +860,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  Widget _buildRoleCard(String label, IconData icon, UserRole role) {
+  Widget _buildRoleCard(String label, String imagePath, UserRole role) {
     final isSelected = _selectedRole == role;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -828,9 +914,9 @@ class _AuthScreenState extends State<AuthScreen> {
                 scale: isSelected ? 1.15 : 1.0,
                 duration: const Duration(milliseconds: 300),
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(18),
                     gradient: isSelected
                         ? LinearGradient(
                             colors: [
@@ -845,12 +931,14 @@ class _AuthScreenState extends State<AuthScreen> {
                             ],
                           ),
                   ),
-                  child: Icon(
-                    icon,
-                    size: 28,
-                    color: isSelected
-                        ? Colors.white
-                        : const Color(0xFFFD5E14).withOpacity(0.7),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.asset(
+                      imagePath,
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
