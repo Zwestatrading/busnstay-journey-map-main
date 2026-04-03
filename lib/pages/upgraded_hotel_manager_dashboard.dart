@@ -172,7 +172,7 @@ class _UpgradedHotelManagerDashboardState
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0F172A), Color(0xFF14B8A6)],
+          colors: [AppColors.darkBg, AppColors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

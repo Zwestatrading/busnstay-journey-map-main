@@ -134,7 +134,7 @@ class _UpgradedDeliveryAgentDashboardState
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0F172A), Color(0xFF3B82F6)],
+          colors: [AppColors.darkBg, AppColors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -306,7 +306,7 @@ class _UpgradedDeliveryAgentDashboardState
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [AppColors.darkBg, Color(0xFF7C3AED)],
+              colors: [AppColors.darkBg, AppColors.primary],
             ),
             borderRadius: BorderRadius.circular(22),
           ),

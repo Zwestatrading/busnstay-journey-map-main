@@ -507,7 +507,7 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [AppColors.darkBg, Color(0xFF7C3AED)],
+              colors: [AppColors.darkBg, AppColors.primary],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -1086,7 +1086,7 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF0F172A), Color(0xFF1D4ED8)],
+              colors: [AppColors.darkBg, AppColors.primary],
             ),
             borderRadius: BorderRadius.circular(26),
           ),

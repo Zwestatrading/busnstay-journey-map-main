@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../main.dart';
 import '../services/menu_management_service.dart';
+import '../theme/app_colors.dart';
 import '../widgets/professional_ui_widgets.dart';
 
 /// Example: Professional Restaurant Page with Live Tracking & Pro Menus
@@ -570,8 +571,8 @@ class _ProfessionalRestaurantPageState
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
                                     colors: [
-                                      Color(0xFFFD5E14),
-                                      Color(0xFFF97316),
+                                      AppColors.primary,
+                                      AppColors.accent,
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(12),

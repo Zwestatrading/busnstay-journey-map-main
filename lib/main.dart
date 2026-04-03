@@ -1601,8 +1601,8 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFF3B82F6),
-                    const Color(0xFF3B82F6).withOpacity(0.7),
+                    AppColors.primary,
+                    AppColors.primary.withOpacity(0.7),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(12),
@@ -1697,7 +1697,7 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [const Color(0xFF3B82F6), const Color(0xFF1E40AF)],
+                  colors: [AppColors.primary, AppColors.primaryDark],
                 ),
                 borderRadius: BorderRadius.circular(16),
               ),

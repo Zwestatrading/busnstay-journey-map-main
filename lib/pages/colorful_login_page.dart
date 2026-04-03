@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../theme/app_colors.dart';
 
 class ColorfulLoginPage extends StatefulWidget {
   const ColorfulLoginPage({Key? key}) : super(key: key);
@@ -18,12 +19,12 @@ class _ColorfulLoginPageState extends State<ColorfulLoginPage> {
   int _selectedTab = 0; // 0: Login, 1: Register
 
   final List<Color> _gradientColors = [
-    const Color(0xFF1A1A2E), // Dark blue
-    const Color(0xFF16213E), // Navy
+    AppColors.darkBg,
+    AppColors.darkSurface,
   ];
 
-  final Color _accentColor = const Color(0xFFDC143C); // Crimson red
-  final Color _accentLight = const Color(0xFFF97316); // Orange
+  final Color _accentColor = AppColors.primary;
+  final Color _accentLight = AppColors.accent;
 
   @override
   void dispose() {
