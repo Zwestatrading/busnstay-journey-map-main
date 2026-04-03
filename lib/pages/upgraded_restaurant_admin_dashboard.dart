@@ -1,11 +1,13 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+
 import '../main.dart';
 import '../services/menu_management_service.dart';
-import '../widgets/professional_ui_widgets.dart';
+import '../widgets/operations_tracking_board.dart';
 
-/// EXAMPLE: Upgraded Restaurant Admin Dashboard with Professional Menus
-/// Shows how to integrate the new pro UI into your existing dashboards
 class UpgradedRestaurantAdminDashboard extends StatefulWidget {
   final String restaurantId;
 
@@ -21,13 +23,73 @@ class UpgradedRestaurantAdminDashboard extends StatefulWidget {
 
 class _UpgradedRestaurantAdminDashboardState
     extends State<UpgradedRestaurantAdminDashboard> {
-  int _tabIndex = 0; // 0: Orders, 1: Pro Menu Manager
+  static const List<String> _fallbackCategories = [
+    'Breakfast',
+    'Fast Food',
+    'Local Meals',
+    'Drinks',
+    'Desserts',
+  ];
+
+  final ImagePicker _picker = ImagePicker();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _prepTimeController =
+      TextEditingController(text: '20');
+
+  int _tabIndex = 0;
   late MenuManagementService _menuService;
+  Uint8List? _selectedImageBytes;
+  String? _selectedImageName;
+  String _selectedCategory = _fallbackCategories.first;
+  bool _isVegetarian = false;
+  bool _isSpicy = false;
+  bool _isSubmitting = false;
+
+  final List<_RestaurantOrderSnapshot> _orderSnapshots = const [
+    _RestaurantOrderSnapshot(
+      code: 'FO-1482',
+      customerName: 'Patricia Banda',
+      status: 'Preparing',
+      preparationWindow: Duration(minutes: 18),
+      destination: 'Intercity pick-up bay',
+      basketTotal: 'K128.00',
+      items: ['Village chicken combo', 'Mineral water'],
+    ),
+    _RestaurantOrderSnapshot(
+      code: 'FO-1483',
+      customerName: 'Daniel Mwila',
+      status: 'Dispatching',
+      preparationWindow: Duration(minutes: 9),
+      destination: 'Bus 3 boarding lane',
+      basketTotal: 'K76.50',
+      items: ['Burger deluxe', 'Chips'],
+    ),
+    _RestaurantOrderSnapshot(
+      code: 'FO-1484',
+      customerName: 'Martha Zulu',
+      status: 'Queued',
+      preparationWindow: Duration(minutes: 24),
+      destination: 'Hotel reception desk',
+      basketTotal: 'K210.00',
+      items: ['Family nshima platter', 'Fresh juice'],
+    ),
+  ];
 
   @override
   void initState() {
     super.initState();
     _menuService = AppServices.menuService;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _priceController.dispose();
+    _prepTimeController.dispose();
+    super.dispose();
   }
 
   @override
@@ -51,22 +113,19 @@ class _UpgradedRestaurantAdminDashboardState
       ),
       body: Column(
         children: [
-          // ============ TAB SELECTOR ============
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildTabButton(0, 'Orders', Icons.receipt),
+                _buildTabButton(0, 'Orders', Icons.receipt_long),
                 _buildTabButton(1, 'Pro Menus', Icons.restaurant_menu),
               ],
             ),
           ),
           Expanded(
-            child: _tabIndex == 0
-                ? _buildOrdersTab()
-                : _buildProMenuTab(),
+            child: _tabIndex == 0 ? _buildOrdersTab() : _buildProMenuTab(),
           ),
         ],
       ),
@@ -106,40 +165,215 @@ class _UpgradedRestaurantAdminDashboardState
     );
   }
 
-  // ============ ORDERS TAB (YOUR EXISTING CODE) ============
   Widget _buildOrdersTab() {
-    return SingleChildScrollView(
+    final preparingOrders =
+        _orderSnapshots.where((order) => order.status == 'Preparing').length;
+    final dispatchingOrders = _orderSnapshots
+        .where((order) => order.status == 'Dispatching')
+        .length;
+
+    return ListView(
       padding: const EdgeInsets.all(16),
+      children: [
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: const [
+            SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'Today Sales',
+                value: 'K4,860',
+                subtitle: '34 completed baskets',
+                icon: Icons.payments_outlined,
+                color: Color(0xFFFD5E14),
+              ),
+            ),
+            SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'Prep Accuracy',
+                value: '94%',
+                subtitle: 'Orders released on time',
+                icon: Icons.timer_outlined,
+                color: Color(0xFF14B8A6),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        OperationsTrackingBoard(
+          title: 'Kitchen and handoff board',
+          originLabel: 'Kitchen',
+          destinationLabel: 'Pickup',
+          accentColor: const Color(0xFFFD5E14),
+          entities: const [
+            TrackingBoardEntity(
+              id: 'kit-1',
+              label: 'FO-1482',
+              status: 'Preparing',
+              color: Color(0xFFF59E0B),
+              progress: 0.42,
+              detail: 'Village chicken combo for Patricia Banda',
+            ),
+            TrackingBoardEntity(
+              id: 'kit-2',
+              label: 'FO-1483',
+              status: 'Dispatching',
+              color: Color(0xFF14B8A6),
+              progress: 0.78,
+              detail: 'Burger deluxe heading to Bus 3 lane',
+            ),
+            TrackingBoardEntity(
+              id: 'kit-3',
+              label: 'FO-1484',
+              status: 'Queued',
+              color: Color(0xFF3B82F6),
+              progress: 0.16,
+              detail: 'Family nshima platter waiting on grill station',
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Active kitchen orders',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            Text(
+              '$preparingOrders preparing • $dispatchingOrders on handoff',
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ..._orderSnapshots.map(_buildOrderCard),
+      ],
+    );
+  }
+
+  Widget _buildOrderCard(_RestaurantOrderSnapshot order) {
+    final color = order.status == 'Preparing'
+        ? const Color(0xFFF59E0B)
+        : order.status == 'Dispatching'
+            ? const Color(0xFF14B8A6)
+            : const Color(0xFF3B82F6);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withOpacity(0.18)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Pending Orders',
-            style: Theme.of(context).textTheme.titleMedium,
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      order.code,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      order.customerName,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              CountdownBadge(
+                label: order.status == 'Dispatching' ? 'ETA' : 'Prep',
+                duration: order.preparationWindow,
+                color: color,
+              ),
+            ],
           ),
           const SizedBox(height: 12),
-          // ... your existing order cards ...
-          _placeholderOrderCard(),
-          _placeholderOrderCard(),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: order.items
+                .map(
+                  (item) => Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      item,
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                order.destination,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black54,
+                ),
+              ),
+              Text(
+                order.basketTotal,
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  // ============ PRO MENU MANAGER TAB (NEW!) ============
   Widget _buildProMenuTab() {
     return DefaultTabController(
       length: 2,
       child: Column(
         children: [
-          // Sub-tabs: View Menu, Add Items
-          TabBar(
-            labelColor: const Color(0xFFFD5E14),
+          const TabBar(
+            labelColor: Color(0xFFFD5E14),
             unselectedLabelColor: Colors.grey,
-            indicatorColor: const Color(0xFFFD5E14),
-            tabs: const [
-              Tab(text: '📋 View Menu'),
-              Tab(text: '➕ Add Item'),
+            indicatorColor: Color(0xFFFD5E14),
+            tabs: [
+              Tab(text: 'View Menu'),
+              Tab(text: 'Add Item'),
             ],
           ),
           Expanded(
@@ -155,7 +389,6 @@ class _UpgradedRestaurantAdminDashboardState
     );
   }
 
-  /// View all menu items as professional cards
   Widget _buildViewMenuTab() {
     return FutureBuilder<List<MenuCategory>>(
       future: _menuService.getCategories(widget.restaurantId),
@@ -165,86 +398,146 @@ class _UpgradedRestaurantAdminDashboardState
         }
 
         final categories = snapshot.data ?? [];
+        if (categories.isEmpty) {
+          return FutureBuilder<List<MenuItem>>(
+            future: _menuService.getMenuItems(widget.restaurantId),
+            builder: (context, menuSnapshot) {
+              if (menuSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-        return SingleChildScrollView(
-          child: Column(
-            children: categories.map((category) {
-              return FutureBuilder<List<MenuItem>>(
-                future: _menuService.getMenuItemsByCategory(
-                  restaurantId: widget.restaurantId,
-                  category: category.name,
-                ),
-                builder: (context, itemSnapshot) {
-                  final items = itemSnapshot.data ?? [];
+              final items = menuSnapshot.data ?? [];
+              if (items.isEmpty) {
+                return _buildEmptyMenuState();
+              }
 
-                  if (items.isEmpty) return const SizedBox.shrink();
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                itemCount: items.length,
+                itemBuilder: (context, index) => _buildMenuItemTile(items[index]),
+              );
+            },
+          );
+        }
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Category header
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
-                        child: Row(
-                          children: [
-                            if (category.imageUrl != null)
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  category.imageUrl!,
-                                  width: 50,
-                                  height: 50,
-                                  fit: BoxFit.cover,
+        return ListView(
+          children: categories.map((category) {
+            return FutureBuilder<List<MenuItem>>(
+              future: _menuService.getMenuItemsByCategory(
+                restaurantId: widget.restaurantId,
+                category: category.name,
+              ),
+              builder: (context, itemSnapshot) {
+                final items = itemSnapshot.data ?? [];
+                if (items.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+                      child: Row(
+                        children: [
+                          if (category.imageUrl != null)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                category.imageUrl!,
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    _buildCategoryFallbackIcon(),
+                              ),
+                            )
+                          else
+                            _buildCategoryFallbackIcon(),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                category.name,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black87,
                                 ),
                               ),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  category.name,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.black87,
-                                  ),
+                              Text(
+                                '${items.length} items',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey,
                                 ),
-                                Text(
-                                  '${items.length} items',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-
-                      // Menu items in this category
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: items.length,
-                        itemBuilder: (context, index) {
-                          final item = items[index];
-                          return _buildMenuItemTile(item);
-                        },
-                      ),
-                    ],
-                  );
-                },
-              );
-            }).toList(),
-          ),
+                    ),
+                    ...items.map(_buildMenuItemTile),
+                  ],
+                );
+              },
+            );
+          }).toList(),
         );
       },
     );
   }
 
-  /// Single menu item tile with edit/delete
+  Widget _buildCategoryFallbackIcon() {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFD5E14).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Icon(Icons.fastfood, color: Color(0xFFFD5E14)),
+    );
+  }
+
+  Widget _buildEmptyMenuState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.restaurant_menu,
+              size: 54,
+              color: Colors.grey.withOpacity(0.5),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No menu items yet',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Use the Add Item tab to publish your first product with an image, prep time, and dietary tags.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildMenuItemTile(MenuItem item) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -257,7 +550,6 @@ class _UpgradedRestaurantAdminDashboardState
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            // Image
             if (item.imageUrl != null)
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
@@ -266,30 +558,12 @@ class _UpgradedRestaurantAdminDashboardState
                   width: 80,
                   height: 80,
                   fit: BoxFit.cover,
-                  errorBuilder: (c, e, st) => Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.image),
-                  ),
+                  errorBuilder: (c, e, st) => _buildItemFallbackIcon(),
                 ),
               )
             else
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.restaurant),
-              ),
+              _buildItemFallbackIcon(),
             const SizedBox(width: 12),
-
-            // Item details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,63 +588,32 @@ class _UpgradedRestaurantAdminDashboardState
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 8,
                     children: [
                       Text(
-                        'K${item.price}',
+                        'K${item.price.toStringAsFixed(2)}',
                         style: GoogleFonts.poppins(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: const Color(0xFFFD5E14),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      CountdownBadge(
+                        label: 'Prep',
+                        duration: Duration(minutes: item.preparationTimeMinutes),
+                        color: const Color(0xFF14B8A6),
+                      ),
                       if (item.isVegetarian)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            '🥗 V',
-                            style: GoogleFonts.poppins(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.green,
-                            ),
-                          ),
-                        ),
+                        _buildTag('Veg', Colors.green),
                       if (item.isSpicy)
-                        Container(
-                          margin: const EdgeInsets.only(left: 6),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            '🌶️ S',
-                            style: GoogleFonts.poppins(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ),
+                        _buildTag('Spicy', Colors.red),
                     ],
                   ),
                 ],
               ),
             ),
-
-            // Actions
             Column(
               children: [
                 GestureDetector(
@@ -412,80 +655,400 @@ class _UpgradedRestaurantAdminDashboardState
     );
   }
 
-  /// Form to add new menu item
-  Widget _buildAddItemTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Text(
-            '✨ Add Professional Menu Item',
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 24),
+  Widget _buildItemFallbackIcon() {
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: const Icon(Icons.restaurant),
+    );
+  }
 
-          // TODO: Implement form here
-          // Use similar code from professional_restaurant_page.dart example
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: const Color(0xFFFD5E14).withOpacity(0.3),
-              ),
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.image_not_supported,
-                  size: 48,
-                  color: Colors.grey.withOpacity(0.5),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Tap to upload image',
-                  style: GoogleFonts.poppins(
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Form Implementation:',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black54,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '1. Image picker\n2. Name input\n3. Price input\n4. Description\n5. Category selector\n6. Vegetarian/Spicy toggles\n7. Submit button',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.grey,
-                    height: 1.6,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+  Widget _buildTag(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
       ),
     );
   }
 
-  // ============ HELPER METHODS ============
+  Widget _buildAddItemTab() {
+    return FutureBuilder<List<MenuCategory>>(
+      future: _menuService.getCategories(widget.restaurantId),
+      builder: (context, snapshot) {
+        final categories = snapshot.data?.map((category) => category.name).toList();
+        final availableCategories =
+            (categories == null || categories.isEmpty) ? _fallbackCategories : categories;
+
+        if (!availableCategories.contains(_selectedCategory)) {
+          _selectedCategory = availableCategories.first;
+        }
+
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text(
+              'Add Professional Menu Item',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Upload a product image, set preparation timing, and publish it directly to your live menu.',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: _pickMenuImage,
+              child: Container(
+                height: 190,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: const Color(0xFFFD5E14).withOpacity(0.28),
+                    width: 1.4,
+                  ),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      const Color(0xFFFD5E14).withOpacity(0.08),
+                      Colors.white,
+                    ],
+                  ),
+                ),
+                child: _selectedImageBytes == null
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.add_a_photo_outlined,
+                            size: 42,
+                            color: Color(0xFFFD5E14),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Tap to upload product image',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFFFD5E14),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Works for mobile and web pickers',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.memory(_selectedImageBytes!, fit: BoxFit.cover),
+                            Positioned(
+                              right: 12,
+                              top: 12,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.55),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  _selectedImageName ?? 'Picked image',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _nameController,
+              label: 'Item name',
+              icon: Icons.fastfood_outlined,
+            ),
+            const SizedBox(height: 12),
+            _buildTextField(
+              controller: _descriptionController,
+              label: 'Description',
+              icon: Icons.notes_outlined,
+              maxLines: 3,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    controller: _priceController,
+                    label: 'Price (K)',
+                    icon: Icons.payments_outlined,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildTextField(
+                    controller: _prepTimeController,
+                    label: 'Prep time (min)',
+                    icon: Icons.timer_outlined,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.withOpacity(0.2)),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedCategory,
+                  isExpanded: true,
+                  items: availableCategories
+                      .map(
+                        (category) => DropdownMenuItem<String>(
+                          value: category,
+                          child: Text(
+                            category,
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) {
+                      return;
+                    }
+                    setState(() => _selectedCategory = value);
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            SwitchListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+              activeColor: Colors.green,
+              title: Text(
+                'Vegetarian option',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              ),
+              value: _isVegetarian,
+              onChanged: (value) => setState(() => _isVegetarian = value),
+            ),
+            SwitchListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+              activeColor: Colors.red,
+              title: Text(
+                'Spicy item',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              ),
+              value: _isSpicy,
+              onChanged: (value) => setState(() => _isSpicy = value),
+            ),
+            const SizedBox(height: 18),
+            ElevatedButton.icon(
+              onPressed: _isSubmitting ? null : _submitNewMenuItem,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFD5E14),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.cloud_upload_outlined),
+              label: Text(
+                _isSubmitting ? 'Publishing item...' : 'Publish menu item',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickMenuImage() async {
+    final image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image == null) {
+      return;
+    }
+
+    final bytes = await image.readAsBytes();
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _selectedImageBytes = bytes;
+      _selectedImageName = image.name;
+    });
+  }
+
+  Future<void> _submitNewMenuItem() async {
+    final name = _nameController.text.trim();
+    final description = _descriptionController.text.trim();
+    final price = double.tryParse(_priceController.text.trim());
+    final prepMinutes = int.tryParse(_prepTimeController.text.trim()) ?? 20;
+
+    if (name.isEmpty || description.isEmpty || price == null) {
+      _showMessage('Enter item name, description, and a valid price.', true);
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final createdItem = await _menuService.createMenuItem(
+        restaurantId: widget.restaurantId,
+        name: name,
+        category: _selectedCategory,
+        price: price,
+        description: description,
+        preparationTimeMinutes: prepMinutes,
+        isVegetarian: _isVegetarian,
+        isSpicy: _isSpicy,
+      );
+
+      if (createdItem == null) {
+        _showMessage('Unable to create menu item right now.', true);
+        return;
+      }
+
+      if (_selectedImageBytes != null) {
+        final extension = _resolveExtension(_selectedImageName);
+        final imageUrl = await _menuService.uploadMenuItemImageBytes(
+          bytes: _selectedImageBytes!,
+          restaurantId: widget.restaurantId,
+          itemId: createdItem.id,
+          extension: extension,
+        );
+
+        if (imageUrl != null) {
+          await _menuService.updateMenuItem(
+            itemId: createdItem.id,
+            imageUrl: imageUrl,
+          );
+        }
+      }
+
+      _clearAddItemForm();
+      _showMessage('Menu item published successfully.', false);
+      setState(() {});
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  String _resolveExtension(String? fileName) {
+    if (fileName == null || !fileName.contains('.')) {
+      return 'jpg';
+    }
+    return fileName.split('.').last.toLowerCase();
+  }
+
+  void _clearAddItemForm() {
+    _nameController.clear();
+    _descriptionController.clear();
+    _priceController.clear();
+    _prepTimeController.text = '20';
+    _selectedCategory = _fallbackCategories.first;
+    _selectedImageBytes = null;
+    _selectedImageName = null;
+    _isVegetarian = false;
+    _isSpicy = false;
+  }
 
   void _showEditItemModal(MenuItem item) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Edit: ${item.name}'),
+        content: Text('Edit flow for ${item.name} can be wired next.'),
         backgroundColor: const Color(0xFFFD5E14),
       ),
     );
@@ -495,7 +1058,7 @@ class _UpgradedRestaurantAdminDashboardState
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Item?'),
+        title: const Text('Delete item?'),
         content: const Text('This action cannot be undone.'),
         actions: [
           TextButton(
@@ -505,13 +1068,12 @@ class _UpgradedRestaurantAdminDashboardState
           TextButton(
             onPressed: () async {
               await _menuService.deleteMenuItem(itemId);
-              if (mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('✅ Item deleted')),
-                );
-                setState(() {}); // Refresh
+              if (!mounted) {
+                return;
               }
+              Navigator.pop(context);
+              _showMessage('Item deleted.', false);
+              setState(() {});
             },
             child: const Text('Delete'),
           ),
@@ -520,73 +1082,32 @@ class _UpgradedRestaurantAdminDashboardState
     );
   }
 
-  Widget _placeholderOrderCard() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Order #12345',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-              ),
-              Text(
-                'Customer: John Doe',
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B).withOpacity(0.2),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              'Pending',
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFFF59E0B),
-              ),
-            ),
-          ),
-        ],
+  void _showMessage(String message, bool isError) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : const Color(0xFF14B8A6),
       ),
     );
   }
 }
 
-// ============ INTEGRATION NOTES ============
-/// HOW TO USE THIS:
-/// 
-/// 1. Replace your old RestaurantAdminDashboard with this one
-/// 2. Or add a new tab to your existing dashboard
-/// 3. The "Orders" tab keeps your existing functionality
-/// 4. The "Pro Menus" tab gives admin professional menu management
-///
-/// Key Features Added:
-/// ✅ View all menu items with images
-/// ✅ Categories with images
-/// ✅ Vegetarian/Spicy badges
-/// ✅ Edit/Delete buttons
-/// ✅ Add new items form (ready to implement)
-/// ✅ Professional styling with your KFC colors
-///
-/// Next Step:
-/// Implement the _buildAddItemTab() form with:
-/// - Image picker
-/// - Input fields
-/// - Toggle switches
-/// - Submit button
+class _RestaurantOrderSnapshot {
+  final String code;
+  final String customerName;
+  final String status;
+  final Duration preparationWindow;
+  final String destination;
+  final String basketTotal;
+  final List<String> items;
+
+  const _RestaurantOrderSnapshot({
+    required this.code,
+    required this.customerName,
+    required this.status,
+    required this.preparationWindow,
+    required this.destination,
+    required this.basketTotal,
+    required this.items,
+  });
+}

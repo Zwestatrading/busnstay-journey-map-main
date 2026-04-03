@@ -23,6 +23,7 @@ import 'widgets/status_badge.dart';
 import 'pages/forgot_password_page.dart';
 import 'pages/passenger_experience_page.dart';
 import 'pages/upgraded_bus_operator_dashboard.dart';
+import 'pages/upgraded_delivery_agent_dashboard.dart';
 import 'pages/upgraded_hotel_manager_dashboard.dart';
 import 'pages/upgraded_restaurant_admin_dashboard.dart';
 
@@ -336,6 +337,32 @@ class MiniStatCard extends StatelessWidget {
   }
 }
 
+class _FrontDoorPill extends StatelessWidget {
+  final String label;
+
+  const _FrontDoorPill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withOpacity(0.14)),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}
+
 
 class BusNStayApp extends StatelessWidget {
   const BusNStayApp({Key? key}) : super(key: key);
@@ -415,9 +442,13 @@ class HomePage extends StatelessWidget {
           busOperatorId: state.user?.id ?? 'operator_001',
         );
       case UserRole.restaurantAdmin:
-        return RestaurantAdminDashboard(state: state);
+        return UpgradedRestaurantAdminDashboard(
+          restaurantId: state.user?.id ?? 'restaurant_001',
+        );
       case UserRole.deliveryAgent:
-        return DeliveryAgentDashboard(state: state);
+        return UpgradedDeliveryAgentDashboard(
+          agentId: state.user?.id ?? 'agent_001',
+        );
       case UserRole.hotelManager:
         return UpgradedHotelManagerDashboard(
           hotelId: state.user?.id ?? 'hotel_001',
@@ -523,6 +554,56 @@ class _AuthScreenState extends State<AuthScreen> {
                             color: Colors.grey,
                             letterSpacing: 0.2,
                           ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF111827), Color(0xFF1D4ED8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF1D4ED8).withOpacity(0.22),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Live marketplace snapshot',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Food uploads, room inventory, bus movement tracking, and delivery countdowns are all surfaced from role dashboards.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.white70,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: const [
+                            _FrontDoorPill(label: 'Menu image uploads'),
+                            _FrontDoorPill(label: 'Bus ETA tracking'),
+                            _FrontDoorPill(label: 'Hotel room reports'),
+                            _FrontDoorPill(label: 'Delivery earnings'),
+                          ],
                         ),
                       ],
                     ),

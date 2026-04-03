@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Service for managing restaurant menus with professional images
@@ -89,6 +90,31 @@ class MenuManagementService {
       return publicUrl;
     } catch (e) {
       print('❌ Error uploading image: $e');
+      return null;
+    }
+  }
+
+  /// Upload menu item image from bytes so it works on mobile and web.
+  Future<String?> uploadMenuItemImageBytes({
+    required Uint8List bytes,
+    required String restaurantId,
+    required String itemId,
+    String extension = 'jpg',
+  }) async {
+    try {
+      final fileName =
+          'menu_${restaurantId}_${itemId}_${DateTime.now().millisecondsSinceEpoch}.$extension';
+      final path = 'restaurants/$restaurantId/$fileName';
+
+      await supabase.storage.from('menu_images').uploadBinary(
+        path,
+        bytes,
+        fileOptions: const FileOptions(upsert: true),
+      );
+
+      return supabase.storage.from('menu_images').getPublicUrl(path);
+    } catch (e) {
+      print('❌ Error uploading image bytes: $e');
       return null;
     }
   }

@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:intl/intl.dart';
-import '../main.dart';
-import '../services/live_location_service.dart';
 
-/// EXAMPLE: Upgraded Bus Operator Dashboard with Live Fleet Tracking
-/// Shows how to integrate the LiveLocationService for real-time bus tracking
+import '../widgets/operations_tracking_board.dart';
+
 class UpgradedBusOperatorDashboard extends StatefulWidget {
   final String busOperatorId;
 
@@ -22,8 +18,8 @@ class UpgradedBusOperatorDashboard extends StatefulWidget {
 
 class _UpgradedBusOperatorDashboardState
     extends State<UpgradedBusOperatorDashboard> {
-  int _tabIndex = 0; // 0: Fleet, 1: Live Tracking, 2: Routes
-  late LiveLocationService _locationService;
+  int _tabIndex = 0;
+
   final List<BusVehicle> _buses = [
     BusVehicle(
       id: 'bus_001',
@@ -37,19 +33,21 @@ class _UpgradedBusOperatorDashboardState
       capacity: 48,
       nextStop: 'Cairo Road Stop',
       eta: '14:30',
+      countdown: const Duration(minutes: 12),
     ),
     BusVehicle(
       id: 'bus_002',
       registrationNumber: 'ZL-25-DEF-456',
       driverName: 'Patricia Banda',
-      status: 'Idle',
+      status: 'Boarding',
       destination: 'Ndola Station',
       latitude: -13.2005,
       longitude: 28.6352,
-      passengersOnBoard: 0,
+      passengersOnBoard: 28,
       capacity: 48,
-      nextStop: 'Ready for departure',
+      nextStop: 'Departure gate',
       eta: '15:00',
+      countdown: const Duration(minutes: 22),
     ),
     BusVehicle(
       id: 'bus_003',
@@ -63,14 +61,9 @@ class _UpgradedBusOperatorDashboardState
       capacity: 48,
       nextStop: 'Awaiting departure clearance',
       eta: '16:00',
+      countdown: const Duration(minutes: 0),
     ),
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _locationService = AppServices.liveLocationService;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,29 +87,36 @@ class _UpgradedBusOperatorDashboardState
       ),
       body: Column(
         children: [
-          // ============ TAB SELECTOR ============
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildTabButton(0, 'Fleet (3)', Icons.directions_bus),
-                _buildTabButton(1, 'Live Map', Icons.map),
-                _buildTabButton(2, 'Routes', Icons.route),
+                _buildTabButton(0, 'Fleet', Icons.directions_bus),
+                _buildTabButton(1, 'Live Map', Icons.map_outlined),
+                _buildTabButton(2, 'Routes', Icons.alt_route),
+                _buildTabButton(3, 'Reports', Icons.query_stats),
               ],
             ),
           ),
-          Expanded(
-            child: _tabIndex == 0
-                ? _buildFleetTab()
-                : _tabIndex == 1
-                    ? _buildLiveMapTab()
-                    : _buildRoutesTab(),
-          ),
+          Expanded(child: _buildCurrentTab()),
         ],
       ),
     );
+  }
+
+  Widget _buildCurrentTab() {
+    switch (_tabIndex) {
+      case 0:
+        return _buildFleetTab();
+      case 1:
+        return _buildLiveMapTab();
+      case 2:
+        return _buildRoutesTab();
+      default:
+        return _buildReportsTab();
+    }
   }
 
   Widget _buildTabButton(int index, String label, IconData icon) {
@@ -129,13 +129,13 @@ class _UpgradedBusOperatorDashboardState
           Icon(
             icon,
             color: isSelected ? const Color(0xFFFD5E14) : Colors.grey,
-            size: 24,
+            size: 22,
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: GoogleFonts.poppins(
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               color: isSelected ? const Color(0xFFFD5E14) : Colors.grey,
             ),
@@ -143,7 +143,7 @@ class _UpgradedBusOperatorDashboardState
           if (isSelected)
             Container(
               height: 2,
-              width: 40,
+              width: 34,
               margin: const EdgeInsets.only(top: 8),
               color: const Color(0xFFFD5E14),
             ),
@@ -152,412 +152,248 @@ class _UpgradedBusOperatorDashboardState
     );
   }
 
-  // ============ FLEET TAB ============
   Widget _buildFleetTab() {
-    return ListView.builder(
+    final activeCount = _buses.where((bus) => bus.status != 'Arrived').length;
+
+    return ListView(
       padding: const EdgeInsets.all(16),
-      itemCount: _buses.length,
-      itemBuilder: (context, index) => _buildBusCard(_buses[index]),
+      children: [
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'Fleet Online',
+                value: '$activeCount / ${_buses.length}',
+                subtitle: 'Vehicles currently moving or boarding',
+                icon: Icons.directions_bus_filled_outlined,
+                color: const Color(0xFFFD5E14),
+              ),
+            ),
+            const SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'Daily Ticket Sales',
+                value: 'K18,920',
+                subtitle: 'Across all active routes today',
+                icon: Icons.payments_outlined,
+                color: Color(0xFF14B8A6),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        ..._buses.map(_buildBusCard),
+      ],
     );
   }
 
-  /// Bus card with status, location, and passengers
   Widget _buildBusCard(BusVehicle bus) {
     final statusColor = bus.status == 'In Transit'
         ? Colors.blue
-        : bus.status == 'Idle'
+        : bus.status == 'Boarding'
             ? Colors.orange
             : Colors.green;
-
-    final occupancyPercent = bus.passengersOnBoard / bus.capacity;
+    final occupancyPercent = bus.capacity == 0 ? 0.0 : bus.passengersOnBoard / bus.capacity;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: statusColor.withOpacity(0.16)),
       ),
-      child: Column(
-        children: [
-          // Header with status
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [statusColor.withOpacity(0.1), statusColor.withOpacity(0.05)],
-              ),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      bus.registrationNumber,
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        bus.registrationNumber,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    Text(
-                      bus.driverName,
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey,
+                      Text(
+                        '${bus.driverName} • ${bus.destination}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    bus.status,
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
+                CountdownBadge(
+                  label: 'ETA',
+                  duration: bus.countdown,
+                  color: statusColor,
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 12),
+            Text(
+              'Next stop: ${bus.nextStop}',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Passengers ${bus.passengersOnBoard}/${bus.capacity}',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: occupancyPercent,
+                minHeight: 7,
+                backgroundColor: Colors.grey.withOpacity(0.15),
+                valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _trackBusLive(bus),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFD5E14),
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.location_searching_outlined),
+                label: const Text('Track bus live'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-          // Body with details
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Destination & ETA
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '📍 Destination',
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Text(
-                            bus.destination,
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+  Widget _buildLiveMapTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        OperationsTrackingBoard(
+          title: 'Uber-style fleet movement board',
+          originLabel: 'Depot',
+          destinationLabel: 'Destination',
+          accentColor: const Color(0xFFFD5E14),
+          entities: _buses
+              .asMap()
+              .entries
+              .map(
+                (entry) => TrackingBoardEntity(
+                  id: entry.value.id,
+                  label: entry.value.registrationNumber,
+                  status: entry.value.status,
+                  color: entry.value.status == 'Arrived'
+                      ? Colors.green
+                      : entry.value.status == 'Boarding'
+                          ? Colors.orange
+                          : const Color(0xFF3B82F6),
+                  progress: entry.value.status == 'Arrived'
+                      ? 0.96
+                      : 0.32 + (entry.key * 0.2),
+                  detail:
+                      '${entry.value.driverName} • ${entry.value.nextStop} • ${entry.value.eta}',
+                ),
+              )
+              .toList(),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.grey.withOpacity(0.18)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: _buses
+                .map(
+                  (bus) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
                       children: [
-                        Text(
-                          '⏱️ ETA',
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                bus.registrationNumber,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                'GPS ${bus.latitude.toStringAsFixed(4)}, ${bus.longitude.toStringAsFixed(4)}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        Text(
-                          bus.eta,
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFFD5E14),
-                          ),
+                        CountdownBadge(
+                          label: 'ETA',
+                          duration: bus.countdown,
+                          color: const Color(0xFFFD5E14),
                         ),
                       ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Next stop
-                Text(
-                  '🛑 Next Stop: ${bus.nextStop}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black54,
                   ),
-                ),
-                const SizedBox(height: 12),
-
-                // Passengers occupancy
-                Text(
-                  '👥 Passengers: ${bus.passengersOnBoard}/${bus.capacity}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: occupancyPercent,
-                    minHeight: 6,
-                    backgroundColor: Colors.grey.withOpacity(0.2),
-                    valueColor: AlwaysStoppedAnimation(
-                      occupancyPercent > 0.8 ? Colors.red : Colors.green,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Action buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => _showBusDetailsModal(bus),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFD5E14).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.info_outline,
-                                size: 16,
-                                color: Color(0xFFFD5E14),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Details',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFFFD5E14),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => _trackBusLive(bus),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFD5E14),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.location_on,
-                                size: 16,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Track Live',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                )
+                .toList(),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  // ============ LIVE MAP TAB ============
-  Widget _buildLiveMapTab() {
-    return Container(
-      color: Colors.grey[100],
-      child: Stack(
-        children: [
-          // Google Map placeholder
-          Container(
-            color: Colors.grey[300],
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.map,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Google Maps Integration',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Shows all 3 buses with live GPS markers\nRed pins: Active routes\nOrange pins: Idle vehicles',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey[500],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Live buses info overlay
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 12,
-                  ),
-                ],
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Active Buses (Real-time)',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ..._buses.map((bus) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[50],
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: Colors.grey.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    bus.registrationNumber,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${bus.latitude.toStringAsFixed(4)}, ${bus.longitude.toStringAsFixed(4)}',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w400,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFD5E14).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  '🔴 Online',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFFFD5E14),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ============ ROUTES TAB ============
   Widget _buildRoutesTab() {
     final routes = [
-      {'name': 'Lusaka ↔ Ndola', 'buses': 2, 'trips': '5/day', 'status': 'Active'},
-      {'name': 'Lusaka ↔ Kitwe', 'buses': 1, 'trips': '3/day', 'status': 'Active'},
-      {'name': 'Ndola ↔ Kitwe', 'buses': 1, 'trips': '2/day', 'status': 'Paused'},
+      {
+        'name': 'Lusaka ↔ Ndola',
+        'buses': '2 buses',
+        'trips': '5 departures/day',
+        'status': 'Active',
+        'window': const Duration(minutes: 18),
+      },
+      {
+        'name': 'Lusaka ↔ Kitwe',
+        'buses': '1 bus',
+        'trips': '3 departures/day',
+        'status': 'Boarding',
+        'window': const Duration(minutes: 28),
+      },
+      {
+        'name': 'Ndola ↔ Kitwe',
+        'buses': '1 bus',
+        'trips': '2 departures/day',
+        'status': 'Paused',
+        'window': const Duration(minutes: 45),
+      },
     ];
 
     return ListView.builder(
@@ -565,16 +401,22 @@ class _UpgradedBusOperatorDashboardState
       itemCount: routes.length,
       itemBuilder: (context, index) {
         final route = routes[index];
+        final label = route['status'] as String;
+        final color = label == 'Active'
+            ? Colors.green
+            : label == 'Boarding'
+                ? Colors.orange
+                : Colors.grey;
+
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: color.withOpacity(0.16)),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Column(
@@ -585,44 +427,31 @@ class _UpgradedBusOperatorDashboardState
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Text(
-                          '🚌 ${route['buses']}',
-                          style: GoogleFonts.poppins(fontSize: 12),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          '📅 ${route['trips']}',
-                          style: GoogleFonts.poppins(fontSize: 12),
-                        ),
-                      ],
+                    Text(
+                      '${route['buses']} • ${route['trips']}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: route['status'] == 'Active'
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  route['status'] as String,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: route['status'] == 'Active'
-                        ? Colors.green
-                        : Colors.orange,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _statusChip(label, color),
+                  const SizedBox(height: 8),
+                  CountdownBadge(
+                    label: 'Next',
+                    duration: route['window'] as Duration,
+                    color: color,
                   ),
-                ),
+                ],
               ),
             ],
           ),
@@ -631,42 +460,93 @@ class _UpgradedBusOperatorDashboardState
     );
   }
 
-  // ============ HELPER METHODS ============
-
-  void _showBusDetailsModal(BusVehicle bus) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+  Widget _buildReportsTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: const [
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
           children: [
-            Text(
-              'Bus Details',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+            SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'Monthly Revenue',
+                value: 'K412,000',
+                subtitle: 'Ticketing and cargo combined',
+                icon: Icons.account_balance_wallet_outlined,
+                color: Color(0xFFFD5E14),
               ),
             ),
-            const SizedBox(height: 16),
-            _detailRow('Registration', bus.registrationNumber),
-            _detailRow('Driver', bus.driverName),
-            _detailRow('Status', bus.status),
-            _detailRow('Destination', bus.destination),
-            _detailRow('Passengers', '${bus.passengersOnBoard}/${bus.capacity}'),
-            _detailRow('ETA', bus.eta),
+            SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'On-time Departures',
+                value: '91%',
+                subtitle: 'Across all active routes',
+                icon: Icons.timelapse_outlined,
+                color: Color(0xFF14B8A6),
+              ),
+            ),
+            SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'Average Load',
+                value: '82%',
+                subtitle: 'Fleet occupancy this week',
+                icon: Icons.people_outline,
+                color: Color(0xFF3B82F6),
+              ),
+            ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _statusChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: color,
         ),
       ),
     );
   }
 
   void _trackBusLive(BusVehicle bus) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Tracking ${bus.registrationNumber}...'),
-        backgroundColor: const Color(0xFFFD5E14),
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              bus.registrationNumber,
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _detailRow('Driver', bus.driverName),
+            _detailRow('Destination', bus.destination),
+            _detailRow('Next stop', bus.nextStop),
+            _detailRow('GPS', '${bus.latitude.toStringAsFixed(4)}, ${bus.longitude.toStringAsFixed(4)}'),
+            _detailRow('Passengers', '${bus.passengersOnBoard}/${bus.capacity}'),
+            _detailRow('ETA', bus.eta),
+          ],
+        ),
       ),
     );
   }
@@ -685,12 +565,14 @@ class _UpgradedBusOperatorDashboardState
               color: Colors.grey,
             ),
           ),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -698,8 +580,6 @@ class _UpgradedBusOperatorDashboardState
     );
   }
 }
-
-// ============ DATA MODELS ============
 
 class BusVehicle {
   final String id;
@@ -713,6 +593,7 @@ class BusVehicle {
   final int capacity;
   final String nextStop;
   final String eta;
+  final Duration countdown;
 
   BusVehicle({
     required this.id,
@@ -726,29 +607,6 @@ class BusVehicle {
     required this.capacity,
     required this.nextStop,
     required this.eta,
+    required this.countdown,
   });
 }
-
-// ============ INTEGRATION NOTES ============
-/// HOW TO USE THIS:
-///
-/// 1. Import into your main.dart and use as bus operator screen
-/// 2. Connect real data from your Supabase database
-/// 3. Implement Google Maps integration in _buildLiveMapTab()
-/// 4. Connect LiveLocationService to stream real bus positions
-///
-/// Key Features Added:
-/// ✅ Fleet overview with status badges
-/// ✅ Occupancy indicators (progress bars)
-/// ✅ Live GPS coordinates
-/// ✅ Route management
-/// ✅ Driver information
-/// ✅ ETA tracking
-/// ✅ Track button to view live location
-///
-/// Integration Steps:
-/// 1. Replace placeholder data (_buses list) with real Supabase queries
-/// 2. Implement GoogleMapController in _buildLiveMapTab()
-/// 3. Add markers for each bus using BitmapDescriptor
-/// 4. Stream location updates using LiveLocationService.getLocationStream()
-/// 5. Update polylines as buses move

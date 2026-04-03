@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Comprehensive hotel management service
@@ -6,6 +8,30 @@ class HotelEnhancedService {
   final SupabaseClient supabase;
 
   HotelEnhancedService({required this.supabase});
+
+  Future<String?> uploadRoomImageBytes({
+    required Uint8List bytes,
+    required String hotelId,
+    required String roomId,
+    String extension = 'jpg',
+  }) async {
+    try {
+      final fileName =
+          'room_${hotelId}_${roomId}_${DateTime.now().millisecondsSinceEpoch}.$extension';
+      final path = 'hotels/$hotelId/$fileName';
+
+      await supabase.storage.from('hotel_room_images').uploadBinary(
+        path,
+        bytes,
+        fileOptions: const FileOptions(upsert: true),
+      );
+
+      return supabase.storage.from('hotel_room_images').getPublicUrl(path);
+    } catch (e) {
+      print('❌ Error uploading hotel room image: $e');
+      return null;
+    }
+  }
 
   // ===== ROOM MANAGEMENT =====
 
