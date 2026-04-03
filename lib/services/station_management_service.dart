@@ -264,9 +264,16 @@ class StationManagementService {
       }).select();
 
       if (response.isNotEmpty) {
+        final createdRecord = Map<String, dynamic>.from(response[0]);
+        final createdAt = DateTime.tryParse(createdRecord['created_at']?.toString() ?? '') ??
+            DateTime.now();
         return {
           'success': true,
-          'id': response[0]['id'],
+          'id': createdRecord['id'],
+          'order_number': _buildStationOrderNumber(
+            createdRecord['id']?.toString() ?? '',
+            createdAt,
+          ),
           'total_price': totalPrice,
           'message': '✅ Order placed. Awaiting confirmation.',
         };
@@ -417,6 +424,16 @@ class StationManagementService {
   static double atan2(double y, double x) => _atan2Impl(y, x);
 
   static double _toRad(double value) => value * (3.14159265359 / 180);
+
+  String _buildStationOrderNumber(String id, DateTime createdAt) {
+    final datePart =
+        '${createdAt.year.toString().padLeft(4, '0')}${createdAt.month.toString().padLeft(2, '0')}${createdAt.day.toString().padLeft(2, '0')}';
+    final sanitized = id.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
+    final suffix = sanitized.length >= 4
+        ? sanitized.substring(sanitized.length - 4)
+        : sanitized.padLeft(4, '0');
+    return 'SO-$datePart-$suffix';
+  }
 
   static double _sinImpl(double x) {
     double result = x;

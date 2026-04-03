@@ -6,6 +6,9 @@ import 'package:image_picker/image_picker.dart';
 
 import '../main.dart';
 import '../services/menu_management_service.dart';
+import '../services/order_document_service.dart';
+import '../services/restaurant_service.dart';
+import '../services/transaction_fee_service.dart';
 import '../widgets/operations_tracking_board.dart';
 
 class UpgradedRestaurantAdminDashboard extends StatefulWidget {
@@ -40,12 +43,16 @@ class _UpgradedRestaurantAdminDashboardState
 
   int _tabIndex = 0;
   late MenuManagementService _menuService;
+  late RestaurantService _restaurantService;
+  late OrderDocumentService _orderDocumentService;
+  late TransactionFeeService _transactionFeeService;
   Uint8List? _selectedImageBytes;
   String? _selectedImageName;
   String _selectedCategory = _fallbackCategories.first;
   bool _isVegetarian = false;
   bool _isSpicy = false;
   bool _isSubmitting = false;
+  bool _isGeneratingDocuments = false;
 
   final List<_RestaurantOrderSnapshot> _orderSnapshots = const [
     _RestaurantOrderSnapshot(
@@ -81,6 +88,9 @@ class _UpgradedRestaurantAdminDashboardState
   void initState() {
     super.initState();
     _menuService = AppServices.menuService;
+    _restaurantService = AppServices.restaurantService;
+    _orderDocumentService = AppServices.orderDocumentService;
+    _transactionFeeService = AppServices.transactionFeeService;
   }
 
   @override
@@ -103,6 +113,20 @@ class _UpgradedRestaurantAdminDashboardState
         title: const Text('Restaurant Manager'),
         backgroundColor: const Color(0xFFFD5E14),
         actions: [
+          IconButton(
+            icon: _isGeneratingDocuments
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.summarize_outlined),
+            tooltip: 'Generate sales report',
+            onPressed: _isGeneratingDocuments ? null : _generateDailyReport,
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
@@ -198,6 +222,27 @@ class _UpgradedRestaurantAdminDashboardState
                 icon: Icons.timer_outlined,
                 color: Color(0xFF14B8A6),
               ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            ElevatedButton.icon(
+              onPressed: _isGeneratingDocuments ? null : _generateDailyReport,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFD5E14),
+                foregroundColor: Colors.white,
+              ),
+              icon: const Icon(Icons.description_outlined),
+              label: const Text('Generate report'),
+            ),
+            OutlinedButton.icon(
+              onPressed: _isGeneratingDocuments ? null : _generateApprovedInvoices,
+              icon: const Icon(Icons.receipt_long_outlined),
+              label: const Text('Generate invoices'),
             ),
           ],
         ),
@@ -1087,6 +1132,128 @@ class _UpgradedRestaurantAdminDashboardState
       SnackBar(
         content: Text(message),
         backgroundColor: isError ? Colors.red : const Color(0xFF14B8A6),
+      ),
+    );
+  }
+
+  Future<void> _generateDailyReport() async {
+    setState(() => _isGeneratingDocuments = true);
+    try {
+      final approvedRecords =
+          await _restaurantService.getApprovedOrders(widget.restaurantId);
+      final approvedOrders =
+          approvedRecords.map(_orderDocumentService.foodOrderFromRecord).toList();
+      final dailyRevenue = await _transactionFeeService.getRestaurantDailyRevenue(
+        restaurantId: widget.restaurantId,
+        date: DateTime.now(),
+      );
+      final monthlyRevenue =
+          await _transactionFeeService.getRestaurantMonthlyRevenue(
+        restaurantId: widget.restaurantId,
+        month: DateTime.now().month,
+        year: DateTime.now().year,
+      );
+      final bytes = await _orderDocumentService.generateRestaurantSalesReport(
+        restaurantName: approvedOrders.isNotEmpty
+            ? approvedOrders.first.restaurantName
+            : 'Restaurant ${widget.restaurantId}',
+        generatedAt: DateTime.now(),
+        orders: approvedOrders,
+        dailyRevenue: dailyRevenue,
+        monthlyRevenue: monthlyRevenue,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _showDocumentDialog(
+        title: 'Sales report generated',
+        lines: [
+          'Approved orders: ${approvedOrders.length}',
+          'Today payout: K${dailyRevenue['restaurant_payout'] ?? '0.00'}',
+          'Month payout: K${monthlyRevenue['restaurant_payout'] ?? '0.00'}',
+          'PDF size: ${(bytes.lengthInBytes / 1024).toStringAsFixed(1)} KB',
+        ],
+      );
+    } catch (e) {
+      _showMessage('Failed to generate report: $e', true);
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingDocuments = false);
+      }
+    }
+  }
+
+  Future<void> _generateApprovedInvoices() async {
+    setState(() => _isGeneratingDocuments = true);
+    try {
+      final approvedRecords =
+          await _restaurantService.getApprovedOrders(widget.restaurantId);
+      if (approvedRecords.isEmpty) {
+        _showMessage('No approved orders available for invoicing yet.', true);
+        return;
+      }
+
+      final invoiceLines = <String>[];
+      int totalBytes = 0;
+
+      for (final record in approvedRecords.take(5)) {
+        final order = _orderDocumentService.foodOrderFromRecord(record);
+        final bytes = await _orderDocumentService.generateApprovedOrderInvoice(
+          order: order,
+        );
+        totalBytes += bytes.lengthInBytes;
+        invoiceLines.add('${order.orderNumber} -> ${order.invoiceNumber}');
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      _showDocumentDialog(
+        title: 'Approved invoices generated',
+        lines: [
+          'Generated ${invoiceLines.length} invoice PDFs for approved food orders.',
+          ...invoiceLines,
+          'Combined PDF output: ${(totalBytes / 1024).toStringAsFixed(1)} KB',
+        ],
+      );
+    } catch (e) {
+      _showMessage('Failed to generate invoices: $e', true);
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingDocuments = false);
+      }
+    }
+  }
+
+  void _showDocumentDialog({required String title, required List<String> lines}) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: SizedBox(
+          width: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: lines
+                .map(
+                  (line) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(line),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }

@@ -27,6 +27,38 @@ class RestaurantService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getApprovedOrders(String restaurantId) async {
+    try {
+      final response = await supabase
+          .from('orders')
+          .select()
+          .eq('restaurant_id', restaurantId)
+          .inFilter('status', ['accepted', 'preparing', 'ready', 'completed'])
+          .order('accepted_at', ascending: false)
+          .order('created_at', ascending: false);
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('❌ [ORDERS] Error fetching approved orders: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> getOrderById(String orderId) async {
+    try {
+      final response = await supabase
+          .from('orders')
+          .select()
+          .eq('id', orderId)
+          .single();
+
+      return Map<String, dynamic>.from(response);
+    } catch (e) {
+      print('❌ [ORDERS] Error fetching order $orderId: $e');
+      return null;
+    }
+  }
+
   // Accept order + notify customer via WATI
   Future<bool> acceptOrder(String orderId, String customerPhone) async {
     try {

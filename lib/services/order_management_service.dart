@@ -54,8 +54,11 @@ class OrderManagementService {
       final total = subtotal + deliveryFee + platformFee;
 
       // Create order object
+      final now = DateTime.now();
+      final generatedId = _generateId('order');
       FoodOrder order = FoodOrder(
-        id: _generateId('order'),
+        id: generatedId,
+        orderNumberValue: _buildFoodOrderNumber(generatedId, now),
         customerId: customerId,
         customerName: customerName,
         customerPhoneNumber: customerPhone,
@@ -66,7 +69,7 @@ class OrderManagementService {
         journeyId: journeyId,
         items: items,
         status: OrderStatus.pending,
-        orderTime: DateTime.now(),
+        orderTime: now,
         specialInstructions: specialInstructions,
         deliveryFee: deliveryFee,
         platformFee: platformFee,
@@ -79,6 +82,7 @@ class OrderManagementService {
       if (town != null && town.etaToTown != null) {
         order = FoodOrder(
           id: order.id,
+          orderNumberValue: order.orderNumber,
           customerId: order.customerId,
           customerName: order.customerName,
           customerPhoneNumber: order.customerPhoneNumber,
@@ -139,6 +143,7 @@ class OrderManagementService {
       // Update order with payment confirmation
       final updatedOrder = FoodOrder(
         id: order.id,
+        orderNumberValue: order.orderNumber,
         customerId: order.customerId,
         customerName: order.customerName,
         customerPhoneNumber: order.customerPhoneNumber,
@@ -387,6 +392,16 @@ class OrderManagementService {
   String _generateId(String prefix) {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     return '$prefix:${timestamp}_${_randomString(8)}';
+  }
+
+  String _buildFoodOrderNumber(String id, DateTime createdAt) {
+    final datePart =
+        '${createdAt.year.toString().padLeft(4, '0')}${createdAt.month.toString().padLeft(2, '0')}${createdAt.day.toString().padLeft(2, '0')}';
+    final sanitized = id.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
+    final suffix = sanitized.length >= 4
+        ? sanitized.substring(sanitized.length - 4)
+        : sanitized.padLeft(4, '0');
+    return 'FO-$datePart-$suffix';
   }
 
   /// Generate random string

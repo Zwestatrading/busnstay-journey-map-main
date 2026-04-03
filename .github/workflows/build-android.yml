@@ -5,6 +5,7 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,7 +19,6 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.41.6'
         channel: 'stable'
     
     # Step 3: Get dependencies
@@ -36,6 +36,9 @@ jobs:
     # Step 6: Build APK (Release)
     - name: Build APK - Release
       run: flutter build apk --release --split-per-abi
+
+    - name: Build APK - Universal Release
+      run: flutter build apk --release
     
     # Step 7: Upload APK artifacts
     - name: Upload APK artifacts
@@ -49,6 +52,7 @@ jobs:
           build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
           build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
           build/app/outputs/flutter-apk/app-x86_64-release.apk
+          build/app/outputs/flutter-apk/app-release.apk
 
   # Optional: Deploy to Firebase or other services
   deploy:

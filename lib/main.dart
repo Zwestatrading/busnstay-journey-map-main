@@ -8,6 +8,7 @@ import 'models/user_model.dart';
 import 'models/wallet_model.dart';
 import 'services/app_state.dart';
 import 'services/database_service.dart';
+import 'services/order_document_service.dart';
 import 'services/order_management_service.dart';
 import 'services/restaurant_notification_service.dart';
 import 'services/town_order_management_service.dart';
@@ -18,6 +19,7 @@ import 'services/delivery_service.dart';
 import 'services/hotel_service.dart';
 import 'services/live_location_service.dart';
 import 'services/menu_management_service.dart';
+import 'services/transaction_fee_service.dart';
 import 'widgets/payment_modal.dart';
 import 'widgets/status_badge.dart';
 import 'pages/forgot_password_page.dart';
@@ -30,6 +32,7 @@ import 'pages/upgraded_restaurant_admin_dashboard.dart';
 // ============ APP SERVICES SINGLETON ============
 class AppServices {
   static late OrderManagementService orderService;
+  static late OrderDocumentService orderDocumentService;
   static late RestaurantNotificationService notificationService;
   static late TownOrderManagementService townService;
   static late DatabaseService databaseService;
@@ -40,6 +43,7 @@ class AppServices {
   static late LiveLocationService liveLocationService;
   static late MenuManagementService menuService;
   static late DeliveryService deliveryService;
+  static late TransactionFeeService transactionFeeService;
 
   static bool _initialized = false;
 
@@ -91,6 +95,10 @@ class AppServices {
         townService: townService,
       );
       print('✅ [INIT] Order management service initialized');
+
+      orderDocumentService = OrderDocumentService();
+      transactionFeeService = TransactionFeeService(supabase: supabaseClient);
+      print('✅ [INIT] Order document and revenue services initialized');
 
       // ============= PHASE 1: NEW SERVICES ✅ =============
       // Initialize Passenger Service (bookings + tracking)
@@ -871,20 +879,7 @@ class _AuthScreenState extends State<AuthScreen> {
           curve: Curves.easeInOut,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            gradient: isSelected
-                ? const LinearGradient(
-                    colors: [Color(0xFFDC143C), Color(0xFFFD5E14)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : LinearGradient(
-                    colors: [
-                      Colors.grey.withOpacity(0.06),
-                      Colors.grey.withOpacity(0.02),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+            color: const Color(0xFF1F2740),
             border: Border.all(
               color: isSelected
                   ? const Color(0xFFDC143C)
@@ -907,50 +902,73 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ],
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              AnimatedScale(
-                scale: isSelected ? 1.15 : 1.0,
-                duration: const Duration(milliseconds: 300),
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
-                    gradient: isSelected
-                        ? LinearGradient(
-                            colors: [
-                              Colors.white.withOpacity(0.3),
-                              Colors.white.withOpacity(0.1),
-                            ],
-                          )
-                        : LinearGradient(
-                            colors: [
-                              const Color(0xFFFD5E14).withOpacity(0.15),
-                              const Color(0xFFFD5E14).withOpacity(0.05),
-                            ],
-                          ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Image.asset(
-                      imagePath,
-                      width: 56,
-                      height: 56,
-                      fit: BoxFit.cover,
-                    ),
+              Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: isSelected
+                        ? [
+                            const Color(0xFFDC143C).withOpacity(0.16),
+                            const Color(0xFF0F172A).withOpacity(0.20),
+                            const Color(0xFFDC143C).withOpacity(0.38),
+                          ]
+                        : [
+                            Colors.black.withOpacity(0.04),
+                            Colors.black.withOpacity(0.18),
+                            Colors.black.withOpacity(0.52),
+                          ],
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: isSelected ? Colors.white : Colors.grey.shade700,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                  fontSize: 11,
-                  letterSpacing: 0.3,
+              if (isSelected)
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDC143C),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      'Selected',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ),
+              Positioned(
+                left: 14,
+                right: 14,
+                bottom: 14,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.34),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.16)),
+                  ),
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
                 ),
               ),
             ],

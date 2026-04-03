@@ -100,6 +100,8 @@ class RestaurantNotification {
 
 class FoodOrder {
   final String id;
+  final String? orderNumberValue;
+  final String? invoiceNumberValue;
   final String customerId;
   final String customerName;
   final String customerPhoneNumber;
@@ -122,9 +124,13 @@ class FoodOrder {
   final bool restaurantNotified;
   final String? deliveryAddress;
   final String? pickupAddress;
+  final DateTime? approvedAt;
+  final String? approvedBy;
 
   FoodOrder({
     required this.id,
+    this.orderNumberValue,
+    this.invoiceNumberValue,
     required this.customerId,
     required this.customerName,
     required this.customerPhoneNumber,
@@ -145,10 +151,20 @@ class FoodOrder {
     this.restaurantNotified = false,
     this.deliveryAddress,
     this.pickupAddress,
+    this.approvedAt,
+    this.approvedBy,
   });
 
   double get subtotal => items.fold(0, (sum, item) => sum + item.total);
   double get total => subtotal + deliveryFee + platformFee;
+  String get orderNumber => orderNumberValue ?? _buildOrderNumber(id, orderTime);
+  String get invoiceNumber => invoiceNumberValue ?? _buildInvoiceNumber(orderNumber);
+  bool get isApprovedOrder => const {
+        OrderStatus.accepted,
+        OrderStatus.preparing,
+        OrderStatus.ready,
+        OrderStatus.completed,
+      }.contains(status);
 
   String get statusLabel {
     switch (status) {
@@ -202,6 +218,8 @@ class FoodOrder {
 
   Map<String, dynamic> toJson() => {
     'id': id,
+    'orderNumber': orderNumber,
+    'invoiceNumber': invoiceNumber,
     'customerId': customerId,
     'customerName': customerName,
     'customerPhoneNumber': customerPhoneNumber,
@@ -222,39 +240,47 @@ class FoodOrder {
     'restaurantNotified': restaurantNotified,
     'deliveryAddress': deliveryAddress,
     'pickupAddress': pickupAddress,
+    'approvedAt': approvedAt?.toIso8601String(),
+    'approvedBy': approvedBy,
   };
 
   factory FoodOrder.fromJson(Map<String, dynamic> json) => FoodOrder(
-    id: json['id'] as String,
-    customerId: json['customerId'] as String,
-    customerName: json['customerName'] as String,
-    customerPhoneNumber: json['customerPhoneNumber'] as String,
-    restaurantId: json['restaurantId'] as String,
-    restaurantName: json['restaurantName'] as String,
-    townId: json['townId'] as String,
-    townName: json['townName'] as String,
-    journeyId: json['journeyId'] as String,
-    items: (json['items'] as List<dynamic>)
+    id: _stringValue(json, const ['id']) ?? '',
+    orderNumberValue: _stringValue(json, const ['orderNumber', 'order_number']),
+    invoiceNumberValue: _stringValue(json, const ['invoiceNumber', 'invoice_number']),
+    customerId: _stringValue(json, const ['customerId', 'customer_id']) ?? '',
+    customerName: _stringValue(json, const ['customerName', 'customer_name']) ?? 'Customer',
+    customerPhoneNumber: _stringValue(json, const ['customerPhoneNumber', 'customer_phone', 'customer_phone_number']) ?? '',
+    restaurantId: _stringValue(json, const ['restaurantId', 'restaurant_id']) ?? '',
+    restaurantName: _stringValue(json, const ['restaurantName', 'restaurant_name']) ?? 'Unknown',
+    townId: _stringValue(json, const ['townId', 'town_id']) ?? '',
+    townName: _stringValue(json, const ['townName', 'town_name']) ?? 'Unknown',
+    journeyId: _stringValue(json, const ['journeyId', 'journey_id']) ?? '',
+    items: (_listValue(json, const ['items']) ?? const <dynamic>[])
         .map((i) => OrderItem.fromJson(i as Map<String, dynamic>))
         .toList(),
-    status: _parseOrderStatus(json['status'] as String),
-    orderTime: DateTime.parse(json['orderTime'] as String),
-    confirmedPaymentTime: json['confirmedPaymentTime'] != null
-        ? DateTime.parse(json['confirmedPaymentTime'] as String)
-        : null,
-    specialInstructions: json['specialInstructions'] as String?,
-    deliveryFee: (json['deliveryFee'] as num?)?.toDouble() ?? 0,
-    platformFee: (json['platformFee'] as num?)?.toDouble() ?? 0,
-    notifications: (json['notifications'] as List<dynamic>?)
+    status: _parseOrderStatus(_stringValue(json, const ['status']) ?? 'pending'),
+    orderTime: _dateTimeValue(json, const ['orderTime', 'order_time', 'created_at']) ?? DateTime.now(),
+    confirmedPaymentTime: _dateTimeValue(
+      json,
+      const ['confirmedPaymentTime', 'payment_confirmed_at', 'confirmed_payment_time'],
+    ),
+    specialInstructions: _stringValue(json, const ['specialInstructions', 'special_instructions']),
+    deliveryFee: _numValue(json, const ['deliveryFee', 'delivery_fee']) ?? 0,
+    platformFee: _numValue(json, const ['platformFee', 'platform_fee']) ?? 0,
+    notifications: (_listValue(json, const ['notifications']) as List<dynamic>?)
             ?.map((n) => RestaurantNotification.fromJson(n as Map<String, dynamic>))
             .toList() ??
         [],
-    estimatedBusArrivalTime: json['estimatedBusArrivalTime'] != null
-        ? DateTime.parse(json['estimatedBusArrivalTime'] as String)
-        : null,
-    restaurantNotified: json['restaurantNotified'] as bool? ?? false,
-    deliveryAddress: json['deliveryAddress'] as String?,
-    pickupAddress: json['pickupAddress'] as String?,
+    estimatedBusArrivalTime: _dateTimeValue(
+      json,
+      const ['estimatedBusArrivalTime', 'estimated_bus_arrival_time'],
+    ),
+    restaurantNotified: _boolValue(json, const ['restaurantNotified', 'restaurant_notified']) ?? false,
+    deliveryAddress: _stringValue(json, const ['deliveryAddress', 'delivery_address']),
+    pickupAddress: _stringValue(json, const ['pickupAddress', 'pickup_address']),
+    approvedAt: _dateTimeValue(json, const ['approvedAt', 'approved_at', 'accepted_at']),
+    approvedBy: _stringValue(json, const ['approvedBy', 'approved_by', 'accepted_by']),
   );
 }
 
@@ -325,6 +351,68 @@ OrderStatus _parseOrderStatus(String status) {
     default:
       return OrderStatus.pending;
   }
+}
+
+String? _stringValue(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    final value = json[key];
+    if (value != null) {
+      return value.toString();
+    }
+  }
+  return null;
+}
+
+double? _numValue(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    final value = json[key];
+    if (value is num) {
+      return value.toDouble();
+    }
+  }
+  return null;
+}
+
+bool? _boolValue(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    final value = json[key];
+    if (value is bool) {
+      return value;
+    }
+  }
+  return null;
+}
+
+DateTime? _dateTimeValue(Map<String, dynamic> json, List<String> keys) {
+  final value = _stringValue(json, keys);
+  if (value == null || value.isEmpty) {
+    return null;
+  }
+  return DateTime.tryParse(value);
+}
+
+List<dynamic>? _listValue(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    final value = json[key];
+    if (value is List<dynamic>) {
+      return value;
+    }
+  }
+  return null;
+}
+
+String _buildOrderNumber(String id, DateTime createdAt) {
+  final datePart =
+      '${createdAt.year.toString().padLeft(4, '0')}${createdAt.month.toString().padLeft(2, '0')}${createdAt.day.toString().padLeft(2, '0')}';
+  final sanitized = id.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
+  final suffix = sanitized.length >= 4
+      ? sanitized.substring(sanitized.length - 4)
+      : sanitized.padLeft(4, '0');
+  return 'FO-$datePart-$suffix';
+}
+
+String _buildInvoiceNumber(String orderNumber) {
+  return 'INV-${orderNumber.replaceFirst('FO-', '')}';
 }
 
 NotificationChannel _parseNotificationChannel(String channel) {

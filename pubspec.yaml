@@ -48,6 +48,9 @@ dependencies:
   
   # HTTP client for external APIs
   http: ^1.1.0
+
+  # PDF documents for invoices and reports
+  pdf: ^3.11.3
   
   # Typography
   google_fonts: ^6.0.0
