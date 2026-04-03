@@ -6,10 +6,8 @@ import '../widgets/operations_tracking_board.dart';
 class UpgradedBusOperatorDashboard extends StatefulWidget {
   final String busOperatorId;
 
-  const UpgradedBusOperatorDashboard({
-    Key? key,
-    required this.busOperatorId,
-  }) : super(key: key);
+  const UpgradedBusOperatorDashboard({Key? key, required this.busOperatorId})
+    : super(key: key);
 
   @override
   State<UpgradedBusOperatorDashboard> createState() =>
@@ -19,6 +17,8 @@ class UpgradedBusOperatorDashboard extends StatefulWidget {
 class _UpgradedBusOperatorDashboardState
     extends State<UpgradedBusOperatorDashboard> {
   int _tabIndex = 0;
+  bool _dispatchBoardOpen = true;
+  bool _acceptingBookings = true;
 
   final List<BusVehicle> _buses = [
     BusVehicle(
@@ -73,7 +73,7 @@ class _UpgradedBusOperatorDashboardState
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Bus Operator Dashboard'),
+        title: const Text('Transport Operator Dashboard'),
         backgroundColor: const Color(0xFFFD5E14),
         elevation: 0,
         actions: [
@@ -87,6 +87,7 @@ class _UpgradedBusOperatorDashboardState
       ),
       body: Column(
         children: [
+          _buildOperationalHeader(),
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -96,11 +97,106 @@ class _UpgradedBusOperatorDashboardState
                 _buildTabButton(0, 'Fleet', Icons.directions_bus),
                 _buildTabButton(1, 'Live Map', Icons.map_outlined),
                 _buildTabButton(2, 'Routes', Icons.alt_route),
-                _buildTabButton(3, 'Reports', Icons.query_stats),
+                _buildTabButton(3, 'Dispatch', Icons.settings_input_component),
+                _buildTabButton(4, 'Reports', Icons.query_stats),
               ],
             ),
           ),
           Expanded(child: _buildCurrentTab()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOperationalHeader() {
+    final movingBuses = _buses
+        .where((bus) => bus.status == 'In Transit')
+        .length;
+    final totalSeats = _buses.fold<int>(0, (sum, bus) => sum + bus.capacity);
+    final occupiedSeats = _buses.fold<int>(
+      0,
+      (sum, bus) => sum + bus.passengersOnBoard,
+    );
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF111827), Color(0xFFFD5E14)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Fleet control centre',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Bring the web transport dashboard into mobile with dispatch readiness, route health, and live fleet visibility in one shell.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white70,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _dispatchBoardOpen ? 'Dispatch live' : 'Dispatch paused',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: _dispatchBoardOpen,
+                    activeColor: Colors.white,
+                    activeTrackColor: const Color(0xFF10B981),
+                    onChanged: (value) =>
+                        setState(() => _dispatchBoardOpen = value),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _BusOpsPill('$movingBuses vehicles moving now'),
+              _BusOpsPill(
+                '${occupiedSeats.toString()}/$totalSeats seats occupied',
+              ),
+              _BusOpsPill(
+                _acceptingBookings ? 'New bookings open' : 'Bookings paused',
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -114,6 +210,8 @@ class _UpgradedBusOperatorDashboardState
         return _buildLiveMapTab();
       case 2:
         return _buildRoutesTab();
+      case 3:
+        return _buildDispatchTab();
       default:
         return _buildReportsTab();
     }
@@ -194,9 +292,11 @@ class _UpgradedBusOperatorDashboardState
     final statusColor = bus.status == 'In Transit'
         ? Colors.blue
         : bus.status == 'Boarding'
-            ? Colors.orange
-            : Colors.green;
-    final occupancyPercent = bus.capacity == 0 ? 0.0 : bus.passengersOnBoard / bus.capacity;
+        ? Colors.orange
+        : Colors.green;
+    final occupancyPercent = bus.capacity == 0
+        ? 0.0
+        : bus.passengersOnBoard / bus.capacity;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -277,7 +377,7 @@ class _UpgradedBusOperatorDashboardState
                   foregroundColor: Colors.white,
                 ),
                 icon: const Icon(Icons.location_searching_outlined),
-                label: const Text('Track bus live'),
+                label: const Text('Track vehicle live'),
               ),
             ),
           ],
@@ -306,8 +406,8 @@ class _UpgradedBusOperatorDashboardState
                   color: entry.value.status == 'Arrived'
                       ? Colors.green
                       : entry.value.status == 'Boarding'
-                          ? Colors.orange
-                          : const Color(0xFF3B82F6),
+                      ? Colors.orange
+                      : const Color(0xFF3B82F6),
                   progress: entry.value.status == 'Arrived'
                       ? 0.96
                       : 0.32 + (entry.key * 0.2),
@@ -405,8 +505,8 @@ class _UpgradedBusOperatorDashboardState
         final color = label == 'Active'
             ? Colors.green
             : label == 'Boarding'
-                ? Colors.orange
-                : Colors.grey;
+            ? Colors.orange
+            : Colors.grey;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
@@ -504,6 +604,182 @@ class _UpgradedBusOperatorDashboardState
     );
   }
 
+  Widget _buildDispatchTab() {
+    final boardingBuses = _buses
+        .where((bus) => bus.status == 'Boarding')
+        .length;
+    final arrivedBuses = _buses.where((bus) => bus.status == 'Arrived').length;
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _dispatchActionCard(
+                title: 'Booking status',
+                subtitle: _acceptingBookings
+                    ? 'Customers can reserve seats'
+                    : 'Seat sales temporarily paused',
+                icon: Icons.confirmation_number_outlined,
+                color: const Color(0xFF14B8A6),
+                trailing: Switch.adaptive(
+                  value: _acceptingBookings,
+                  activeColor: Colors.white,
+                  activeTrackColor: const Color(0xFF14B8A6),
+                  onChanged: (value) =>
+                      setState(() => _acceptingBookings = value),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'Boarding Bays',
+                value: '$boardingBuses active',
+                subtitle: 'Vehicles loading passengers',
+                icon: Icons.meeting_room_outlined,
+                color: const Color(0xFFFD5E14),
+              ),
+            ),
+            SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'Turnaround Ready',
+                value: '$arrivedBuses buses',
+                subtitle: 'Cleared for next departure prep',
+                icon: Icons.sync_alt_outlined,
+                color: const Color(0xFF3B82F6),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _dispatchActionCard(
+          title: 'Control checklist',
+          subtitle:
+              'Keep fleet, manifests, and route windows aligned from mobile.',
+          icon: Icons.rule_folder_outlined,
+          color: const Color(0xFF7C3AED),
+          content: Column(
+            children: [
+              _controlRow(
+                'Manifest sync',
+                'Passenger lists uploaded for all active routes',
+              ),
+              _controlRow(
+                'Crew readiness',
+                'Drivers acknowledged departure windows',
+              ),
+              _controlRow(
+                'Route alerts',
+                '1 congestion warning on Lusaka to Kitwe line',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _dispatchActionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    Widget? trailing,
+    Widget? content,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withOpacity(0.16)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (trailing != null) trailing,
+            ],
+          ),
+          if (content != null) ...[const SizedBox(height: 14), content],
+        ],
+      ),
+    );
+  }
+
+  Widget _controlRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _statusChip(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -542,8 +818,14 @@ class _UpgradedBusOperatorDashboardState
             _detailRow('Driver', bus.driverName),
             _detailRow('Destination', bus.destination),
             _detailRow('Next stop', bus.nextStop),
-            _detailRow('GPS', '${bus.latitude.toStringAsFixed(4)}, ${bus.longitude.toStringAsFixed(4)}'),
-            _detailRow('Passengers', '${bus.passengersOnBoard}/${bus.capacity}'),
+            _detailRow(
+              'GPS',
+              '${bus.latitude.toStringAsFixed(4)}, ${bus.longitude.toStringAsFixed(4)}',
+            ),
+            _detailRow(
+              'Passengers',
+              '${bus.passengersOnBoard}/${bus.capacity}',
+            ),
             _detailRow('ETA', bus.eta),
           ],
         ),
@@ -609,4 +891,30 @@ class BusVehicle {
     required this.eta,
     required this.countdown,
   });
+}
+
+class _BusOpsPill extends StatelessWidget {
+  final String label;
+
+  const _BusOpsPill(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
 }

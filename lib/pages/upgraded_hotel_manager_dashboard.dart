@@ -11,10 +11,8 @@ import '../widgets/operations_tracking_board.dart';
 class UpgradedHotelManagerDashboard extends StatefulWidget {
   final String hotelId;
 
-  const UpgradedHotelManagerDashboard({
-    Key? key,
-    required this.hotelId,
-  }) : super(key: key);
+  const UpgradedHotelManagerDashboard({Key? key, required this.hotelId})
+    : super(key: key);
 
   @override
   State<UpgradedHotelManagerDashboard> createState() =>
@@ -26,6 +24,7 @@ class _UpgradedHotelManagerDashboardState
   final ImagePicker _picker = ImagePicker();
   int _tabIndex = 0;
   late HotelEnhancedService _hotelService;
+  bool _acceptingBookings = true;
 
   final List<RoomServiceOrder> _orders = [
     RoomServiceOrder(
@@ -138,6 +137,7 @@ class _UpgradedHotelManagerDashboardState
       ),
       body: Column(
         children: [
+          _buildOperationalHeader(),
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -152,6 +152,95 @@ class _UpgradedHotelManagerDashboardState
             ),
           ),
           Expanded(child: _buildCurrentTab()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOperationalHeader() {
+    final occupiedRooms = _rooms
+        .where((room) => room.status == 'Occupied')
+        .length;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0F172A), Color(0xFF14B8A6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hotel operations command',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Mobile now surfaces the same booking readiness, room visibility, and service monitoring intent as the web dashboard.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white70,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _acceptingBookings ? 'Accepting bookings' : 'Paused',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: _acceptingBookings,
+                    activeColor: Colors.white,
+                    activeTrackColor: const Color(0xFF14B8A6),
+                    onChanged: (value) =>
+                        setState(() => _acceptingBookings = value),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _HotelStatusPill('${_orders.length} service orders'),
+              _HotelStatusPill('$occupiedRooms occupied rooms'),
+              _HotelStatusPill(
+                _acceptingBookings
+                    ? 'Check-in flow live'
+                    : 'New reservations paused',
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -243,8 +332,8 @@ class _UpgradedHotelManagerDashboardState
     final statusColor = order.status == 'In Delivery'
         ? Colors.blue
         : order.status == 'Preparing'
-            ? Colors.orange
-            : Colors.green;
+        ? Colors.orange
+        : Colors.green;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -296,8 +385,10 @@ class _UpgradedHotelManagerDashboardState
               children: order.items
                   .map(
                     (item) => Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: statusColor.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(999),
@@ -354,8 +445,9 @@ class _UpgradedHotelManagerDashboardState
   }
 
   Widget _buildTrackingTab() {
-    final inDeliveryOrders =
-        _orders.where((order) => order.status == 'In Delivery').toList();
+    final inDeliveryOrders = _orders
+        .where((order) => order.status == 'In Delivery')
+        .toList();
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -373,26 +465,27 @@ class _UpgradedHotelManagerDashboardState
                     status: 'Standby',
                     color: Color(0xFF14B8A6),
                     progress: 0.1,
-                    detail: 'Staff will appear here as soon as orders are dispatched.',
+                    detail:
+                        'Staff will appear here as soon as orders are dispatched.',
                   ),
                 ]
               : inDeliveryOrders
-                  .asMap()
-                  .entries
-                  .map(
-                    (entry) => TrackingBoardEntity(
-                      id: entry.value.id,
-                      label: 'Room ${entry.value.roomNumber}',
-                      status: entry.value.staffName,
-                      color: entry.key.isEven
-                          ? const Color(0xFF14B8A6)
-                          : const Color(0xFF3B82F6),
-                      progress: 0.45 + (entry.key * 0.18),
-                      detail:
-                          '${entry.value.items.first} • ${entry.value.estimatedArrival} arrival window',
-                    ),
-                  )
-                  .toList(),
+                    .asMap()
+                    .entries
+                    .map(
+                      (entry) => TrackingBoardEntity(
+                        id: entry.value.id,
+                        label: 'Room ${entry.value.roomNumber}',
+                        status: entry.value.staffName,
+                        color: entry.key.isEven
+                            ? const Color(0xFF14B8A6)
+                            : const Color(0xFF3B82F6),
+                        progress: 0.45 + (entry.key * 0.18),
+                        detail:
+                            '${entry.value.items.first} • ${entry.value.estimatedArrival} arrival window',
+                      ),
+                    )
+                    .toList(),
         ),
         const SizedBox(height: 16),
         ...inDeliveryOrders.map(
@@ -496,8 +589,8 @@ class _UpgradedHotelManagerDashboardState
     final color = room.status == 'Occupied'
         ? Colors.green
         : room.status == 'Cleaning'
-            ? Colors.orange
-            : const Color(0xFF14B8A6);
+        ? Colors.orange
+        : const Color(0xFF14B8A6);
 
     return Container(
       decoration: BoxDecoration(
@@ -518,7 +611,8 @@ class _UpgradedHotelManagerDashboardState
                     room.imageUrl!,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => _roomImageFallback(color),
+                    errorBuilder: (context, error, stackTrace) =>
+                        _roomImageFallback(color),
                   ),
                 ),
               )
@@ -579,9 +673,7 @@ class _UpgradedHotelManagerDashboardState
         color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Center(
-        child: Icon(Icons.hotel_outlined, color: color, size: 34),
-      ),
+      child: Center(child: Icon(Icons.hotel_outlined, color: color, size: 34)),
     );
   }
 
@@ -604,8 +696,11 @@ class _UpgradedHotelManagerDashboardState
   }
 
   Widget _buildReportsTab() {
-    final occupiedRooms = _rooms.where((room) => room.status == 'Occupied').length;
-    final occupancyRate = (_rooms.isEmpty ? 0 : occupiedRooms / _rooms.length) * 100;
+    final occupiedRooms = _rooms
+        .where((room) => room.status == 'Occupied')
+        .length;
+    final occupancyRate =
+        (_rooms.isEmpty ? 0 : occupiedRooms / _rooms.length) * 100;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -687,8 +782,9 @@ class _UpgradedHotelManagerDashboardState
                     const SizedBox(height: 16),
                     GestureDetector(
                       onTap: () async {
-                        final image =
-                            await _picker.pickImage(source: ImageSource.gallery);
+                        final image = await _picker.pickImage(
+                          source: ImageSource.gallery,
+                        );
                         if (image == null) {
                           return;
                         }
@@ -721,7 +817,10 @@ class _UpgradedHotelManagerDashboardState
                                 child: Stack(
                                   fit: StackFit.expand,
                                   children: [
-                                    Image.memory(imageBytes!, fit: BoxFit.cover),
+                                    Image.memory(
+                                      imageBytes!,
+                                      fit: BoxFit.cover,
+                                    ),
                                     Positioned(
                                       right: 12,
                                       top: 12,
@@ -732,7 +831,9 @@ class _UpgradedHotelManagerDashboardState
                                         ),
                                         decoration: BoxDecoration(
                                           color: Colors.black.withOpacity(0.55),
-                                          borderRadius: BorderRadius.circular(999),
+                                          borderRadius: BorderRadius.circular(
+                                            999,
+                                          ),
                                         ),
                                         child: Text(
                                           imageName ?? 'Room image',
@@ -760,8 +861,9 @@ class _UpgradedHotelManagerDashboardState
                           child: _sheetField(
                             priceController,
                             'Nightly rate',
-                            keyboardType:
-                                const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -775,7 +877,11 @@ class _UpgradedHotelManagerDashboardState
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _sheetField(descriptionController, 'Description', maxLines: 3),
+                    _sheetField(
+                      descriptionController,
+                      'Description',
+                      maxLines: 3,
+                    ),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
@@ -787,11 +893,19 @@ class _UpgradedHotelManagerDashboardState
                         onPressed: () async {
                           final roomNumber = roomNumberController.text.trim();
                           final roomType = roomTypeController.text.trim();
-                          final price = double.tryParse(priceController.text.trim());
-                          final capacity = int.tryParse(capacityController.text.trim()) ?? 2;
+                          final price = double.tryParse(
+                            priceController.text.trim(),
+                          );
+                          final capacity =
+                              int.tryParse(capacityController.text.trim()) ?? 2;
 
-                          if (roomNumber.isEmpty || roomType.isEmpty || price == null) {
-                            _showMessage('Enter room number, type, and price.', true);
+                          if (roomNumber.isEmpty ||
+                              roomType.isEmpty ||
+                              price == null) {
+                            _showMessage(
+                              'Enter room number, type, and price.',
+                              true,
+                            );
                             return;
                           }
 
@@ -861,9 +975,7 @@ class _UpgradedHotelManagerDashboardState
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
@@ -1040,4 +1152,30 @@ class RoomStatus {
     required this.nightlyRate,
     this.imageUrl,
   });
+}
+
+class _HotelStatusPill extends StatelessWidget {
+  final String label;
+
+  const _HotelStatusPill(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
 }

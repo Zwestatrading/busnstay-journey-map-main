@@ -1,6 +1,8 @@
+import 'dart:convert';
+import 'dart:math' as math;
+
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 /// Service to fetch real road geometry from Google Directions API
 /// This provides accurate routing that follows actual road networks
@@ -45,8 +47,9 @@ class DirectionsService {
           final leg = route['legs'][0];
 
           // Decode polyline to get actual route points
-          final polylinePoints =
-              _decodePolyline(route['overview_polyline']['points']);
+          final polylinePoints = _decodePolyline(
+            route['overview_polyline']['points'],
+          );
 
           // Extract steps for turn-by-turn directions
           final steps = leg['steps'] as List?;
@@ -126,24 +129,18 @@ class DirectionsService {
           final routes = (json['routes'] as List).map((route) {
             final leg = route['legs'][0];
             return {
-              'polyline_points':
-                  _decodePolyline(route['overview_polyline']['points']),
+              'polyline_points': _decodePolyline(
+                route['overview_polyline']['points'],
+              ),
               'distance_km': (leg['distance']['value'] as num) / 1000,
               'duration_text': leg['duration']['text'],
               'summary': route['summary'] ?? 'Route',
             };
           }).toList();
 
-          return {
-            'success': true,
-            'routes': routes,
-          };
+          return {'success': true, 'routes': routes};
         } else {
-          return {
-            'success': false,
-            'routes': [],
-            'error': json['status'],
-          };
+          return {'success': false, 'routes': [], 'error': json['status']};
         }
       } else {
         return {
@@ -153,11 +150,7 @@ class DirectionsService {
         };
       }
     } catch (e) {
-      return {
-        'success': false,
-        'routes': [],
-        'error': 'Error: $e',
-      };
+      return {'success': false, 'routes': [], 'error': 'Error: $e'};
     }
   }
 
@@ -206,8 +199,13 @@ class DirectionsService {
     double minDistance = double.infinity;
     LatLng closestPoint = routePoints.first;
 
-    for (var point in routePoints) {
-      double distance = _calculateDistance(lat, lng, point.latitude, point.longitude);
+    for (final point in routePoints) {
+      final distance = _calculateDistance(
+        lat,
+        lng,
+        point.latitude,
+        point.longitude,
+      );
       if (distance < minDistance) {
         minDistance = distance;
         closestPoint = point;
@@ -231,16 +229,15 @@ class DirectionsService {
     const R = 6371; // Earth's radius in km
     final dLat = _toRad(lat2 - lat1);
     final dLng = _toRad(lng2 - lng1);
-    final a = (Math.sin(dLat / 2) * Math.sin(dLat / 2)) +
-        (Math.cos(_toRad(lat1)) *
-            Math.cos(_toRad(lat2)) *
-            Math.sin(dLng / 2) *
-            Math.sin(dLng / 2));
-    final c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    final a =
+        (math.sin(dLat / 2) * math.sin(dLat / 2)) +
+        (math.cos(_toRad(lat1)) *
+            math.cos(_toRad(lat2)) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2));
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
     return R * c;
   }
 
   double _toRad(double value) => value * (3.14159265359 / 180);
 }
-
-import 'dart:math' as Math;

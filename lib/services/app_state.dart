@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../models/user_model.dart';
 import '../models/wallet_model.dart';
 import '../models/order_model.dart';
@@ -10,6 +10,10 @@ import 'database_service.dart';
 import 'flutterwave_service.dart';
 
 class AppState extends ChangeNotifier {
+  static const String demoEmail = 'demo@busnstay.com';
+  static const String demoPassword = 'demo123';
+  static const String demoPhone = '+260 97 123 4567';
+
   // User state
   AppUser? _user;
   bool _isLoggedIn = false;
@@ -17,7 +21,7 @@ class AppState extends ChangeNotifier {
   String? _authError;
 
   // Service instances
-  // late final SupabaseService _supabaseService;
+  late final SupabaseClient _supabaseClient;
   late final DatabaseService _databaseService;
 
   // Wallet & loyalty
@@ -47,15 +51,15 @@ class AppState extends ChangeNotifier {
   DatabaseService get databaseService => _databaseService;
 
   AppState() {
-    // _supabaseService = SupabaseService();
+    _supabaseClient = Supabase.instance.client;
     _databaseService = DatabaseService();
     _initializeServices();
   }
 
   Future<void> _initializeServices() async {
-    // Initialize database
     try {
       final _ = await _databaseService.database;
+      await _restoreSession();
     } catch (e) {
       print('Error initializing database: $e');
     }
@@ -73,17 +77,47 @@ class AppState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Demo mode: create user without Supabase
-      _user = AppUser(
-        id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-        name: name,
-        email: email,
-        phone: '+260 97 123 4567',
-        role: role,
-        memberSince: DateTime.now(),
+      final backendRole = _roleToBackendRole(role);
+      if (backendRole == null) {
+        _authError =
+            'This role is not available for direct mobile registration. Use the demo account for testing or onboard with the web app.';
+        _isAuthenticating = false;
+        notifyListeners();
+        return false;
+      }
+
+      final response = await _supabaseClient.auth.signUp(
+        email: email.trim(),
+        password: password,
+        data: {'role': backendRole, 'full_name': name},
       );
-      _isLoggedIn = true;
-      _initDemoData();
+
+      if (response.user == null) {
+        _authError = 'Unable to create account.';
+        _isAuthenticating = false;
+        notifyListeners();
+        return false;
+      }
+
+      await _supabaseClient
+          .from('user_profiles')
+          .update({'full_name': name, 'role': backendRole})
+          .eq('user_id', response.user!.id);
+
+      if (response.session != null) {
+        final profile = await _fetchUserProfile(response.user!.id);
+        final mobileRole = _profileToMobileRole(profile?['role'] as String?);
+        if (profile != null && mobileRole != null) {
+          await _applyAuthenticatedUser(
+            authUser: response.user!,
+            profile: profile,
+            role: mobileRole,
+          );
+          return true;
+        }
+      }
+
+      _authError = 'Account created. Verify your email, then sign in.';
       _isAuthenticating = false;
       notifyListeners();
       return true;
@@ -105,20 +139,67 @@ class AppState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Demo mode: accept any login
-      _user = AppUser(
-        id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-        name: 'User',
-        email: email,
-        phone: '+260 97 123 4567',
-        role: role,
-        memberSince: DateTime.now(),
-      );
-      _isLoggedIn = true;
-      await _restoreWalletFromDatabase();
-      _initDemoData();
-      _isAuthenticating = false;
-      notifyListeners();
+      if (!_isDemoCredentialPair(email, password)) {
+        final response = await _supabaseClient.auth.signInWithPassword(
+          email: email.trim(),
+          password: password,
+        );
+
+        if (response.user == null) {
+          _authError = 'No authenticated user was returned.';
+          _isAuthenticating = false;
+          notifyListeners();
+          return false;
+        }
+
+        final profile = await _fetchUserProfile(response.user!.id);
+        if (profile == null) {
+          await _supabaseClient.auth.signOut();
+          _authError =
+              'Your user profile is missing. Finish onboarding on the web app or contact support.';
+          _isAuthenticating = false;
+          notifyListeners();
+          return false;
+        }
+
+        final mobileRole = _profileToMobileRole(profile['role'] as String?);
+        if (mobileRole == null) {
+          await _supabaseClient.auth.signOut();
+          _authError =
+              'This account role is not supported in the mobile app yet. Use the demo account to inspect those flows.';
+          _isAuthenticating = false;
+          notifyListeners();
+          return false;
+        }
+
+        if (role != mobileRole) {
+          await _supabaseClient.auth.signOut();
+          _authError =
+              'This account belongs to ${_roleLabel(mobileRole)}. Select that role and try again.';
+          _isAuthenticating = false;
+          notifyListeners();
+          return false;
+        }
+
+        if (_requiresApproval(mobileRole) &&
+            !(profile['is_approved'] as bool? ?? false)) {
+          await _supabaseClient.auth.signOut();
+          _authError =
+              'Your account is awaiting admin approval before mobile access is enabled.';
+          _isAuthenticating = false;
+          notifyListeners();
+          return false;
+        }
+
+        await _applyAuthenticatedUser(
+          authUser: response.user!,
+          profile: profile,
+          role: mobileRole,
+        );
+        return true;
+      }
+
+      await demoLogin(role: role);
       return true;
     } catch (e) {
       _authError = e.toString();
@@ -129,47 +210,70 @@ class AppState extends ChangeNotifier {
   }
 
   // Demo login for testing
-  void demoLogin(String email, UserRole role) {
+  Future<void> demoLogin({required UserRole role}) async {
     _user = AppUser(
       id: 'user_demo_${role.toString().split('.').last}',
       name: _demoNameForRole(role),
-      email: email.isNotEmpty ? email : 'demo@busnstay.com',
-      phone: '+260 97 123 4567',
+      email: demoEmail,
+      phone: demoPhone,
       role: role,
       memberSince: DateTime(2024, 3, 15),
     );
     _isLoggedIn = true;
+    _authError = null;
+    await _restoreWalletFromDatabase();
     _initDemoData();
+    _isAuthenticating = false;
     notifyListeners();
   }
 
+  bool _isDemoCredentialPair(String email, String password) {
+    return email.trim().toLowerCase() == demoEmail && password == demoPassword;
+  }
+
   Future<void> _restoreSession() async {
-    // Demo mode: skip Supabase restoration
-    // final currentUser = _supabaseService.getCurrentUser();
-    // if (currentUser != null) {
-    //   final profile = await _supabaseService.getUserProfile(currentUser.id);
-    //   _user = AppUser(
-    //     id: currentUser.id,
-    //     name: profile?['name'] ?? 'User',
-    //     email: currentUser.email ?? '',
-    //     phone: profile?['phone'] ?? '+260 97 123 4567',
-    //     role: _parseRole(profile?['role'] ?? 'passenger'),
-    //     memberSince: DateTime.parse(profile?['member_since'] ?? DateTime.now().toIso8601String()),
-    //   );
-    //   _isLoggedIn = true;
-    //   await _restoreWalletFromDatabase();
-    //   notifyListeners();
-    // }
+    try {
+      final currentUser = _supabaseClient.auth.currentUser;
+      if (currentUser == null) {
+        return;
+      }
+
+      final profile = await _fetchUserProfile(currentUser.id);
+      final mobileRole = _profileToMobileRole(profile?['role'] as String?);
+      if (profile == null || mobileRole == null) {
+        await _supabaseClient.auth.signOut();
+        return;
+      }
+
+      if (_requiresApproval(mobileRole) &&
+          !(profile['is_approved'] as bool? ?? false)) {
+        await _supabaseClient.auth.signOut();
+        return;
+      }
+
+      await _applyAuthenticatedUser(
+        authUser: currentUser,
+        profile: profile,
+        role: mobileRole,
+      );
+    } catch (e) {
+      print('Error restoring session: $e');
+    }
   }
 
   Future<void> logout() async {
     try {
-      // await _supabaseService.signOut();
+      await _supabaseClient.auth.signOut();
       await _databaseService.clearAllData();
       _user = null;
       _isLoggedIn = false;
       _authError = null;
-      _wallet = Wallet(balance: 0, transactions: [], totalSpent: 0, totalReceived: 0);
+      _wallet = Wallet(
+        balance: 0,
+        transactions: [],
+        totalSpent: 0,
+        totalReceived: 0,
+      );
       notifyListeners();
     } catch (e) {
       print('Error during logout: $e');
@@ -206,7 +310,9 @@ class AppState extends ChangeNotifier {
       currentPoints: _loyalty.currentPoints + pointsEarned,
       totalEarned: _loyalty.totalEarned + pointsEarned,
       tier: _calculateTier(_loyalty.currentPoints + pointsEarned),
-      pointsToNextTier: _getPointsToNextTier(_loyalty.currentPoints + pointsEarned),
+      pointsToNextTier: _getPointsToNextTier(
+        _loyalty.currentPoints + pointsEarned,
+      ),
       availableRewards: _loyalty.availableRewards,
     );
 
@@ -287,7 +393,13 @@ class AppState extends ChangeNotifier {
   Future<bool> redeemReward(String rewardId) async {
     final reward = _loyalty.availableRewards.firstWhere(
       (r) => r.id == rewardId,
-      orElse: () => LoyaltyReward(id: '', title: '', description: '', pointsCost: 0, category: ''),
+      orElse: () => LoyaltyReward(
+        id: '',
+        title: '',
+        description: '',
+        pointsCost: 0,
+        category: '',
+      ),
     );
 
     if (reward.id.isEmpty || _loyalty.currentPoints < reward.pointsCost) {
@@ -399,7 +511,7 @@ class AppState extends ChangeNotifier {
       case UserRole.passenger:
         return 'Traveler';
       case UserRole.busOperator:
-        return 'Bus Operator';
+        return 'Transport Operator';
       case UserRole.restaurantAdmin:
         return 'Restaurant Manager';
       case UserRole.deliveryAgent:
@@ -411,6 +523,103 @@ class AppState extends ChangeNotifier {
       case UserRole.guest:
         return 'Guest';
     }
+  }
+
+  String _roleLabel(UserRole role) {
+    switch (role) {
+      case UserRole.passenger:
+        return 'Passenger';
+      case UserRole.busOperator:
+        return 'Bus or Taxi Operator';
+      case UserRole.restaurantAdmin:
+        return 'Restaurant';
+      case UserRole.deliveryAgent:
+        return 'Delivery';
+      case UserRole.hotelManager:
+        return 'Hotel';
+      case UserRole.platformAdmin:
+        return 'Admin';
+      case UserRole.guest:
+        return 'Guest';
+    }
+  }
+
+  String? _roleToBackendRole(UserRole role) {
+    switch (role) {
+      case UserRole.passenger:
+        return 'passenger';
+      case UserRole.busOperator:
+        return 'taxi';
+      case UserRole.restaurantAdmin:
+        return 'restaurant';
+      case UserRole.deliveryAgent:
+        return 'rider';
+      case UserRole.hotelManager:
+        return 'hotel';
+      case UserRole.platformAdmin:
+        return 'admin';
+      case UserRole.guest:
+        return null;
+    }
+  }
+
+  UserRole? _profileToMobileRole(String? profileRole) {
+    switch (profileRole) {
+      case 'passenger':
+        return UserRole.passenger;
+      case 'taxi':
+        return UserRole.busOperator;
+      case 'restaurant':
+        return UserRole.restaurantAdmin;
+      case 'rider':
+        return UserRole.deliveryAgent;
+      case 'hotel':
+        return UserRole.hotelManager;
+      case 'admin':
+        return UserRole.platformAdmin;
+      case null:
+        return null;
+      default:
+        return _parseRole(profileRole);
+    }
+  }
+
+  bool _requiresApproval(UserRole role) {
+    return role != UserRole.passenger && role != UserRole.platformAdmin;
+  }
+
+  Future<Map<String, dynamic>?> _fetchUserProfile(String userId) async {
+    return await _supabaseClient
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+  }
+
+  Future<void> _applyAuthenticatedUser({
+    required User authUser,
+    required Map<String, dynamic> profile,
+    required UserRole role,
+  }) async {
+    _user = AppUser(
+      id: authUser.id,
+      name: (profile['full_name'] as String?)?.trim().isNotEmpty == true
+          ? profile['full_name'] as String
+          : (authUser.email ?? _demoNameForRole(role)),
+      email: authUser.email ?? (profile['email'] as String? ?? ''),
+      phone: profile['phone'] as String? ?? demoPhone,
+      role: role,
+      memberSince:
+          DateTime.tryParse(profile['created_at'] as String? ?? '') ??
+          DateTime.now(),
+      avatarUrl: profile['avatar_url'] as String?,
+    );
+    _isLoggedIn = true;
+    _authError = null;
+    await _restoreWalletFromDatabase();
+    _initDemoData();
+    _isAuthenticating = false;
+    notifyListeners();
   }
 
   UserRole _parseRole(String roleString) {

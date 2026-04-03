@@ -14,10 +14,8 @@ import '../widgets/operations_tracking_board.dart';
 class UpgradedRestaurantAdminDashboard extends StatefulWidget {
   final String restaurantId;
 
-  const UpgradedRestaurantAdminDashboard({
-    Key? key,
-    required this.restaurantId,
-  }) : super(key: key);
+  const UpgradedRestaurantAdminDashboard({Key? key, required this.restaurantId})
+    : super(key: key);
 
   @override
   State<UpgradedRestaurantAdminDashboard> createState() =>
@@ -38,8 +36,9 @@ class _UpgradedRestaurantAdminDashboardState
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _prepTimeController =
-      TextEditingController(text: '20');
+  final TextEditingController _prepTimeController = TextEditingController(
+    text: '20',
+  );
 
   int _tabIndex = 0;
   late MenuManagementService _menuService;
@@ -53,6 +52,7 @@ class _UpgradedRestaurantAdminDashboardState
   bool _isSpicy = false;
   bool _isSubmitting = false;
   bool _isGeneratingDocuments = false;
+  bool _isStorefrontOpen = true;
 
   final List<_RestaurantOrderSnapshot> _orderSnapshots = const [
     _RestaurantOrderSnapshot(
@@ -137,6 +137,7 @@ class _UpgradedRestaurantAdminDashboardState
       ),
       body: Column(
         children: [
+          _buildOperationalHeader(),
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -145,11 +146,97 @@ class _UpgradedRestaurantAdminDashboardState
               children: [
                 _buildTabButton(0, 'Orders', Icons.receipt_long),
                 _buildTabButton(1, 'Pro Menus', Icons.restaurant_menu),
+                _buildTabButton(2, 'Control', Icons.tune),
               ],
             ),
           ),
           Expanded(
-            child: _tabIndex == 0 ? _buildOrdersTab() : _buildProMenuTab(),
+            child: _tabIndex == 0
+                ? _buildOrdersTab()
+                : _tabIndex == 1
+                ? _buildProMenuTab()
+                : _buildControlTab(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOperationalHeader() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF111827), Color(0xFFFD5E14)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Restaurant operations hub',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Match the web restaurant dashboard with order flow, menu publishing, and storefront controls in one mobile shell.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white70,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _isStorefrontOpen ? 'Accepting orders' : 'Paused',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: _isStorefrontOpen,
+                    activeColor: Colors.white,
+                    activeTrackColor: Colors.green,
+                    onChanged: (value) =>
+                        setState(() => _isStorefrontOpen = value),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: const [
+              _ControlPill(label: 'Station-linked fulfillment'),
+              _ControlPill(label: 'Invoice generation ready'),
+              _ControlPill(label: 'Menu image uploads live'),
+            ],
           ),
         ],
       ),
@@ -190,8 +277,9 @@ class _UpgradedRestaurantAdminDashboardState
   }
 
   Widget _buildOrdersTab() {
-    final preparingOrders =
-        _orderSnapshots.where((order) => order.status == 'Preparing').length;
+    final preparingOrders = _orderSnapshots
+        .where((order) => order.status == 'Preparing')
+        .length;
     final dispatchingOrders = _orderSnapshots
         .where((order) => order.status == 'Dispatching')
         .length;
@@ -240,7 +328,9 @@ class _UpgradedRestaurantAdminDashboardState
               label: const Text('Generate report'),
             ),
             OutlinedButton.icon(
-              onPressed: _isGeneratingDocuments ? null : _generateApprovedInvoices,
+              onPressed: _isGeneratingDocuments
+                  ? null
+                  : _generateApprovedInvoices,
               icon: const Icon(Icons.receipt_long_outlined),
               label: const Text('Generate invoices'),
             ),
@@ -310,8 +400,8 @@ class _UpgradedRestaurantAdminDashboardState
     final color = order.status == 'Preparing'
         ? const Color(0xFFF59E0B)
         : order.status == 'Dispatching'
-            ? const Color(0xFF14B8A6)
-            : const Color(0xFF3B82F6);
+        ? const Color(0xFF14B8A6)
+        : const Color(0xFF3B82F6);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -362,8 +452,10 @@ class _UpgradedRestaurantAdminDashboardState
             children: order.items
                 .map(
                   (item) => Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: color.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(999),
@@ -423,10 +515,7 @@ class _UpgradedRestaurantAdminDashboardState
           ),
           Expanded(
             child: TabBarView(
-              children: [
-                _buildViewMenuTab(),
-                _buildAddItemTab(),
-              ],
+              children: [_buildViewMenuTab(), _buildAddItemTab()],
             ),
           ),
         ],
@@ -459,7 +548,8 @@ class _UpgradedRestaurantAdminDashboardState
               return ListView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 itemCount: items.length,
-                itemBuilder: (context, index) => _buildMenuItemTile(items[index]),
+                itemBuilder: (context, index) =>
+                    _buildMenuItemTile(items[index]),
               );
             },
           );
@@ -647,13 +737,19 @@ class _UpgradedRestaurantAdminDashboardState
                       ),
                       CountdownBadge(
                         label: 'Prep',
-                        duration: Duration(minutes: item.preparationTimeMinutes),
+                        duration: Duration(
+                          minutes: item.preparationTimeMinutes,
+                        ),
                         color: const Color(0xFF14B8A6),
                       ),
-                      if (item.isVegetarian)
-                        _buildTag('Veg', Colors.green),
-                      if (item.isSpicy)
-                        _buildTag('Spicy', Colors.red),
+                      _buildTag(
+                        item.isAvailable ? 'Live' : 'Hidden',
+                        item.isAvailable
+                            ? const Color(0xFF14B8A6)
+                            : Colors.grey,
+                      ),
+                      if (item.isVegetarian) _buildTag('Veg', Colors.green),
+                      if (item.isSpicy) _buildTag('Spicy', Colors.red),
                     ],
                   ),
                 ],
@@ -661,6 +757,11 @@ class _UpgradedRestaurantAdminDashboardState
             ),
             Column(
               children: [
+                Switch.adaptive(
+                  value: item.isAvailable,
+                  activeColor: const Color(0xFFFD5E14),
+                  onChanged: (_) => _toggleMenuAvailability(item),
+                ),
                 GestureDetector(
                   onTap: () => _showEditItemModal(item),
                   child: Container(
@@ -700,6 +801,138 @@ class _UpgradedRestaurantAdminDashboardState
     );
   }
 
+  Widget _buildControlTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'Storefront',
+                value: _isStorefrontOpen ? 'Open' : 'Paused',
+                subtitle: 'Controls inbound orders',
+                icon: Icons.storefront_outlined,
+                color: _isStorefrontOpen
+                    ? const Color(0xFF14B8A6)
+                    : const Color(0xFFF59E0B),
+              ),
+            ),
+            const SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'Support lane',
+                value: 'Live',
+                subtitle: 'Call centre and admin escalation ready',
+                icon: Icons.support_agent_outlined,
+                color: Color(0xFF3B82F6),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Operational controls',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                value: _isStorefrontOpen,
+                activeColor: const Color(0xFF14B8A6),
+                title: Text(
+                  'Accept new orders',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  'Mirrors the web restaurant open or closed control.',
+                  style: GoogleFonts.poppins(fontSize: 11),
+                ),
+                onChanged: (value) => setState(() => _isStorefrontOpen = value),
+              ),
+              const Divider(height: 24),
+              _controlRow(
+                'Invoices',
+                'Generate approved order documents for reconciliation',
+              ),
+              _controlRow(
+                'Kitchen handoff',
+                'Active order board tracks preparation and dispatching',
+              ),
+              _controlRow(
+                'Menu publishing',
+                'Use item toggles to hide unavailable dishes without deleting them',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _controlRow(String title, String subtitle) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleMenuAvailability(MenuItem item) async {
+    final success = await _menuService.updateMenuItem(
+      itemId: item.id,
+      isAvailable: !item.isAvailable,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? '${item.name} is now ${item.isAvailable ? 'hidden' : 'live'}'
+              : 'Failed to update ${item.name}',
+        ),
+      ),
+    );
+
+    if (success) {
+      setState(() {});
+    }
+  }
+
   Widget _buildItemFallbackIcon() {
     return Container(
       width: 80,
@@ -734,9 +967,12 @@ class _UpgradedRestaurantAdminDashboardState
     return FutureBuilder<List<MenuCategory>>(
       future: _menuService.getCategories(widget.restaurantId),
       builder: (context, snapshot) {
-        final categories = snapshot.data?.map((category) => category.name).toList();
-        final availableCategories =
-            (categories == null || categories.isEmpty) ? _fallbackCategories : categories;
+        final categories = snapshot.data
+            ?.map((category) => category.name)
+            .toList();
+        final availableCategories = (categories == null || categories.isEmpty)
+            ? _fallbackCategories
+            : categories;
 
         if (!availableCategories.contains(_selectedCategory)) {
           _selectedCategory = availableCategories.first;
@@ -816,7 +1052,10 @@ class _UpgradedRestaurantAdminDashboardState
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            Image.memory(_selectedImageBytes!, fit: BoxFit.cover),
+                            Image.memory(
+                              _selectedImageBytes!,
+                              fit: BoxFit.cover,
+                            ),
                             Positioned(
                               right: 12,
                               top: 12,
@@ -865,7 +1104,9 @@ class _UpgradedRestaurantAdminDashboardState
                     controller: _priceController,
                     label: 'Price (K)',
                     icon: Icons.payments_outlined,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -958,9 +1199,7 @@ class _UpgradedRestaurantAdminDashboardState
                   : const Icon(Icons.cloud_upload_outlined),
               label: Text(
                 _isSubmitting ? 'Publishing item...' : 'Publish menu item',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -1139,20 +1378,23 @@ class _UpgradedRestaurantAdminDashboardState
   Future<void> _generateDailyReport() async {
     setState(() => _isGeneratingDocuments = true);
     try {
-      final approvedRecords =
-          await _restaurantService.getApprovedOrders(widget.restaurantId);
-      final approvedOrders =
-          approvedRecords.map(_orderDocumentService.foodOrderFromRecord).toList();
-      final dailyRevenue = await _transactionFeeService.getRestaurantDailyRevenue(
-        restaurantId: widget.restaurantId,
-        date: DateTime.now(),
+      final approvedRecords = await _restaurantService.getApprovedOrders(
+        widget.restaurantId,
       );
-      final monthlyRevenue =
-          await _transactionFeeService.getRestaurantMonthlyRevenue(
-        restaurantId: widget.restaurantId,
-        month: DateTime.now().month,
-        year: DateTime.now().year,
-      );
+      final approvedOrders = approvedRecords
+          .map(_orderDocumentService.foodOrderFromRecord)
+          .toList();
+      final dailyRevenue = await _transactionFeeService
+          .getRestaurantDailyRevenue(
+            restaurantId: widget.restaurantId,
+            date: DateTime.now(),
+          );
+      final monthlyRevenue = await _transactionFeeService
+          .getRestaurantMonthlyRevenue(
+            restaurantId: widget.restaurantId,
+            month: DateTime.now().month,
+            year: DateTime.now().year,
+          );
       final bytes = await _orderDocumentService.generateRestaurantSalesReport(
         restaurantName: approvedOrders.isNotEmpty
             ? approvedOrders.first.restaurantName
@@ -1188,8 +1430,9 @@ class _UpgradedRestaurantAdminDashboardState
   Future<void> _generateApprovedInvoices() async {
     setState(() => _isGeneratingDocuments = true);
     try {
-      final approvedRecords =
-          await _restaurantService.getApprovedOrders(widget.restaurantId);
+      final approvedRecords = await _restaurantService.getApprovedOrders(
+        widget.restaurantId,
+      );
       if (approvedRecords.isEmpty) {
         _showMessage('No approved orders available for invoicing yet.', true);
         return;
@@ -1228,7 +1471,10 @@ class _UpgradedRestaurantAdminDashboardState
     }
   }
 
-  void _showDocumentDialog({required String title, required List<String> lines}) {
+  void _showDocumentDialog({
+    required String title,
+    required List<String> lines,
+  }) {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1277,4 +1523,30 @@ class _RestaurantOrderSnapshot {
     required this.basketTotal,
     required this.items,
   });
+}
+
+class _ControlPill extends StatelessWidget {
+  final String label;
+
+  const _ControlPill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
 }

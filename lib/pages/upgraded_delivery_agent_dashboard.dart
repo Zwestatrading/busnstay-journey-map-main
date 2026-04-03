@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
+import '../models/wallet_model.dart';
+import '../services/app_state.dart';
+import '../services/flutterwave_service.dart';
+import '../widgets/payment_modal.dart';
 import '../widgets/operations_tracking_board.dart';
 
 class UpgradedDeliveryAgentDashboard extends StatefulWidget {
   final String agentId;
 
-  const UpgradedDeliveryAgentDashboard({
-    Key? key,
-    required this.agentId,
-  }) : super(key: key);
+  const UpgradedDeliveryAgentDashboard({Key? key, required this.agentId})
+    : super(key: key);
 
   @override
   State<UpgradedDeliveryAgentDashboard> createState() =>
@@ -19,6 +22,7 @@ class UpgradedDeliveryAgentDashboard extends StatefulWidget {
 class _UpgradedDeliveryAgentDashboardState
     extends State<UpgradedDeliveryAgentDashboard> {
   int _tabIndex = 0;
+  bool _isOnline = true;
 
   final List<DeliveryRun> _activeRuns = const [
     DeliveryRun(
@@ -75,12 +79,14 @@ class _UpgradedDeliveryAgentDashboardState
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+            onPressed: () =>
+                Navigator.popUntil(context, (route) => route.isFirst),
           ),
         ],
       ),
       body: Column(
         children: [
+          _buildStatusHeader(),
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -89,7 +95,12 @@ class _UpgradedDeliveryAgentDashboardState
               children: [
                 _buildTabButton(0, 'Active', Icons.delivery_dining),
                 _buildTabButton(1, 'Available', Icons.assignment_outlined),
-                _buildTabButton(2, 'Reports', Icons.bar_chart_outlined),
+                _buildTabButton(
+                  2,
+                  'Wallet',
+                  Icons.account_balance_wallet_outlined,
+                ),
+                _buildTabButton(3, 'Reports', Icons.bar_chart_outlined),
               ],
             ),
           ),
@@ -105,9 +116,91 @@ class _UpgradedDeliveryAgentDashboardState
         return _buildActiveTab();
       case 1:
         return _buildAvailableTab();
+      case 2:
+        return _buildWalletTab();
       default:
         return _buildReportsTab();
     }
+  }
+
+  Widget _buildStatusHeader() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0F172A), Color(0xFF3B82F6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Delivery control centre',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Mobile now carries the web dashboard essentials: live run queue, payout visibility, and online or offline readiness.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white70,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _isOnline ? 'Online' : 'Offline',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: _isOnline,
+                    activeColor: Colors.white,
+                    activeTrackColor: const Color(0xFF14B8A6),
+                    onChanged: (value) => setState(() => _isOnline = value),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _DeliveryPill('${_activeRuns.length} active runs'),
+              _DeliveryPill('${_availableRuns.length} jobs ready'),
+              _DeliveryPill(_isOnline ? 'GPS heartbeat good' : 'Standby mode'),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildTabButton(int index, String label, IconData icon) {
@@ -117,10 +210,7 @@ class _UpgradedDeliveryAgentDashboardState
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: isSelected ? const Color(0xFF3B82F6) : Colors.grey,
-          ),
+          Icon(icon, color: isSelected ? const Color(0xFF3B82F6) : Colors.grey),
           const SizedBox(height: 4),
           Text(
             label,
@@ -214,6 +304,91 @@ class _UpgradedDeliveryAgentDashboardState
     );
   }
 
+  Widget _buildWalletTab() {
+    final appState = context.watch<AppState>();
+    final wallet = appState.wallet;
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF111827), Color(0xFF7C3AED)],
+            ),
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Rider wallet',
+                style: GoogleFonts.poppins(fontSize: 13, color: Colors.white70),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                FlutterwaveService.formatZMW(wallet.balance),
+                style: GoogleFonts.poppins(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Use the same wallet rails exposed in the web rider dashboard to manage payouts, transfers, and float.',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: Colors.white70,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _walletAction(
+                'Add funds',
+                Icons.add_circle_outline,
+                const Color(0xFF14B8A6),
+                _showAddFundsModal,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _walletAction(
+                'Transfer',
+                Icons.send_outlined,
+                const Color(0xFF7C3AED),
+                _showTransferDialog,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _walletAction(
+                'Withdraw',
+                Icons.savings_outlined,
+                const Color(0xFFF59E0B),
+                _showWithdrawDialog,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Text(
+          'Recent transactions',
+          style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 12),
+        ...wallet.transactions.take(5).map(_buildTransactionTile),
+      ],
+    );
+  }
+
   Widget _deliveryCard(DeliveryRun run, bool active) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -276,6 +451,208 @@ class _UpgradedDeliveryAgentDashboardState
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _walletAction(
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withOpacity(0.16)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransactionTile(WalletTransaction tx) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: tx.color.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(tx.icon, color: tx.color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tx.description,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  tx.method.name,
+                  style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            FlutterwaveService.formatZMW(tx.amount),
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w700,
+              color: tx.color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddFundsModal() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => PaymentModal(
+        title: 'Top up rider wallet',
+        onConfirm: (amount, method) {
+          context.read<AppState>().addFunds(amount, method);
+        },
+      ),
+    );
+  }
+
+  Future<void> _showTransferDialog() async {
+    final recipientController = TextEditingController(
+      text: 'merchant@busnstay.com',
+    );
+    final amountController = TextEditingController(text: '80');
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Transfer funds'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: recipientController,
+              decoration: const InputDecoration(labelText: 'Recipient'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: amountController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Amount (K)'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final amount = double.tryParse(amountController.text) ?? 0;
+              await context.read<AppState>().transferFunds(
+                amount,
+                recipientController.text.trim(),
+              );
+              if (mounted) {
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Transfer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showWithdrawDialog() async {
+    final amountController = TextEditingController(text: '120');
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Withdraw earnings'),
+        content: TextField(
+          controller: amountController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Amount (K)'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final amount = double.tryParse(amountController.text) ?? 0;
+              await context.read<AppState>().withdrawFunds(amount);
+              if (mounted) {
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Withdraw'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeliveryPill extends StatelessWidget {
+  final String label;
+
+  const _DeliveryPill(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
       ),
     );
   }

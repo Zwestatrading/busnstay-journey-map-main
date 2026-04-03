@@ -1,11 +1,13 @@
 /// Enhanced maps service with real routing and location validation
 /// Integrates Google Directions API and OpenStreetMap with location validation
 
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'location_validation_service.dart';
-import 'directions_service.dart';
-import 'openstreetmap_routing_service.dart';
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import 'directions_service.dart';
+import 'location_validation_service.dart';
+import 'openstreetmap_routing_service.dart';
 
 class EnhancedMapsService {
   final DirectionsService directionsService;
@@ -47,7 +49,7 @@ class EnhancedMapsService {
 
         // Validate user location against the route
         final polylinePoints = osmRoute['polyline_points'] as List<LatLng>;
-        final validation = _validateLocationOnRoute(
+        final validation = await _validateLocationOnRoute(
           userLocation: userLocation,
           routePoints: polylinePoints,
           startTown: startTown,
@@ -76,14 +78,11 @@ class EnhancedMapsService {
         );
 
         if (!googleRoute['success']) {
-          return {
-            'success': false,
-            'error': 'Could not retrieve route',
-          };
+          return {'success': false, 'error': 'Could not retrieve route'};
         }
 
         final polylinePoints = googleRoute['polyline_points'] as List<LatLng>;
-        final validation = _validateLocationOnRoute(
+        final validation = await _validateLocationOnRoute(
           userLocation: userLocation,
           routePoints: polylinePoints,
           startTown: startTown,
@@ -102,10 +101,7 @@ class EnhancedMapsService {
         };
       }
     } catch (e) {
-      return {
-        'success': false,
-        'error': 'Error planning route: $e',
-      };
+      return {'success': false, 'error': 'Error planning route: $e'};
     }
   }
 
@@ -141,10 +137,7 @@ class EnhancedMapsService {
           'provider': 'OpenStreetMap',
         };
       } else {
-        return {
-          'success': false,
-          'error': result['error'],
-        };
+        return {'success': false, 'error': result['error']};
       }
     } catch (e) {
       return {
@@ -183,20 +176,20 @@ class EnhancedMapsService {
 
       if (!route['success']) {
         print('❌ Route planning failed: ${route['error']}');
-        return {
-          'success': false,
-          'error': 'Unable to retrieve route',
-        };
+        return {'success': false, 'error': 'Unable to retrieve route'};
       }
 
       // Validate user is on route
       final polylinePoints = route['polyline_points'] as List<LatLng>;
-      final isOnRoute = LocationValidationService.validateJourneyLocation(
-        userLocation: userLocation,
-        routePoints: polylinePoints.map((p) => {'lat': p.latitude, 'lng': p.longitude}).toList(),
-        startTown: 'Ndola',
-        endTown: 'Lusaka',
-      );
+      final validation =
+          await LocationValidationService.validateJourneyLocation(
+            userLocation: userLocation,
+            routePoints: polylinePoints
+                .map((p) => {'lat': p.latitude, 'lng': p.longitude})
+                .toList(),
+            startTown: 'Ndola',
+            endTown: 'Lusaka',
+          );
 
       print('✅ Ndola-Lusaka route retrieved successfully');
       print('📍 Route distance: ${route['distance_km']} km');
@@ -207,7 +200,8 @@ class EnhancedMapsService {
         'polyline_points': polylinePoints,
         'distance_km': route['distance_km'],
         'duration_minutes': route['duration_minutes'],
-        'distance_display': '${(route['distance_km'] as num).toStringAsFixed(1)} km',
+        'distance_display':
+            '${(route['distance_km'] as num).toStringAsFixed(1)} km',
         'duration_display': '${route['duration_minutes']} minutes',
         'steps': route['steps'],
         'contains_waypoints': [
@@ -227,7 +221,7 @@ class EnhancedMapsService {
             'infoWindow': 'End point - Lusaka Main Station',
           },
         },
-        'location_validation': await isOnRoute,
+        'location_validation': validation,
       };
     } catch (e) {
       print('❌ Error: $e');
@@ -241,20 +235,20 @@ class EnhancedMapsService {
   // ===== INTERNAL VALIDATION LOGIC =====
 
   /// Internal method to validate user location on route
-  Map<String, dynamic> _validateLocationOnRoute({
+  Future<Map<String, dynamic>> _validateLocationOnRoute({
     required Position userLocation,
     required List<LatLng> routePoints,
     required String startTown,
     required String endTown,
   }) {
-    final validation = LocationValidationService.validateJourneyLocation(
+    return LocationValidationService.validateJourneyLocation(
       userLocation: userLocation,
-      routePoints: routePoints.map((p) => {'lat': p.latitude, 'lng': p.longitude}).toList(),
+      routePoints: routePoints
+          .map((p) => {'lat': p.latitude, 'lng': p.longitude})
+          .toList(),
       startTown: startTown,
       endTown: endTown,
     );
-
-    return validation;
   }
 
   /// Get map styling for specific region
@@ -287,10 +281,7 @@ class EnhancedMapsService {
         color: routeColor,
         width: 5,
         geodesic: true,
-        patterns: const [
-          PatternItem.dash(30),
-          PatternItem.gap(20),
-        ],
+        patterns: [PatternItem.dash(30), PatternItem.gap(20)],
       ),
     };
   }
@@ -319,10 +310,7 @@ class EnhancedMapsService {
       Marker(
         markerId: const MarkerId('end'),
         position: LatLng(endLat, endLng),
-        infoWindow: InfoWindow(
-          title: endTown,
-          snippet: 'Journey ends here',
-        ),
+        infoWindow: InfoWindow(title: endTown, snippet: 'Journey ends here'),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
       ),
     };
@@ -346,6 +334,3 @@ class EnhancedMapsService {
     };
   }
 }
-
-// Placeholder for Color import if not already imported
-import 'package:flutter/material.dart';

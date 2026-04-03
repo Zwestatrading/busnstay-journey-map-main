@@ -14,13 +14,11 @@ import 'professional_restaurant_page.dart';
 class PassengerExperiencePage extends StatefulWidget {
   final AppState state;
 
-  const PassengerExperiencePage({
-    super.key,
-    required this.state,
-  });
+  const PassengerExperiencePage({super.key, required this.state});
 
   @override
-  State<PassengerExperiencePage> createState() => _PassengerExperiencePageState();
+  State<PassengerExperiencePage> createState() =>
+      _PassengerExperiencePageState();
 }
 
 class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
@@ -78,6 +76,84 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
     ),
   ];
 
+  final List<_PassengerOrderHistoryItem> _recentOrders = const [
+    _PassengerOrderHistoryItem(
+      code: 'FD-1042',
+      title: 'Copper Pot Express order',
+      destination: 'Kabwe pickup bay',
+      totalLabel: 'K145.00',
+      status: 'Preparing',
+      etaLabel: 'Ready in 12 min',
+      accent: _orange,
+      items: ['Village chicken plate', 'Fresh juice'],
+    ),
+    _PassengerOrderHistoryItem(
+      code: 'HT-2081',
+      title: 'Protea Hotel booking',
+      destination: 'Lusaka business district',
+      totalLabel: 'K420.00',
+      status: 'Confirmed',
+      etaLabel: 'Check-in after 14:00',
+      accent: _teal,
+      items: ['Executive room', 'Breakfast included'],
+    ),
+    _PassengerOrderHistoryItem(
+      code: 'FD-0977',
+      title: 'Nshima Yard order',
+      destination: 'Bus seat 14A delivery',
+      totalLabel: 'K88.00',
+      status: 'Delivered',
+      etaLabel: 'Completed today',
+      accent: _crimson,
+      items: ['Burger deluxe', 'Chips'],
+    ),
+  ];
+
+  final List<_PassengerFavoriteItem> _favoriteItems = const [
+    _PassengerFavoriteItem(
+      title: 'Copper Pot Express',
+      subtitle: 'Fast pickup meals at Kabwe station',
+      typeLabel: 'Favorite restaurant',
+      accent: _orange,
+      icon: Icons.restaurant,
+    ),
+    _PassengerFavoriteItem(
+      title: 'Protea Hotel Lusaka',
+      subtitle: 'Preferred stay for business arrivals',
+      typeLabel: 'Saved hotel',
+      accent: _teal,
+      icon: Icons.hotel,
+    ),
+    _PassengerFavoriteItem(
+      title: 'Ndola to Lusaka corridor',
+      subtitle: 'Pinned route for recurring bookings',
+      typeLabel: 'Pinned route',
+      accent: Color(0xFF2563EB),
+      icon: Icons.route,
+    ),
+  ];
+
+  final List<_PassengerSavedAddress> _savedAddresses = const [
+    _PassengerSavedAddress(
+      label: 'Home',
+      address: 'Plot 18, Kansenshi, Ndola',
+      note: 'Use for evening drop-offs',
+      accent: _crimson,
+    ),
+    _PassengerSavedAddress(
+      label: 'Office',
+      address: 'Cairo Road business centre, Lusaka',
+      note: 'Preferred destination for weekday rides',
+      accent: Color(0xFF2563EB),
+    ),
+    _PassengerSavedAddress(
+      label: 'Pickup Point',
+      address: 'Intercity terminal, Kabwe bay C',
+      note: 'Food and parcel collection point',
+      accent: _orange,
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -90,10 +166,12 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
               _tabIndex == 0
                   ? 'BusNStay Passenger'
                   : _tabIndex == 1
-                      ? 'Wallet'
-                      : _tabIndex == 2
-                          ? 'Rewards'
-                          : 'Profile',
+                  ? 'Orders'
+                  : _tabIndex == 2
+                  ? 'Wallet'
+                  : _tabIndex == 3
+                  ? 'Saved'
+                  : 'Profile',
               style: GoogleFonts.dmSerifDisplay(fontSize: 24),
             ),
             actions: [
@@ -113,8 +191,9 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
             index: _tabIndex,
             children: [
               _buildExploreTab(context),
+              _buildOrdersTab(context),
               _buildWalletTab(context),
-              _buildRewardsTab(context),
+              _buildSavedTab(context),
               _buildProfileTab(context),
             ],
           ),
@@ -122,10 +201,26 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
             selectedIndex: _tabIndex,
             onDestinationSelected: (index) => setState(() => _tabIndex = index),
             destinations: const [
-              NavigationDestination(icon: Icon(Icons.explore), label: 'Explore'),
-              NavigationDestination(icon: Icon(Icons.account_balance_wallet), label: 'Wallet'),
-              NavigationDestination(icon: Icon(Icons.workspace_premium), label: 'Rewards'),
-              NavigationDestination(icon: Icon(Icons.person_outline), label: 'Profile'),
+              NavigationDestination(
+                icon: Icon(Icons.explore),
+                label: 'Explore',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.receipt_long),
+                label: 'Orders',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.account_balance_wallet),
+                label: 'Wallet',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.favorite_outline),
+                label: 'Saved',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                label: 'Profile',
+              ),
             ],
           ),
         );
@@ -142,19 +237,31 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
         const SizedBox(height: 20),
         _buildQuickActions(context),
         const SizedBox(height: 20),
-        _buildSectionHeader('Journey Control', 'Track route validation, stop availability, and live order windows.'),
+        _buildSectionHeader(
+          'Journey Control',
+          'Track route validation, stop availability, and live order windows.',
+        ),
         const SizedBox(height: 12),
         _buildJourneyCard(),
         const SizedBox(height: 20),
-        _buildSectionHeader('Featured Food Stops', 'Order ahead only from approved partners while the bus is still inbound.'),
+        _buildSectionHeader(
+          'Featured Food Stops',
+          'Order ahead only from approved partners while the bus is still inbound.',
+        ),
         const SizedBox(height: 12),
         ..._restaurantCards(context),
         const SizedBox(height: 20),
-        _buildSectionHeader('Recommended Stays', 'Hotel inventory, room categories, and payout-ready booking flow are now surfaced in-app.'),
+        _buildSectionHeader(
+          'Recommended Stays',
+          'Hotel inventory, room categories, and payout-ready booking flow are now surfaced in-app.',
+        ),
         const SizedBox(height: 12),
         ..._stayCards(),
         const SizedBox(height: 20),
-        _buildSectionHeader('Platform Readiness', 'Offline queue, role dashboards, and payment rails are active in the demo flow.'),
+        _buildSectionHeader(
+          'Platform Readiness',
+          'Offline queue, role dashboards, and payment rails are active in the demo flow.',
+        ),
         const SizedBox(height: 12),
         _buildReadinessGrid(),
       ],
@@ -217,7 +324,11 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: Colors.white24),
                 ),
-                child: const Icon(Icons.travel_explore, size: 42, color: Colors.white),
+                child: const Icon(
+                  Icons.travel_explore,
+                  size: 42,
+                  color: Colors.white,
+                ),
               ),
             ],
           ),
@@ -226,7 +337,9 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
             spacing: 10,
             runSpacing: 10,
             children: [
-              _heroChip('Wallet ${FlutterwaveService.formatZMW(widget.state.wallet.balance)}'),
+              _heroChip(
+                'Wallet ${FlutterwaveService.formatZMW(widget.state.wallet.balance)}',
+              ),
               _heroChip('${widget.state.loyalty.currentPoints} loyalty points'),
               _heroChip('6 payment rails live'),
               _heroChip('Offline sync queue ready'),
@@ -258,14 +371,60 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
 
   Widget _buildQuickActions(BuildContext context) {
     final actions = [
-      _QuickActionData('Order food', Icons.lunch_dining, _orange, () => _openRestaurant(context)),
-      _QuickActionData('Track route', Icons.route, _crimson, _showRouteStatusSheet),
-      _QuickActionData('Book stay', Icons.hotel, _teal, () => _showHotelBookingPrompt('Protea Hotel Lusaka', 420)),
-      _QuickActionData('Top up wallet', Icons.account_balance_wallet, const Color(0xFF2563EB), () => _showAddFundsModal(context)),
-      _QuickActionData('Transfer', Icons.send, const Color(0xFF7C3AED), _showTransferDialog),
-      _QuickActionData('Withdraw', Icons.call_received, const Color(0xFFEA580C), _showWithdrawDialog),
-      _QuickActionData('Checkout demo', Icons.shopping_bag, const Color(0xFF0F766E), () => _openDemoCheckout(context)),
-      _QuickActionData('Redeem reward', Icons.redeem, const Color(0xFFCA8A04), () => setState(() => _tabIndex = 2)),
+      _QuickActionData(
+        'Order food',
+        Icons.lunch_dining,
+        _orange,
+        () => _openRestaurant(context),
+      ),
+      _QuickActionData(
+        'Track route',
+        Icons.route,
+        _crimson,
+        _showRouteStatusSheet,
+      ),
+      _QuickActionData(
+        'Book stay',
+        Icons.hotel,
+        _teal,
+        () => _showHotelBookingPrompt('Protea Hotel Lusaka', 420),
+      ),
+      _QuickActionData(
+        'My orders',
+        Icons.receipt_long,
+        _navy,
+        () => setState(() => _tabIndex = 1),
+      ),
+      _QuickActionData(
+        'Top up wallet',
+        Icons.account_balance_wallet,
+        const Color(0xFF2563EB),
+        () => _showAddFundsModal(context),
+      ),
+      _QuickActionData(
+        'Transfer',
+        Icons.send,
+        const Color(0xFF7C3AED),
+        _showTransferDialog,
+      ),
+      _QuickActionData(
+        'Withdraw',
+        Icons.call_received,
+        const Color(0xFFEA580C),
+        _showWithdrawDialog,
+      ),
+      _QuickActionData(
+        'Checkout demo',
+        Icons.shopping_bag,
+        const Color(0xFF0F766E),
+        () => _openDemoCheckout(context),
+      ),
+      _QuickActionData(
+        'Saved places',
+        Icons.favorite,
+        const Color(0xFFCA8A04),
+        () => setState(() => _tabIndex = 3),
+      ),
     ];
 
     return GridView.builder(
@@ -311,12 +470,20 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
                 const Spacer(),
                 Text(
                   action.title,
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 16, color: _navy),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: _navy,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Open',
-                  style: GoogleFonts.inter(fontSize: 12, color: action.color, fontWeight: FontWeight.w600),
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: action.color,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -326,8 +493,183 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
     );
   }
 
+  Widget _buildOrdersTab(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF111827), Color(0xFF7C3AED)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(26),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Order and booking history',
+                style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${_recentOrders.length} live records',
+                style: GoogleFonts.dmSerifDisplay(
+                  fontSize: 34,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'This tab mirrors the web order-history surface for food orders, hotel bookings, and recurring route requests.',
+                style: GoogleFonts.inter(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        _buildSectionHeader(
+          'Recent activity',
+          'Review fulfillment progress, re-open preferred providers, or repeat frequent orders.',
+        ),
+        const SizedBox(height: 12),
+        ..._recentOrders.map(_buildOrderHistoryCard),
+      ],
+    );
+  }
+
+  Widget _buildOrderHistoryCard(_PassengerOrderHistoryItem order) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: order.accent.withValues(alpha: 0.16)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      order.title,
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: _navy,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      order.code,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Colors.black45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: order.accent.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  order.status,
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    color: order.accent,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            order.destination,
+            style: GoogleFonts.inter(fontSize: 13, color: Colors.black54),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: order.items
+                .map(
+                  (item) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      item,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: _navy,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(child: _historyMeta('Total', order.totalLabel)),
+              Expanded(child: _historyMeta('Status note', order.etaLabel)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _historyMeta(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(fontSize: 11, color: Colors.black45),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+            color: _navy,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildJourneyCard() {
-    final openTowns = _journeyTowns.where((town) => town.status == TownStatus.open).length;
+    final openTowns = _journeyTowns
+        .where((town) => town.status == TownStatus.open)
+        .length;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -344,25 +686,41 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Ndola to Lusaka', style: GoogleFonts.dmSerifDisplay(fontSize: 28, color: _navy)),
+                    Text(
+                      'Ndola to Lusaka',
+                      style: GoogleFonts.dmSerifDisplay(
+                        fontSize: 28,
+                        color: _navy,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     Text(
                       'Real route validation is enabled. Ordering locks automatically when the bus approaches a town.',
-                      style: GoogleFonts.inter(fontSize: 13, color: Colors.black54, height: 1.45),
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: Colors.black54,
+                        height: 1.45,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFDBEAFE),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   '$openTowns towns open',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1D4ED8),
+                  ),
                 ),
               ),
             ],
@@ -410,13 +768,25 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(town.townName, style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _navy)),
+                Text(
+                  town.townName,
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    color: _navy,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(town.availabilityMessage, style: GoogleFonts.inter(fontSize: 12, color: Colors.black54)),
+                Text(
+                  town.availabilityMessage,
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.black54),
+                ),
               ],
             ),
           ),
-          Text(town.pickupStationName, style: GoogleFonts.inter(fontSize: 11, color: Colors.black38)),
+          Text(
+            town.pickupStationName,
+            style: GoogleFonts.inter(fontSize: 11, color: Colors.black38),
+          ),
         ],
       ),
     );
@@ -476,15 +846,31 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(restaurant.name, style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 17, color: _navy)),
+                      Text(
+                        restaurant.name,
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 17,
+                          color: _navy,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(restaurant.address, style: GoogleFonts.inter(fontSize: 12, color: Colors.black54)),
+                      Text(
+                        restaurant.address,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 FilledButton(
-                  onPressed: () => _openRestaurant(context, restaurant: restaurant),
-                  style: FilledButton.styleFrom(backgroundColor: restaurant.accent),
+                  onPressed: () =>
+                      _openRestaurant(context, restaurant: restaurant),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: restaurant.accent,
+                  ),
                   child: const Text('Open'),
                 ),
               ],
@@ -495,12 +881,22 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
               runSpacing: 8,
               children: restaurant.tags.map((tag) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: restaurant.accent.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: Text(tag, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: restaurant.accent)),
+                  child: Text(
+                    tag,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: restaurant.accent,
+                    ),
+                  ),
                 );
               }).toList(),
             ),
@@ -513,7 +909,12 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
   List<Widget> _stayCards() {
     final stays = [
       _StayPreview('Protea Hotel Lusaka', 'Business stay', 420, _teal),
-      _StayPreview('Mukuba Lodge Ndola', 'Family suite', 315, const Color(0xFF2563EB)),
+      _StayPreview(
+        'Mukuba Lodge Ndola',
+        'Family suite',
+        315,
+        const Color(0xFF2563EB),
+      ),
     ];
 
     return stays.map((stay) {
@@ -534,11 +935,29 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(stay.name, style: GoogleFonts.dmSerifDisplay(fontSize: 24, color: _navy)),
+                    Text(
+                      stay.name,
+                      style: GoogleFonts.dmSerifDisplay(
+                        fontSize: 24,
+                        color: _navy,
+                      ),
+                    ),
                     const SizedBox(height: 6),
-                    Text(stay.subtitle, style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
+                    Text(
+                      stay.subtitle,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-                    Text('From K${stay.startingPrice.toStringAsFixed(0)} per night', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: stay.accent)),
+                    Text(
+                      'From K${stay.startingPrice.toStringAsFixed(0)} per night',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w700,
+                        color: stay.accent,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -553,10 +972,30 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
 
   Widget _buildReadinessGrid() {
     final items = [
-      _ReadinessItem('Authentication', 'Role-aware demo sign-in and session state', Icons.verified_user, _navy),
-      _ReadinessItem('Offline queue', 'Local tables for orders, bookings, deliveries, payments', Icons.cloud_done, _teal),
-      _ReadinessItem('Payments', 'Mobile money, bank, card, USSD, wallet, fee handling', Icons.payments, _orange),
-      _ReadinessItem('Dashboards', 'Passenger, operator, restaurant, hotel, delivery, admin', Icons.space_dashboard, _crimson),
+      _ReadinessItem(
+        'Authentication',
+        'Role-aware demo sign-in and session state',
+        Icons.verified_user,
+        _navy,
+      ),
+      _ReadinessItem(
+        'Offline queue',
+        'Local tables for orders, bookings, deliveries, payments',
+        Icons.cloud_done,
+        _teal,
+      ),
+      _ReadinessItem(
+        'Payments',
+        'Mobile money, bank, card, USSD, wallet, fee handling',
+        Icons.payments,
+        _orange,
+      ),
+      _ReadinessItem(
+        'Dashboards',
+        'Passenger, operator, restaurant, hotel, delivery, admin',
+        Icons.space_dashboard,
+        _crimson,
+      ),
     ];
 
     return GridView.builder(
@@ -583,9 +1022,22 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
             children: [
               Icon(item.icon, color: item.color),
               const Spacer(),
-              Text(item.title, style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _navy)),
+              Text(
+                item.title,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w700,
+                  color: _navy,
+                ),
+              ),
               const SizedBox(height: 6),
-              Text(item.description, style: GoogleFonts.inter(fontSize: 12, color: Colors.black54, height: 1.35)),
+              Text(
+                item.description,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: Colors.black54,
+                  height: 1.35,
+                ),
+              ),
             ],
           ),
         );
@@ -601,32 +1053,112 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
         Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [Color(0xFF0F172A), Color(0xFF1D4ED8)]),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF0F172A), Color(0xFF1D4ED8)],
+            ),
             borderRadius: BorderRadius.circular(26),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Available balance', style: GoogleFonts.inter(color: Colors.white70, fontSize: 13)),
+              Text(
+                'Available balance',
+                style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+              ),
               const SizedBox(height: 8),
-              Text(FlutterwaveService.formatZMW(wallet.balance), style: GoogleFonts.dmSerifDisplay(fontSize: 38, color: Colors.white)),
+              Text(
+                FlutterwaveService.formatZMW(wallet.balance),
+                style: GoogleFonts.dmSerifDisplay(
+                  fontSize: 38,
+                  color: Colors.white,
+                ),
+              ),
               const SizedBox(height: 12),
-              Text('Platform fee: 10% on checkout flows. Wallet top-ups remain available across supported rails.', style: GoogleFonts.inter(color: Colors.white70, fontSize: 12, height: 1.4)),
+              Text(
+                'Platform fee: 10% on checkout flows. Wallet top-ups remain available across supported rails.',
+                style: GoogleFonts.inter(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
             ],
           ),
         ),
         const SizedBox(height: 18),
         Row(
           children: [
-            Expanded(child: _walletAction('Add funds', Icons.add_circle_outline, const Color(0xFF059669), () => _showAddFundsModal(context))),
+            Expanded(
+              child: _walletAction(
+                'Add funds',
+                Icons.add_circle_outline,
+                const Color(0xFF059669),
+                () => _showAddFundsModal(context),
+              ),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: _walletAction('Transfer', Icons.send_outlined, const Color(0xFF7C3AED), _showTransferDialog)),
+            Expanded(
+              child: _walletAction(
+                'Transfer',
+                Icons.send_outlined,
+                const Color(0xFF7C3AED),
+                _showTransferDialog,
+              ),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: _walletAction('Withdraw', Icons.savings_outlined, const Color(0xFFEA580C), _showWithdrawDialog)),
+            Expanded(
+              child: _walletAction(
+                'Withdraw',
+                Icons.savings_outlined,
+                const Color(0xFFEA580C),
+                _showWithdrawDialog,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 20),
-        _buildSectionHeader('Supported Payment Methods', 'Configured methods visible in the Flutterwave-backed payment flow.'),
+        _buildSectionHeader(
+          'Loyalty snapshot',
+          'Account rewards from the web dashboard are surfaced directly inside the wallet view on mobile.',
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _walletSnapshotMetric(
+                  'Tier',
+                  widget.state.loyalty.tierName,
+                  const Color(0xFFCA8A04),
+                ),
+              ),
+              Expanded(
+                child: _walletSnapshotMetric(
+                  'Points',
+                  '${widget.state.loyalty.currentPoints}',
+                  _crimson,
+                ),
+              ),
+              Expanded(
+                child: _walletSnapshotMetric(
+                  'Next tier',
+                  '${widget.state.loyalty.pointsToNextTier} pts',
+                  _teal,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        _buildSectionHeader(
+          'Supported Payment Methods',
+          'Configured methods visible in the Flutterwave-backed payment flow.',
+        ),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
@@ -639,19 +1171,55 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
-              child: Text(method, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: _navy)),
+              child: Text(
+                method,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: _navy,
+                ),
+              ),
             );
           }).toList(),
         ),
         const SizedBox(height: 20),
-        _buildSectionHeader('Recent Transactions', 'Local persistence is active so wallet history survives app reloads.'),
+        _buildSectionHeader(
+          'Recent Transactions',
+          'Local persistence is active so wallet history survives app reloads.',
+        ),
         const SizedBox(height: 12),
         ...wallet.transactions.map(_buildTransactionTile),
       ],
     );
   }
 
-  Widget _walletAction(String label, IconData icon, Color color, VoidCallback onTap) {
+  Widget _walletSnapshotMetric(String label, String value, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(fontSize: 11, color: Colors.black45),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _walletAction(
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
@@ -666,7 +1234,14 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
           children: [
             Icon(icon, color: color),
             const SizedBox(height: 8),
-            Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12, color: _navy)),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: _navy,
+              ),
+            ),
           ],
         ),
       ),
@@ -696,20 +1271,34 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(tx.description, style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _navy)),
+                Text(
+                  tx.description,
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    color: _navy,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(tx.method.name, style: GoogleFonts.inter(fontSize: 12, color: Colors.black54)),
+                Text(
+                  tx.method.name,
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.black54),
+                ),
               ],
             ),
           ),
-          Text(FlutterwaveService.formatZMW(tx.amount), style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: tx.color)),
+          Text(
+            FlutterwaveService.formatZMW(tx.amount),
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w700,
+              color: tx.color,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRewardsTab(BuildContext context) {
-    final loyalty = widget.state.loyalty;
+  Widget _buildSavedTab(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       children: [
@@ -717,7 +1306,7 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [loyalty.tierColor.withOpacity(0.95), _navy],
+              colors: [_crimson.withValues(alpha: 0.92), _navy],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -726,80 +1315,159 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(loyalty.tierName, style: GoogleFonts.inter(color: Colors.white70, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 10),
-              Text('${loyalty.currentPoints} pts', style: GoogleFonts.dmSerifDisplay(fontSize: 38, color: Colors.white)),
-              const SizedBox(height: 14),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  minHeight: 10,
-                  value: loyalty.tierProgress,
-                  backgroundColor: Colors.white24,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              Text(
+                'Favorites and saved places',
+                style: GoogleFonts.inter(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text('${loyalty.pointsToNextTier} points to next tier', style: GoogleFonts.inter(fontSize: 12, color: Colors.white70)),
+              const SizedBox(height: 10),
+              Text(
+                '${_favoriteItems.length + _savedAddresses.length} items',
+                style: GoogleFonts.dmSerifDisplay(
+                  fontSize: 38,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'The mobile app now carries the same saved-destination and favorites intent as the web favorites and addresses pages.',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: Colors.white70,
+                  height: 1.4,
+                ),
+              ),
             ],
           ),
         ),
         const SizedBox(height: 20),
-        ...loyalty.availableRewards.map((reward) {
-          final canRedeem = loyalty.currentPoints >= reward.pointsCost && !reward.isRedeemed;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
+        _buildSectionHeader(
+          'Favorites',
+          'Pinned restaurants, stays, and route shortcuts appear here for fast repeat actions.',
+        ),
+        const SizedBox(height: 12),
+        ..._favoriteItems.map(_buildFavoriteTile),
+        const SizedBox(height: 20),
+        _buildSectionHeader(
+          'Saved addresses',
+          'Delivery and pickup locations mirrored from the web address book.',
+        ),
+        const SizedBox(height: 12),
+        ..._savedAddresses.map(_buildSavedAddressTile),
+      ],
+    );
+  }
+
+  Widget _buildFavoriteTile(_PassengerFavoriteItem item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              color: item.accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Row(
+            child: Icon(item.icon, color: item.accent),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFDE68A),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(Icons.workspace_premium, color: Color(0xFF92400E)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(reward.title, style: GoogleFonts.inter(fontWeight: FontWeight.w800, color: _navy)),
-                      const SizedBox(height: 4),
-                      Text(reward.description, style: GoogleFonts.inter(fontSize: 12, color: Colors.black54)),
-                    ],
+                Text(
+                  item.title,
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w800,
+                    color: _navy,
                   ),
                 ),
-                const SizedBox(width: 12),
-                reward.isRedeemed
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFD1FAE5),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text('Redeemed', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: const Color(0xFF047857))),
-                      )
-                    : FilledButton(
-                        onPressed: canRedeem ? () => widget.state.redeemReward(reward.id) : null,
-                        style: FilledButton.styleFrom(backgroundColor: canRedeem ? _crimson : Colors.grey),
-                        child: Text('${reward.pointsCost} pts'),
-                      ),
+                const SizedBox(height: 4),
+                Text(
+                  item.subtitle,
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.black54),
+                ),
               ],
             ),
-          );
-        }),
-      ],
+          ),
+          const SizedBox(width: 12),
+          Text(
+            item.typeLabel,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: item.accent,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSavedAddressTile(_PassengerSavedAddress address) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: address.accent.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: address.accent.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(Icons.place_outlined, color: address.accent),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  address.label,
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w800,
+                    color: _navy,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  address.address,
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.black54),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  address.note,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: address.accent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildProfileTab(BuildContext context) {
     final user = widget.state.user;
+    final loyalty = widget.state.loyalty;
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       children: [
@@ -816,7 +1484,10 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
                 backgroundColor: _crimson.withOpacity(0.12),
                 child: Text(
                   (user?.name ?? 'T').substring(0, 1).toUpperCase(),
-                  style: GoogleFonts.dmSerifDisplay(fontSize: 28, color: _crimson),
+                  style: GoogleFonts.dmSerifDisplay(
+                    fontSize: 28,
+                    color: _crimson,
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
@@ -824,11 +1495,30 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(user?.name ?? 'Traveler', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 18, color: _navy)),
+                    Text(
+                      user?.name ?? 'Traveler',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                        color: _navy,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text(user?.email ?? 'traveler@busnstay.com', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
+                    Text(
+                      user?.email ?? 'traveler@busnstay.com',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text(user?.phone ?? '+260 97 123 4567', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
+                    Text(
+                      user?.phone ?? '+260 97 123 4567',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -836,17 +1526,104 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
           ),
         ),
         const SizedBox(height: 18),
-        _profileTile(Icons.security_outlined, 'Account security', 'Password reset and 2FA entry points'),
-        _profileTile(Icons.sync, 'Offline sync', 'Transactions and bookings persist locally before remote sync'),
-        _profileTile(Icons.support_agent, 'Support', 'Journey, hotel, restaurant, and wallet support lanes'),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Account summary',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  color: _navy,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  _profileSummaryChip(
+                    'Wallet ${FlutterwaveService.formatZMW(widget.state.wallet.balance)}',
+                    _navy,
+                  ),
+                  _profileSummaryChip(
+                    '${loyalty.currentPoints} reward points',
+                    _crimson,
+                  ),
+                  _profileSummaryChip(
+                    '${_recentOrders.length} recent records',
+                    _orange,
+                  ),
+                  _profileSummaryChip(
+                    '${_savedAddresses.length} saved addresses',
+                    _teal,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        _profileTile(
+          Icons.security_outlined,
+          'Account security',
+          'Password reset and 2FA entry points',
+        ),
+        _profileTile(
+          Icons.sync,
+          'Offline sync',
+          'Transactions and bookings persist locally before remote sync',
+        ),
+        _profileTile(
+          Icons.support_agent,
+          'Support',
+          'Journey, hotel, restaurant, and wallet support lanes',
+        ),
+        _profileTile(
+          Icons.history_toggle_off,
+          'Order history',
+          'Food orders, bookings, and travel actions are available on the Orders tab',
+        ),
+        _profileTile(
+          Icons.favorite_outline,
+          'Favorites and addresses',
+          'Saved restaurants, hotels, and address book are available on the Saved tab',
+        ),
         const SizedBox(height: 18),
         FilledButton.icon(
           onPressed: () => widget.state.logout(),
-          style: FilledButton.styleFrom(backgroundColor: _navy, padding: const EdgeInsets.symmetric(vertical: 16)),
+          style: FilledButton.styleFrom(
+            backgroundColor: _navy,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+          ),
           icon: const Icon(Icons.logout),
           label: const Text('Sign out'),
         ),
       ],
+    );
+  }
+
+  Widget _profileSummaryChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
     );
   }
 
@@ -866,9 +1643,18 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _navy)),
+                Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    color: _navy,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(subtitle, style: GoogleFonts.inter(fontSize: 12, color: Colors.black54)),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.black54),
+                ),
               ],
             ),
           ),
@@ -881,9 +1667,19 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: GoogleFonts.dmSerifDisplay(fontSize: 28, color: _navy)),
+        Text(
+          title,
+          style: GoogleFonts.dmSerifDisplay(fontSize: 28, color: _navy),
+        ),
         const SizedBox(height: 4),
-        Text(subtitle, style: GoogleFonts.inter(fontSize: 13, color: Colors.black54, height: 1.4)),
+        Text(
+          subtitle,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: Colors.black54,
+            height: 1.4,
+          ),
+        ),
       ],
     );
   }
@@ -902,7 +1698,9 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
   }
 
   Future<void> _showTransferDialog() async {
-    final recipientController = TextEditingController(text: 'merchant@busnstay.com');
+    final recipientController = TextEditingController(
+      text: 'merchant@busnstay.com',
+    );
     final amountController = TextEditingController(text: '120');
     await showDialog<void>(
       context: context,
@@ -912,17 +1710,30 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: recipientController, decoration: const InputDecoration(labelText: 'Recipient')),
+              TextField(
+                controller: recipientController,
+                decoration: const InputDecoration(labelText: 'Recipient'),
+              ),
               const SizedBox(height: 12),
-              TextField(controller: amountController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Amount (K)')),
+              TextField(
+                controller: amountController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Amount (K)'),
+              ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
             FilledButton(
               onPressed: () async {
                 final amount = double.tryParse(amountController.text) ?? 0;
-                await widget.state.transferFunds(amount, recipientController.text.trim());
+                await widget.state.transferFunds(
+                  amount,
+                  recipientController.text.trim(),
+                );
                 if (mounted) {
                   Navigator.pop(context);
                 }
@@ -948,7 +1759,10 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
             decoration: const InputDecoration(labelText: 'Amount (K)'),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
             FilledButton(
               onPressed: () async {
                 final amount = double.tryParse(amountController.text) ?? 0;
@@ -977,9 +1791,19 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Route status and ordering windows', style: GoogleFonts.dmSerifDisplay(fontSize: 28, color: _navy)),
+              Text(
+                'Route status and ordering windows',
+                style: GoogleFonts.dmSerifDisplay(fontSize: 28, color: _navy),
+              ),
               const SizedBox(height: 8),
-              Text('Locations already passed are locked. Approaching towns are closed automatically to protect preparation windows.', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54, height: 1.4)),
+              Text(
+                'Locations already passed are locked. Approaching towns are closed automatically to protect preparation windows.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: Colors.black54,
+                  height: 1.4,
+                ),
+              ),
               const SizedBox(height: 18),
               ..._journeyTowns.map(_buildTownStatusRow),
             ],
@@ -990,7 +1814,8 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
   }
 
   void _openRestaurant(BuildContext context, {_RestaurantPreview? restaurant}) {
-    final target = restaurant ??
+    final target =
+        restaurant ??
         _RestaurantPreview(
           name: 'Copper Pot Express',
           id: 'restaurant_approved_001',
@@ -1047,9 +1872,14 @@ class _PassengerExperiencePageState extends State<PassengerExperiencePage> {
       builder: (context) {
         return AlertDialog(
           title: Text(hotelName),
-          content: Text('Room inventory is active in the hotel dashboard. Passenger booking flow is staged here at K${price.toStringAsFixed(0)} per night.'),
+          content: Text(
+            'Room inventory is active in the hotel dashboard. Passenger booking flow is staged here at K${price.toStringAsFixed(0)} per night.',
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
             FilledButton(
               onPressed: () {
                 Navigator.pop(context);
@@ -1107,4 +1937,56 @@ class _ReadinessItem {
   final Color color;
 
   const _ReadinessItem(this.title, this.description, this.icon, this.color);
+}
+
+class _PassengerOrderHistoryItem {
+  final String code;
+  final String title;
+  final String destination;
+  final String totalLabel;
+  final String status;
+  final String etaLabel;
+  final Color accent;
+  final List<String> items;
+
+  const _PassengerOrderHistoryItem({
+    required this.code,
+    required this.title,
+    required this.destination,
+    required this.totalLabel,
+    required this.status,
+    required this.etaLabel,
+    required this.accent,
+    required this.items,
+  });
+}
+
+class _PassengerFavoriteItem {
+  final String title;
+  final String subtitle;
+  final String typeLabel;
+  final Color accent;
+  final IconData icon;
+
+  const _PassengerFavoriteItem({
+    required this.title,
+    required this.subtitle,
+    required this.typeLabel,
+    required this.accent,
+    required this.icon,
+  });
+}
+
+class _PassengerSavedAddress {
+  final String label;
+  final String address;
+  final String note;
+  final Color accent;
+
+  const _PassengerSavedAddress({
+    required this.label,
+    required this.address,
+    required this.note,
+    required this.accent,
+  });
 }

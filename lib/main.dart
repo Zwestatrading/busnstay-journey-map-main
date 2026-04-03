@@ -21,6 +21,7 @@ import 'services/live_location_service.dart';
 import 'services/menu_management_service.dart';
 import 'services/transaction_fee_service.dart';
 import 'widgets/payment_modal.dart';
+import 'widgets/operations_tracking_board.dart';
 import 'widgets/status_badge.dart';
 import 'pages/forgot_password_page.dart';
 import 'pages/passenger_experience_page.dart';
@@ -49,15 +50,16 @@ class AppServices {
 
   static Future<void> initialize() async {
     if (_initialized) return;
-    
+
     print('🚀 [INIT] Initializing BusNStay services...');
-    
+
     try {
       // Initialize Supabase
       print('🔐 [INIT] Connecting to Supabase...');
       await Supabase.initialize(
         url: 'https://ksepddxhvfkjfvnaervh.supabase.co',
-        anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZXBkZHhodmZramZ2bmFlcnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjAzNTAsImV4cCI6MjA4NjIzNjM1MH0.PoqNk4G_AqVt560NTlcTJjOXU1ib8ZItzH5vtFd45-A',
+        anonKey:
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZXBkZHhodmZramZ2bmFlcnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjAzNTAsImV4cCI6MjA4NjIzNjM1MH0.PoqNk4G_AqVt560NTlcTJjOXU1ib8ZItzH5vtFd45-A',
       );
       final supabaseClient = Supabase.instance.client;
       print('✅ [INIT] Supabase connected successfully');
@@ -75,16 +77,17 @@ class AppServices {
       // ============= WATI CONFIGURATION ✅ =============
       // WhatsApp notifications enabled via Wati
       RestaurantNotificationService.initializeWati(
-        apiKey: 'wati_e4b6420d-a195-4dcb-afb8-e7a614387c50.vByJfCujf5OGX92okV8tBLLI7m71EvyNVip_AqDe7WRyCyYfqLnuM-iNf0BTWqpE44VAGryNw9lVXFoanhcQV0v217H5uydTBiRwNIDMueyqFwPS-k_G8Yh5ajv-uEsm',
+        apiKey:
+            'wati_e4b6420d-a195-4dcb-afb8-e7a614387c50.vByJfCujf5OGX92okV8tBLLI7m71EvyNVip_AqDe7WRyCyYfqLnuM-iNf0BTWqpE44VAGryNw9lVXFoanhcQV0v217H5uydTBiRwNIDMueyqFwPS-k_G8Yh5ajv-uEsm',
         phoneNumberId: '27696469651', // +27696469651
       );
-      
-      print('📱 [WATI] Status: ${RestaurantNotificationService.isWatiConfigured() ? 'Configured ✅' : 'Not configured ⚠️'}');
+
+      print(
+        '📱 [WATI] Status: ${RestaurantNotificationService.isWatiConfigured() ? 'Configured ✅' : 'Not configured ⚠️'}',
+      );
 
       // Initialize town service
-      townService = TownOrderManagementService(
-        supabaseClient: supabaseClient,
-      );
+      townService = TownOrderManagementService(supabaseClient: supabaseClient);
       print('✅ [INIT] Town management service initialized');
 
       // Initialize order service
@@ -144,10 +147,10 @@ class AppServices {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   _configureDatabaseFactory();
-  
+
   // Initialize all services
   await AppServices.initialize();
-  
+
   runApp(const BusNStayApp());
 }
 
@@ -192,17 +195,22 @@ class StatCard extends StatefulWidget {
   State<StatCard> createState() => _StatCardState();
 }
 
-class _StatCardState extends State<StatCard> with SingleTickerProviderStateMixin {
+class _StatCardState extends State<StatCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.02).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
     );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.02,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -230,7 +238,10 @@ class _StatCardState extends State<StatCard> with SingleTickerProviderStateMixin
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: widget.color.withOpacity(0.2), width: 1.5),
+            border: Border.all(
+              color: widget.color.withOpacity(0.2),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
                 color: widget.color.withOpacity(0.1),
@@ -265,12 +276,27 @@ class _StatCardState extends State<StatCard> with SingleTickerProviderStateMixin
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.title, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey, letterSpacing: 0.5)),
+                    Text(
+                      widget.title,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Colors.grey,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                     const SizedBox(height: 6),
-                    Text(widget.value, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+                    Text(
+                      widget.value,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
                     if (widget.subtitle != null) ...[
                       const SizedBox(height: 4),
-                      Text(widget.subtitle!, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                      Text(
+                        widget.subtitle!,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                      ),
                     ],
                   ],
                 ),
@@ -303,10 +329,7 @@ class MiniStatCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            color.withOpacity(0.08),
-            color.withOpacity(0.02),
-          ],
+          colors: [color.withOpacity(0.08), color.withOpacity(0.02)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -336,9 +359,20 @@ class MiniStatCard extends StatelessWidget {
             child: Icon(icon, color: Colors.white, size: 18),
           ),
           const SizedBox(height: 10),
-          Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 4),
-          Text(title, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey, letterSpacing: 0.3)),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Colors.grey,
+              letterSpacing: 0.3,
+            ),
+          ),
         ],
       ),
     );
@@ -375,10 +409,7 @@ class _FrontDoorRolePreview extends StatelessWidget {
   final String label;
   final String imagePath;
 
-  const _FrontDoorRolePreview({
-    required this.label,
-    required this.imagePath,
-  });
+  const _FrontDoorRolePreview({required this.label, required this.imagePath});
 
   @override
   Widget build(BuildContext context) {
@@ -420,7 +451,6 @@ class _FrontDoorRolePreview extends StatelessWidget {
   }
 }
 
-
 class BusNStayApp extends StatelessWidget {
   const BusNStayApp({Key? key}) : super(key: key);
 
@@ -446,16 +476,16 @@ class BusNStayApp extends StatelessWidget {
       // KFC-inspired crimson primary
       primaryColor: const Color(0xFFDC143C),
       secondaryHeaderColor: const Color(0xFFFD5E14),
-      scaffoldBackgroundColor: brightness == Brightness.light 
-        ? const Color(0xFFFAFAFA) 
-        : const Color(0xFF1A1A2E),
-      appBarTheme: AppBarTheme(
-        backgroundColor: brightness == Brightness.light 
-          ? const Color(0xFFFFFFFF) 
+      scaffoldBackgroundColor: brightness == Brightness.light
+          ? const Color(0xFFFAFAFA)
           : const Color(0xFF1A1A2E),
-        foregroundColor: brightness == Brightness.light 
-          ? const Color(0xFF000000) 
-          : Colors.white,
+      appBarTheme: AppBarTheme(
+        backgroundColor: brightness == Brightness.light
+            ? const Color(0xFFFFFFFF)
+            : const Color(0xFF1A1A2E),
+        foregroundColor: brightness == Brightness.light
+            ? const Color(0xFF000000)
+            : Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
@@ -467,9 +497,7 @@ class BusNStayApp extends StatelessWidget {
       ),
       cardTheme: CardThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
@@ -513,7 +541,10 @@ class HomePage extends StatelessWidget {
       case UserRole.platformAdmin:
         return AdminDashboard(state: state);
       default:
-        return Scaffold(appBar: AppBar(title: const Text('BusNStay')), body: const Center(child: Text('Role not supported')));
+        return Scaffold(
+          appBar: AppBar(title: const Text('BusNStay')),
+          body: const Center(child: Text('Role not supported')),
+        );
     }
   }
 }
@@ -533,6 +564,166 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  String _defaultEmailFor(UserRole role) {
+    switch (role) {
+      case UserRole.passenger:
+        return 'traveler@busnstay.demo';
+      case UserRole.busOperator:
+        return 'operator@busnstay.demo';
+      case UserRole.restaurantAdmin:
+        return 'restaurant@busnstay.demo';
+      case UserRole.deliveryAgent:
+        return 'rider@busnstay.demo';
+      case UserRole.hotelManager:
+        return 'hotel@busnstay.demo';
+      case UserRole.platformAdmin:
+        return 'admin@busnstay.demo';
+      default:
+        return AppState.demoEmail;
+    }
+  }
+
+  String _roleSummary(UserRole role) {
+    switch (role) {
+      case UserRole.passenger:
+        return 'Access journeys, orders, saved places, wallet activity, and profile tools from one account shell.';
+      case UserRole.busOperator:
+        return 'Monitor bus or taxi movement, route windows, dispatch readiness, and occupancy from mobile.';
+      case UserRole.restaurantAdmin:
+        return 'Control storefront availability, orders, menu publishing, and restaurant reporting.';
+      case UserRole.deliveryAgent:
+        return 'Manage delivery runs, online status, wallet payouts, and recent transaction flow.';
+      case UserRole.hotelManager:
+        return 'Track bookings, room service, room inventory, and hotel performance in real time.';
+      case UserRole.platformAdmin:
+        return 'Review approvals, watch fleet operations, and keep system health under control.';
+      default:
+        return 'Choose a role to continue.';
+    }
+  }
+
+  String _roleLabel(UserRole role) {
+    switch (role) {
+      case UserRole.passenger:
+        return 'Passenger';
+      case UserRole.busOperator:
+        return 'Bus or Taxi Operator';
+      case UserRole.restaurantAdmin:
+        return 'Restaurant';
+      case UserRole.deliveryAgent:
+        return 'Delivery';
+      case UserRole.hotelManager:
+        return 'Hotel';
+      case UserRole.platformAdmin:
+        return 'Admin';
+      default:
+        return 'User';
+    }
+  }
+
+  void _applyRolePreset(UserRole role) {
+    setState(() {
+      _selectedRole = role;
+      if (kDebugMode) {
+        _emailController.text = _defaultEmailFor(role);
+        _passwordController.text = AppState.demoPassword;
+      }
+    });
+  }
+
+  void _applyDemoCredentials() {
+    setState(() {
+      _emailController.text = AppState.demoEmail;
+      _passwordController.text = AppState.demoPassword;
+    });
+  }
+
+  Future<void> _submitAuth() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter your email and password.')),
+      );
+      return;
+    }
+
+    final appState = context.read<AppState>();
+    final success = _isLogin
+        ? await appState.signIn(
+            email: email,
+            password: password,
+            role: _selectedRole,
+          )
+        : await appState.signUp(
+            email: email,
+            password: password,
+            name: _roleLabel(_selectedRole),
+            role: _selectedRole,
+          );
+
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(appState.authError ?? 'Authentication failed.')),
+      );
+    }
+  }
+
+  Widget _buildDemoAccountCard(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF151B2F)
+            : const Color(0xFFFFF4EB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFD5E14).withOpacity(0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'System check demo account',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFFDC143C),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Use one demo account to verify all major role dashboards. Select a role above, then sign in with these credentials.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.grey.shade700,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Email: ${AppState.demoEmail}',
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Password: ${AppState.demoPassword}',
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _applyDemoCredentials,
+            icon: const Icon(Icons.play_circle_outline),
+            label: const Text('Use demo credentials'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -542,6 +733,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = context.watch<AppState>();
+    final isBusy = appState.isAuthenticating;
+
     // Show forgot password screen
     if (_showForgotPassword) {
       return ForgotPasswordScreen(
@@ -554,8 +748,12 @@ class _AuthScreenState extends State<AuthScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1A1A2E) : const Color(0xFFFFF5F5),
-              Theme.of(context).brightness == Brightness.dark ? const Color(0xFF16213E) : Colors.white,
+              Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF1A1A2E)
+                  : const Color(0xFFFFF5F5),
+              Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF16213E)
+                  : Colors.white,
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -583,7 +781,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
-                        child: Image.asset('assets/images/logo.jpg', width: 120, height: 120, fit: BoxFit.cover),
+                        child: Image.asset(
+                          'assets/images/logo.jpg',
+                          width: 120,
+                          height: 120,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
@@ -591,26 +794,34 @@ class _AuthScreenState extends State<AuthScreen> {
                   Center(
                     child: Column(
                       children: [
-                        Text('BusNStay', style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFFDC143C),
-                          letterSpacing: -0.5,
-                        )),
+                        Text(
+                          'BusNStay',
+                          style: Theme.of(context).textTheme.displaySmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFFDC143C),
+                                letterSpacing: -0.5,
+                              ),
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           _isLogin ? 'Welcome Back' : 'Join Us',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.3,
-                          ),
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.3,
+                              ),
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          _isLogin ? 'Select your role to continue' : 'Choose your role to get started',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey,
-                            letterSpacing: 0.2,
-                          ),
+                          _isLogin
+                              ? 'Select your role to continue'
+                              : 'Choose your role to get started',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Colors.grey,
+                                letterSpacing: 0.2,
+                              ),
                         ),
                       ],
                     ),
@@ -638,18 +849,17 @@ class _AuthScreenState extends State<AuthScreen> {
                       children: [
                         Text(
                           'Live marketplace snapshot',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                              ),
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Food uploads, room inventory, bus movement tracking, and delivery countdowns are all surfaced from role dashboards.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.white70,
-                            height: 1.5,
-                          ),
+                          'Food uploads, room inventory, transport movement tracking, and delivery countdowns are all surfaced from role dashboards.',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: Colors.white70, height: 1.5),
                         ),
                         const SizedBox(height: 16),
                         Wrap(
@@ -657,7 +867,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           runSpacing: 10,
                           children: const [
                             _FrontDoorPill(label: 'Menu image uploads'),
-                            _FrontDoorPill(label: 'Bus ETA tracking'),
+                            _FrontDoorPill(label: 'Transport ETA tracking'),
                             _FrontDoorPill(label: 'Hotel room reports'),
                             _FrontDoorPill(label: 'Delivery earnings'),
                           ],
@@ -673,7 +883,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                               SizedBox(width: 10),
                               _FrontDoorRolePreview(
-                                label: 'Bus Operator',
+                                label: 'Transport',
                                 imagePath: 'Icons/Bus operator Icon.jpg',
                               ),
                               SizedBox(width: 10),
@@ -711,20 +921,132 @@ class _AuthScreenState extends State<AuthScreen> {
                     mainAxisSpacing: 12,
                     childAspectRatio: 1.05,
                     children: [
-                      _buildRoleCard('Passenger', 'Icons/Passenger.jpg', UserRole.passenger),
-                      _buildRoleCard('Bus Operator', 'Icons/Bus operator Icon.jpg', UserRole.busOperator),
-                      _buildRoleCard('Restaurant', 'Icons/Restaurant_icon.jpg', UserRole.restaurantAdmin),
-                      _buildRoleCard('Delivery', 'Icons/Delivery_icon.jpg', UserRole.deliveryAgent),
-                      _buildRoleCard('Hotel', 'Icons/Hotel_icon.jpg', UserRole.hotelManager),
-                      _buildRoleCard('Admin', 'Icons/Admin icon.jpg', UserRole.platformAdmin),
+                      _buildRoleCard(
+                        'Passenger',
+                        'Icons/Passenger.jpg',
+                        UserRole.passenger,
+                      ),
+                      _buildRoleCard(
+                        'Transport',
+                        'Icons/Bus operator Icon.jpg',
+                        UserRole.busOperator,
+                      ),
+                      _buildRoleCard(
+                        'Restaurant',
+                        'Icons/Restaurant_icon.jpg',
+                        UserRole.restaurantAdmin,
+                      ),
+                      _buildRoleCard(
+                        'Delivery',
+                        'Icons/Delivery_icon.jpg',
+                        UserRole.deliveryAgent,
+                      ),
+                      _buildRoleCard(
+                        'Hotel',
+                        'Icons/Hotel_icon.jpg',
+                        UserRole.hotelManager,
+                      ),
+                      _buildRoleCard(
+                        'Admin',
+                        'Icons/Admin icon.jpg',
+                        UserRole.platformAdmin,
+                      ),
                     ],
                   ),
+                  const SizedBox(height: 20),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF111827)
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFFDC143C).withOpacity(0.12),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Selected role experience',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _roleLabel(_selectedRole),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
+                                color: const Color(0xFFDC143C),
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _roleSummary(_selectedRole),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Colors.grey.shade700,
+                                height: 1.5,
+                              ),
+                        ),
+                        const SizedBox(height: 16),
+                        if (kDebugMode) ...[
+                          Text(
+                            'Developer quick presets',
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.4,
+                                ),
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _buildPresetChip('Passenger', UserRole.passenger),
+                              _buildPresetChip(
+                                'Operator',
+                                UserRole.busOperator,
+                              ),
+                              _buildPresetChip(
+                                'Restaurant',
+                                UserRole.restaurantAdmin,
+                              ),
+                              _buildPresetChip(
+                                'Delivery',
+                                UserRole.deliveryAgent,
+                              ),
+                              _buildPresetChip('Hotel', UserRole.hotelManager),
+                              _buildPresetChip('Admin', UserRole.platformAdmin),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  if (_isLogin) _buildDemoAccountCard(context),
                   const SizedBox(height: 32),
-                  Text('Credentials', style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: Colors.grey,
-                    letterSpacing: 0.5,
-                    fontWeight: FontWeight.w600,
-                  )),
+                  Text(
+                    'Credentials',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Colors.grey,
+                      letterSpacing: 0.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Container(
                     decoration: BoxDecoration(
@@ -736,6 +1058,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     child: TextField(
                       controller: _emailController,
+                      enabled: !isBusy,
                       decoration: InputDecoration(
                         labelText: 'Email Address',
                         labelStyle: TextStyle(
@@ -744,8 +1067,15 @@ class _AuthScreenState extends State<AuthScreen> {
                           letterSpacing: 0.3,
                         ),
                         border: InputBorder.none,
-                        prefixIcon: Icon(Icons.email, color: const Color(0xFFFD5E14).withOpacity(0.6), size: 20),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                        prefixIcon: Icon(
+                          Icons.email,
+                          color: const Color(0xFFFD5E14).withOpacity(0.6),
+                          size: 20,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -760,6 +1090,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     child: TextField(
                       controller: _passwordController,
+                      enabled: !isBusy,
                       obscureText: true,
                       decoration: InputDecoration(
                         labelText: 'Password',
@@ -769,8 +1100,15 @@ class _AuthScreenState extends State<AuthScreen> {
                           letterSpacing: 0.3,
                         ),
                         border: InputBorder.none,
-                        prefixIcon: Icon(Icons.lock, color: const Color(0xFFFD5E14).withOpacity(0.6), size: 20),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                        prefixIcon: Icon(
+                          Icons.lock,
+                          color: const Color(0xFFFD5E14).withOpacity(0.6),
+                          size: 20,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -779,14 +1117,16 @@ class _AuthScreenState extends State<AuthScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () => setState(() => _showForgotPassword = true),
+                        onPressed: () =>
+                            setState(() => _showForgotPassword = true),
                         child: Text(
                           'Forgot Password?',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: const Color(0xFFFD5E14),
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.3,
-                          ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: const Color(0xFFFD5E14),
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.3,
+                              ),
                         ),
                       ),
                     ),
@@ -810,23 +1150,34 @@ class _AuthScreenState extends State<AuthScreen> {
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () {
-                          final email = _emailController.text.isNotEmpty ? _emailController.text : 'user@busnstay.com';
-                          context.read<AppState>().demoLogin(email, _selectedRole);
-                        },
+                        onTap: isBusy ? null : _submitAuth,
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           child: Center(
-                            child: Text(
-                              _isLogin ? 'Login' : 'Register',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
-                                fontSize: 15,
-                              ),
-                            ),
+                            child: isBusy
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : Text(
+                                    _isLogin ? 'Login' : 'Register',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                          letterSpacing: 0.5,
+                                          fontSize: 15,
+                                        ),
+                                  ),
                           ),
                         ),
                       ),
@@ -838,21 +1189,25 @@ class _AuthScreenState extends State<AuthScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          _isLogin ? "Don't have an account? " : 'Already have an account? ',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey,
-                            letterSpacing: 0.2,
-                          ),
+                          _isLogin
+                              ? "Don't have an account? "
+                              : 'Already have an account? ',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Colors.grey,
+                                letterSpacing: 0.2,
+                              ),
                         ),
                         GestureDetector(
                           onTap: () => setState(() => _isLogin = !_isLogin),
                           child: Text(
                             _isLogin ? 'Register' : 'Login',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFFFD5E14),
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.3,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: const Color(0xFFFD5E14),
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.3,
+                                ),
                           ),
                         ),
                       ],
@@ -906,10 +1261,7 @@ class _AuthScreenState extends State<AuthScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset(
-                imagePath,
-                fit: BoxFit.cover,
-              ),
+              Image.asset(imagePath, fit: BoxFit.cover),
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -934,7 +1286,10 @@ class _AuthScreenState extends State<AuthScreen> {
                   top: 10,
                   right: 10,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFDC143C),
                       borderRadius: BorderRadius.circular(999),
@@ -954,7 +1309,10 @@ class _AuthScreenState extends State<AuthScreen> {
                 right: 14,
                 bottom: 14,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.34),
                     borderRadius: BorderRadius.circular(12),
@@ -972,6 +1330,35 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPresetChip(String label, UserRole role) {
+    final isSelected = _selectedRole == role;
+    return InkWell(
+      onTap: () => _applyRolePreset(role),
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFFDC143C)
+              : const Color(0xFFDC143C).withOpacity(0.08),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFFDC143C)
+                : const Color(0xFFDC143C).withOpacity(0.14),
+          ),
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: isSelected ? Colors.white : const Color(0xFFDC143C),
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -1015,15 +1402,27 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
         ],
       ),
       drawer: _buildAppDrawer(context),
-      body: _tabIndex == 0 ? _buildOverviewTab(context) : _tabIndex == 1 ? _buildWalletTab(context) : _tabIndex == 2 ? _buildRewardsTab(context) : _buildSettingsTab(context),
+      body: _tabIndex == 0
+          ? _buildOverviewTab(context)
+          : _tabIndex == 1
+          ? _buildWalletTab(context)
+          : _tabIndex == 2
+          ? _buildRewardsTab(context)
+          : _buildSettingsTab(context),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _tabIndex,
         onTap: (i) => setState(() => _tabIndex = i),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.wallet), label: 'Wallet'),
-          BottomNavigationBarItem(icon: Icon(Icons.card_giftcard), label: 'Rewards'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.card_giftcard),
+            label: 'Rewards',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
         ],
       ),
     );
@@ -1035,9 +1434,7 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: const BoxDecoration(
-              color: Color(0xFF3B82F6),
-            ),
+            decoration: const BoxDecoration(color: Color(0xFF3B82F6)),
             child: Consumer<AppState>(
               builder: (context, state, _) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1047,13 +1444,21 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
                     backgroundColor: Colors.white,
                     child: Text(
                       (state.user?.name ?? 'U')[0].toUpperCase(),
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF3B82F6)),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF3B82F6),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     state.user?.name ?? 'User',
-                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     state.user?.email ?? 'email@example.com',
@@ -1116,7 +1521,9 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
               TextField(
                 controller: _currentPasswordController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Current Password'),
+                decoration: const InputDecoration(
+                  labelText: 'Current Password',
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -1128,19 +1535,27 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
               TextField(
                 controller: _confirmPasswordController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Confirm Password'),
+                decoration: const InputDecoration(
+                  labelText: 'Confirm Password',
+                ),
               ),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () {
-              if (_newPasswordController.text == _confirmPasswordController.text &&
+              if (_newPasswordController.text ==
+                      _confirmPasswordController.text &&
                   _newPasswordController.text.isNotEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Password changed successfully!')),
+                  const SnackBar(
+                    content: Text('Password changed successfully!'),
+                  ),
                 );
                 Navigator.pop(context);
               } else {
@@ -1166,14 +1581,29 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [const Color(0xFF3B82F6), const Color(0xFF3B82F6).withOpacity(0.7)]),
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF3B82F6),
+                    const Color(0xFF3B82F6).withOpacity(0.7),
+                  ],
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Welcome, ${state.user?.name}!', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                  Text('Member since March 15, 2024', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  Text(
+                    'Welcome, ${state.user?.name}!',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Member since March 15, 2024',
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
                 ],
               ),
             ),
@@ -1203,16 +1633,31 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
               ],
             ),
             const SizedBox(height: 24),
-            Text('Loyalty Tier Progress', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Loyalty Tier Progress',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 12),
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(value: state.loyalty.tierProgress, minHeight: 8, color: state.loyalty.tierColor),
+              child: LinearProgressIndicator(
+                value: state.loyalty.tierProgress,
+                minHeight: 8,
+                color: state.loyalty.tierColor,
+              ),
             ),
             const SizedBox(height: 8),
-            Text('${(state.loyalty.tierProgress * 100).toStringAsFixed(0)}% to next tier', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+            Text(
+              '${(state.loyalty.tierProgress * 100).toStringAsFixed(0)}% to next tier',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+            ),
             const SizedBox(height: 24),
-            Text('Account Information', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Account Information',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 12),
             _buildInfoRow('Name', state.user?.name ?? 'N/A'),
             _buildInfoRow('Email', state.user?.email ?? 'N/A'),
@@ -1233,14 +1678,26 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [const Color(0xFF3B82F6), const Color(0xFF1E40AF)]),
+                gradient: LinearGradient(
+                  colors: [const Color(0xFF3B82F6), const Color(0xFF1E40AF)],
+                ),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Total Balance', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                  Text('K ${state.wallet.balance.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Total Balance',
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                  Text(
+                    'K ${state.wallet.balance.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1252,7 +1709,9 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
                     icon: const Icon(Icons.add),
                     label: const Text('Add Funds'),
                     onPressed: () => _showPaymentModal(context, 'Add Funds'),
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1261,7 +1720,9 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
                     icon: const Icon(Icons.send),
                     label: const Text('Transfer'),
                     onPressed: () {},
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B5CF6),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1270,15 +1731,22 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
                     icon: const Icon(Icons.call_received),
                     label: const Text('Withdraw'),
                     onPressed: () {},
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            Text('Transaction History', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Transaction History',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 12),
-            ...state.wallet.transactions.map((tx) => _buildTransactionTile(tx)).toList(),
+            ...state.wallet.transactions
+                .map((tx) => _buildTransactionTile(tx))
+                .toList(),
           ],
         ),
       ),
@@ -1297,26 +1765,46 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
               decoration: BoxDecoration(
                 color: state.loyalty.tierColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: state.loyalty.tierColor.withOpacity(0.3)),
+                border: Border.all(
+                  color: state.loyalty.tierColor.withOpacity(0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.military_tech, color: state.loyalty.tierColor, size: 32),
+                  Icon(
+                    Icons.military_tech,
+                    color: state.loyalty.tierColor,
+                    size: 32,
+                  ),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(state.loyalty.tierName, style: TextStyle(color: state.loyalty.tierColor, fontWeight: FontWeight.bold)),
-                      Text('${state.loyalty.currentPoints} / ${state.loyalty.currentPoints + state.loyalty.pointsToNextTier} points', style: Theme.of(context).textTheme.bodySmall),
+                      Text(
+                        state.loyalty.tierName,
+                        style: TextStyle(
+                          color: state.loyalty.tierColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '${state.loyalty.currentPoints} / ${state.loyalty.currentPoints + state.loyalty.pointsToNextTier} points',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
-            Text('Available Rewards', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Available Rewards',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 12),
-            ...state.loyalty.availableRewards.map((reward) => _buildRewardCard(context, reward, state)).toList(),
+            ...state.loyalty.availableRewards
+                .map((reward) => _buildRewardCard(context, reward, state))
+                .toList(),
           ],
         ),
       ),
@@ -1381,7 +1869,10 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(color: tx.color.withOpacity(0.15), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: tx.color.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
             child: Icon(tx.icon, color: tx.color, size: 20),
           ),
           const SizedBox(width: 12),
@@ -1389,19 +1880,35 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(tx.description, style: const TextStyle(fontWeight: FontWeight.w500)),
-                Text(tx.date.toString().split('.')[0], style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                Text(
+                  tx.description,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  tx.date.toString().split('.')[0],
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                ),
               ],
             ),
           ),
-          Text('K${tx.amount.toStringAsFixed(2)}', style: TextStyle(color: tx.color, fontWeight: FontWeight.bold)),
+          Text(
+            'K${tx.amount.toStringAsFixed(2)}',
+            style: TextStyle(color: tx.color, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRewardCard(BuildContext context, LoyaltyReward reward, AppState state) {
-    final canRedeem = state.loyalty.currentPoints >= reward.pointsCost && !reward.isRedeemed;
+  Widget _buildRewardCard(
+    BuildContext context,
+    LoyaltyReward reward,
+    AppState state,
+  ) {
+    final canRedeem =
+        state.loyalty.currentPoints >= reward.pointsCost && !reward.isRedeemed;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -1424,17 +1931,33 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(reward.title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text('${reward.pointsCost} points', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                Text(
+                  reward.title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  '${reward.pointsCost} points',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                ),
               ],
             ),
           ),
           if (reward.isRedeemed)
             StatusBadge(label: 'Redeemed', color: const Color(0xFF10B981))
           else if (canRedeem)
-            ElevatedButton(onPressed: () => context.read<AppState>().redeemReward(reward.id), child: const Text('Redeem'))
+            ElevatedButton(
+              onPressed: () => context.read<AppState>().redeemReward(reward.id),
+              child: const Text('Redeem'),
+            )
           else
-            Text('Locked', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+            Text(
+              'Locked',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+            ),
         ],
       ),
     );
@@ -1446,7 +1969,12 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+          ),
           Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
@@ -1482,16 +2010,21 @@ class _BusOperatorDashboardState extends State<BusOperatorDashboard> {
   Future<void> _loadData() async {
     try {
       setState(() => _loading = true);
-      
+
       // Load buses
-      _buses = await _busService.getBuses('operator_001'); // Replace with real operator ID
-      
+      _buses = await _busService.getBuses(
+        'operator_001',
+      ); // Replace with real operator ID
+
       // Load journeys
       _journeys = await _busService.getActiveJourneys('operator_001');
-      
+
       // Load today's revenue
-      _todayRevenue = await _busService.getOperatorRevenue('operator_001', DateTime.now());
-      
+      _todayRevenue = await _busService.getOperatorRevenue(
+        'operator_001',
+        DateTime.now(),
+      );
+
       setState(() => _loading = false);
     } catch (e) {
       print('❌ Error loading data: $e');
@@ -1515,7 +2048,7 @@ class _BusOperatorDashboardState extends State<BusOperatorDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bus Operator'),
+        title: const Text('Transport Operator'),
         actions: [
           IconButton(
             icon: const Icon(Icons.auto_awesome, color: Color(0xFFFD5E14)),
@@ -1523,14 +2056,13 @@ class _BusOperatorDashboardState extends State<BusOperatorDashboard> {
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const UpgradedBusOperatorDashboard(busOperatorId: 'operator_001'),
+                builder: (_) => const UpgradedBusOperatorDashboard(
+                  busOperatorId: 'operator_001',
+                ),
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => context.read<AppState>().logout(),
@@ -1541,14 +2073,25 @@ class _BusOperatorDashboardState extends State<BusOperatorDashboard> {
         selectedIndex: 0,
         onDestinationSelected: (i) {
           if (i == 1) {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (_) => const UpgradedBusOperatorDashboard(busOperatorId: 'operator_001'),
-            ));
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const UpgradedBusOperatorDashboard(
+                  busOperatorId: 'operator_001',
+                ),
+              ),
+            );
           }
         },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          NavigationDestination(icon: Icon(Icons.auto_awesome), label: 'Pro View'),
+          NavigationDestination(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.auto_awesome),
+            label: 'Pro View',
+          ),
         ],
       ),
       body: _loading
@@ -1581,21 +2124,34 @@ class _BusOperatorDashboardState extends State<BusOperatorDashboard> {
                   const SizedBox(height: 12),
                   StatCard(
                     title: 'Bookings',
-                    value: _journeys.fold<int>(0, (sum, j) => sum + ((j['bookings'] as List?)?.length ?? 0)).toString(),
+                    value: _journeys
+                        .fold<int>(
+                          0,
+                          (sum, j) =>
+                              sum + ((j['bookings'] as List?)?.length ?? 0),
+                        )
+                        .toString(),
                     icon: Icons.pending_actions,
                     color: const Color(0xFF8B5CF6),
                   ),
                   const SizedBox(height: 20),
-                  Text('Active Journeys', style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    'Active Journeys',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 12),
-                  ..._journeys.map((j) => _buildJourneyCard(context, j)).toList(),
+                  ..._journeys
+                      .map((j) => _buildJourneyCard(context, j))
+                      .toList(),
                   if (_journeys.isEmpty)
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: Text(
                           'No active journeys',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                         ),
                       ),
                     ),
@@ -1630,19 +2186,39 @@ class _BusOperatorDashboardState extends State<BusOperatorDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${j['origin']} → ${j['destination']}', 
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                    Text(j['journey_date'] ?? 'N/A',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                    Text(
+                      '${j['origin']} → ${j['destination']}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      j['journey_date'] ?? 'N/A',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                    ),
                   ],
                 ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('K${j['price']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3B82F6), fontSize: 16)),
-                  Text(j['status'] ?? 'active', 
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.green)),
+                  Text(
+                    'K${j['price']}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF3B82F6),
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    j['status'] ?? 'active',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: Colors.green),
+                  ),
                 ],
               ),
             ],
@@ -1654,9 +2230,16 @@ class _BusOperatorDashboardState extends State<BusOperatorDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Seats Booked', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey)),
-                    Text('${j['total_seats'] - j['available_seats']}/${j['total_seats']}', 
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      'Seats Booked',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(color: Colors.grey),
+                    ),
+                    Text(
+                      '${j['total_seats'] - j['available_seats']}/${j['total_seats']}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ],
                 ),
               ),
@@ -1665,7 +2248,9 @@ class _BusOperatorDashboardState extends State<BusOperatorDashboard> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: (j['total_seats'] - j['available_seats']) / j['total_seats'],
+                    value:
+                        (j['total_seats'] - j['available_seats']) /
+                        j['total_seats'],
                     minHeight: 6,
                     valueColor: const AlwaysStoppedAnimation(Color(0xFF3B82F6)),
                   ),
@@ -1699,9 +2284,9 @@ class _BusOperatorDashboardState extends State<BusOperatorDashboard> {
   void _updateJourneyStatus(String journeyId, String status) async {
     final success = await _busService.updateJourneyStatus(journeyId, status);
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Journey updated to $status ✅')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Journey updated to $status ✅')));
       _loadData();
     }
   }
@@ -1711,7 +2296,9 @@ class _BusOperatorDashboardState extends State<BusOperatorDashboard> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Create New Journey'),
-        content: const Text('Feature coming soon! Use mobile app to create journeys.'),
+        content: const Text(
+          'Feature coming soon! Use mobile app to create journeys.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1726,10 +2313,12 @@ class _BusOperatorDashboardState extends State<BusOperatorDashboard> {
 // ============ RESTAURANT ADMIN DASHBOARD ============
 class RestaurantAdminDashboard extends StatefulWidget {
   final AppState state;
-  const RestaurantAdminDashboard({Key? key, required this.state}) : super(key: key);
+  const RestaurantAdminDashboard({Key? key, required this.state})
+    : super(key: key);
 
   @override
-  State<RestaurantAdminDashboard> createState() => _RestaurantAdminDashboardState();
+  State<RestaurantAdminDashboard> createState() =>
+      _RestaurantAdminDashboardState();
 }
 
 class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
@@ -1752,10 +2341,12 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
   Future<void> _loadData() async {
     try {
       setState(() => _loading = true);
-      
-      _pendingOrders = await _restaurantService.getPendingOrders('restaurant_001');
+
+      _pendingOrders = await _restaurantService.getPendingOrders(
+        'restaurant_001',
+      );
       _menuItems = await _restaurantService.getMenuItems('restaurant_001');
-      
+
       setState(() => _loading = false);
     } catch (e) {
       print('❌ Error loading restaurant data: $e');
@@ -1785,14 +2376,13 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const UpgradedRestaurantAdminDashboard(restaurantId: 'restaurant_001'),
+                builder: (_) => const UpgradedRestaurantAdminDashboard(
+                  restaurantId: 'restaurant_001',
+                ),
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => context.read<AppState>().logout(),
@@ -1803,14 +2393,25 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
         selectedIndex: 0,
         onDestinationSelected: (i) {
           if (i == 1) {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (_) => const UpgradedRestaurantAdminDashboard(restaurantId: 'restaurant_001'),
-            ));
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const UpgradedRestaurantAdminDashboard(
+                  restaurantId: 'restaurant_001',
+                ),
+              ),
+            );
           }
         },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          NavigationDestination(icon: Icon(Icons.auto_awesome), label: 'Pro View'),
+          NavigationDestination(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.auto_awesome),
+            label: 'Pro View',
+          ),
         ],
       ),
       body: _loading
@@ -1825,15 +2426,25 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Manager Dashboard', 
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                        Text(
+                          'Manager Dashboard',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color: _isOpen ? const Color(0xFF10B981).withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                            color: _isOpen
+                                ? const Color(0xFF10B981).withOpacity(0.1)
+                                : Colors.grey.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: _isOpen ? const Color(0xFF10B981) : Colors.grey,
+                              color: _isOpen
+                                  ? const Color(0xFF10B981)
+                                  : Colors.grey,
                               width: 1.5,
                             ),
                           ),
@@ -1843,7 +2454,9 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
                               _isOpen ? '🟢 Open' : '🔴 Closed',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: _isOpen ? const Color(0xFF10B981) : Colors.grey,
+                                color: _isOpen
+                                    ? const Color(0xFF10B981)
+                                    : Colors.grey,
                               ),
                             ),
                           ),
@@ -1883,7 +2496,9 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
                               decoration: BoxDecoration(
                                 border: Border(
                                   bottom: BorderSide(
-                                    color: _tabIndex == 0 ? const Color(0xFF3B82F6) : Colors.transparent,
+                                    color: _tabIndex == 0
+                                        ? const Color(0xFF3B82F6)
+                                        : Colors.transparent,
                                     width: 2,
                                   ),
                                 ),
@@ -1892,8 +2507,12 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
                                 'Orders',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontWeight: _tabIndex == 0 ? FontWeight.bold : FontWeight.normal,
-                                  color: _tabIndex == 0 ? const Color(0xFF3B82F6) : Colors.grey,
+                                  fontWeight: _tabIndex == 0
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: _tabIndex == 0
+                                      ? const Color(0xFF3B82F6)
+                                      : Colors.grey,
                                 ),
                               ),
                             ),
@@ -1907,7 +2526,9 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
                               decoration: BoxDecoration(
                                 border: Border(
                                   bottom: BorderSide(
-                                    color: _tabIndex == 1 ? const Color(0xFF3B82F6) : Colors.transparent,
+                                    color: _tabIndex == 1
+                                        ? const Color(0xFF3B82F6)
+                                        : Colors.transparent,
                                     width: 2,
                                   ),
                                 ),
@@ -1916,8 +2537,12 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
                                 'Menu',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontWeight: _tabIndex == 1 ? FontWeight.bold : FontWeight.normal,
-                                  color: _tabIndex == 1 ? const Color(0xFF3B82F6) : Colors.grey,
+                                  fontWeight: _tabIndex == 1
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: _tabIndex == 1
+                                      ? const Color(0xFF3B82F6)
+                                      : Colors.grey,
                                 ),
                               ),
                             ),
@@ -1927,21 +2552,34 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
                     ),
                     const SizedBox(height: 16),
                     if (_tabIndex == 0) ...[
-                      Text('Pending Orders', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Pending Orders',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 12),
-                      ..._pendingOrders.map((o) => _buildOrderCard(context, o)).toList(),
+                      ..._pendingOrders
+                          .map((o) => _buildOrderCard(context, o))
+                          .toList(),
                       if (_pendingOrders.isEmpty)
                         Center(
                           child: Padding(
                             padding: const EdgeInsets.all(24.0),
-                            child: Text('No pending orders', 
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                            child: Text(
+                              'No pending orders',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey),
+                            ),
                           ),
                         ),
                     ] else ...[
-                      Text('Menu Items', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Menu Items',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 12),
-                      ..._menuItems.map((m) => _buildMenuItemTile(context, m)).toList(),
+                      ..._menuItems
+                          .map((m) => _buildMenuItemTile(context, m))
+                          .toList(),
                     ],
                   ],
                 ),
@@ -1965,14 +2603,21 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Order #${o['id']?.toString().substring(0, 8) ?? 'N/A'}',
-                style: const TextStyle(fontWeight: FontWeight.w600)),
-              StatusBadge(label: o['status'] ?? 'pending', color: const Color(0xFFF59E0B)),
+              Text(
+                'Order #${o['id']?.toString().substring(0, 8) ?? 'N/A'}',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              StatusBadge(
+                label: o['status'] ?? 'pending',
+                color: const Color(0xFFF59E0B),
+              ),
             ],
           ),
           const SizedBox(height: 8),
-          Text('Customer: ${o['customer_name'] ?? 'N/A'}',
-            style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            'Customer: ${o['customer_name'] ?? 'N/A'}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -2020,9 +2665,16 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(m['name'] ?? 'N/A', style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text('${m['category'] ?? 'N/A'} • K${m['price']}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                Text(
+                  m['name'] ?? 'N/A',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  '${m['category'] ?? 'N/A'} • K${m['price']}',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                ),
               ],
             ),
           ),
@@ -2032,13 +2684,27 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 gradient: (m['is_available'] ?? false)
-                    ? LinearGradient(colors: [const Color(0xFF10B981).withOpacity(0.2), Colors.transparent])
-                    : LinearGradient(colors: [Colors.grey.withOpacity(0.2), Colors.transparent]),
+                    ? LinearGradient(
+                        colors: [
+                          const Color(0xFF10B981).withOpacity(0.2),
+                          Colors.transparent,
+                        ],
+                      )
+                    : LinearGradient(
+                        colors: [
+                          Colors.grey.withOpacity(0.2),
+                          Colors.transparent,
+                        ],
+                      ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
-                (m['is_available'] ?? false) ? Icons.check_circle : Icons.cancel,
-                color: (m['is_available'] ?? false) ? const Color(0xFF10B981) : Colors.grey,
+                (m['is_available'] ?? false)
+                    ? Icons.check_circle
+                    : Icons.cancel,
+                color: (m['is_available'] ?? false)
+                    ? const Color(0xFF10B981)
+                    : Colors.grey,
               ),
             ),
           ),
@@ -2081,7 +2747,9 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
     );
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Order marked ready & customer notified 🎉')),
+        const SnackBar(
+          content: Text('Order marked ready & customer notified 🎉'),
+        ),
       );
       _loadData();
     }
@@ -2102,7 +2770,8 @@ class _RestaurantAdminDashboardState extends State<RestaurantAdminDashboard> {
 // ============ DELIVERY AGENT DASHBOARD ============
 class DeliveryAgentDashboard extends StatefulWidget {
   final AppState state;
-  const DeliveryAgentDashboard({Key? key, required this.state}) : super(key: key);
+  const DeliveryAgentDashboard({Key? key, required this.state})
+    : super(key: key);
 
   @override
   State<DeliveryAgentDashboard> createState() => _DeliveryAgentDashboardState();
@@ -2127,14 +2796,19 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
   Future<void> _loadData() async {
     try {
       setState(() => _loading = true);
-      
+
       if (_isOnline) {
         _availableDeliveries = await _deliveryService.getAvailableDeliveries();
-        _activeDeliveries = await _deliveryService.getAgentDeliveries('agent_001');
-        _todayEarnings = await _deliveryService.getAgentEarnings('agent_001', DateTime.now());
+        _activeDeliveries = await _deliveryService.getAgentDeliveries(
+          'agent_001',
+        );
+        _todayEarnings = await _deliveryService.getAgentEarnings(
+          'agent_001',
+          DateTime.now(),
+        );
         _subscribeToDeliveries();
       }
-      
+
       setState(() => _loading = false);
     } catch (e) {
       print('❌ Error loading delivery data: $e');
@@ -2144,7 +2818,9 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
 
   void _subscribeToDeliveries() {
     if (_activeDeliveries.isNotEmpty) {
-      _deliverySubscription = _deliveryService.subscribeToDelivery(_activeDeliveries.first['id']);
+      _deliverySubscription = _deliveryService.subscribeToDelivery(
+        _activeDeliveries.first['id'],
+      );
     }
   }
 
@@ -2156,7 +2832,7 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
 
   void _toggleOnline() async {
     setState(() => _isOnline = !_isOnline);
-    
+
     try {
       if (_isOnline) {
         await _deliveryService.setAgentOnline('agent_001', true);
@@ -2170,9 +2846,9 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
       }
     } catch (e) {
       print('❌ Error toggling online status: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating status: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating status: $e')));
     }
   }
 
@@ -2196,7 +2872,10 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
         selectedIndex: 0,
         onDestinationSelected: (i) {},
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+          NavigationDestination(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
           NavigationDestination(icon: Icon(Icons.map), label: 'Map'),
           NavigationDestination(icon: Icon(Icons.history), label: 'History'),
         ],
@@ -2213,17 +2892,27 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Delivery Dashboard', 
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                        Text(
+                          'Delivery Dashboard',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
                         GestureDetector(
                           onTap: _toggleOnline,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
-                              color: _isOnline ? const Color(0xFF10B981).withOpacity(0.15) : Colors.red.withOpacity(0.15),
+                              color: _isOnline
+                                  ? const Color(0xFF10B981).withOpacity(0.15)
+                                  : Colors.red.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: _isOnline ? const Color(0xFF10B981) : Colors.red,
+                                color: _isOnline
+                                    ? const Color(0xFF10B981)
+                                    : Colors.red,
                                 width: 1,
                               ),
                             ),
@@ -2231,7 +2920,9 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
                               _isOnline ? '🟢 Online' : '🔴 Offline',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: _isOnline ? const Color(0xFF10B981) : Colors.red,
+                                color: _isOnline
+                                    ? const Color(0xFF10B981)
+                                    : Colors.red,
                               ),
                             ),
                           ),
@@ -2271,22 +2962,35 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
                         ],
                       ),
                       const SizedBox(height: 24),
-                      Text('Available Deliveries', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Available Deliveries',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 12),
-                      ..._availableDeliveries.map((d) => _buildDeliveryCard(context, d)).toList(),
+                      ..._availableDeliveries
+                          .map((d) => _buildDeliveryCard(context, d))
+                          .toList(),
                       if (_availableDeliveries.isEmpty)
                         Center(
                           child: Padding(
                             padding: const EdgeInsets.all(24.0),
-                            child: Text('No available deliveries',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                            child: Text(
+                              'No available deliveries',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey),
+                            ),
                           ),
                         ),
                       const SizedBox(height: 24),
                       if (_activeDeliveries.isNotEmpty) ...[
-                        Text('Active Deliveries', style: Theme.of(context).textTheme.titleMedium),
+                        Text(
+                          'Active Deliveries',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                         const SizedBox(height: 12),
-                        ..._activeDeliveries.map((d) => _buildActiveDeliveryCard(context, d)).toList(),
+                        ..._activeDeliveries
+                            .map((d) => _buildActiveDeliveryCard(context, d))
+                            .toList(),
                       ],
                     ] else ...[
                       Container(
@@ -2297,12 +3001,19 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
                         ),
                         child: Column(
                           children: [
-                            const Icon(Icons.info_outline, size: 48, color: Colors.grey),
+                            const Icon(
+                              Icons.info_outline,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
                             const SizedBox(height: 12),
                             const Text(
                               'Go online to see available deliveries',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.grey, fontSize: 16),
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
+                              ),
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton(
@@ -2335,10 +3046,21 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Order #${d['id']?.toString().substring(0, 8) ?? 'N/A'}',
-                style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF8B5CF6))),
-              Text('K${d['fee']}',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF10B981), fontSize: 16)),
+              Text(
+                'Order #${d['id']?.toString().substring(0, 8) ?? 'N/A'}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF8B5CF6),
+                ),
+              ),
+              Text(
+                'K${d['fee']}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF10B981),
+                  fontSize: 16,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -2349,7 +3071,9 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
               Expanded(
                 child: Text(
                   d['pickup_address'] ?? 'N/A',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                 ),
               ),
             ],
@@ -2357,12 +3081,18 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
           const SizedBox(height: 4),
           Row(
             children: [
-              const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+              const Icon(
+                Icons.location_on_outlined,
+                size: 16,
+                color: Colors.grey,
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   d['delivery_address'] ?? 'N/A',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                 ),
               ),
             ],
@@ -2370,12 +3100,16 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
           const SizedBox(height: 8),
           Text(
             '${d['distance']} km • ${d['customer_name'] ?? 'N/A'}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey),
           ),
           const SizedBox(height: 8),
           ElevatedButton(
             onPressed: () => _acceptDelivery(d),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B5CF6),
+            ),
             child: const Text('Accept'),
           ),
         ],
@@ -2383,7 +3117,10 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
     );
   }
 
-  Widget _buildActiveDeliveryCard(BuildContext context, Map<String, dynamic> d) {
+  Widget _buildActiveDeliveryCard(
+    BuildContext context,
+    Map<String, dynamic> d,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -2398,14 +3135,21 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Order #${d['id']?.toString().substring(0, 8) ?? 'N/A'}',
-                style: const TextStyle(fontWeight: FontWeight.w600)),
-              StatusBadge(label: d['status'] ?? 'in-transit', color: const Color(0xFF8B5CF6)),
+              Text(
+                'Order #${d['id']?.toString().substring(0, 8) ?? 'N/A'}',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              StatusBadge(
+                label: d['status'] ?? 'in-transit',
+                color: const Color(0xFF8B5CF6),
+              ),
             ],
           ),
           const SizedBox(height: 8),
-          Text('To: ${d['delivery_address'] ?? 'N/A'}',
-            style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            'To: ${d['delivery_address'] ?? 'N/A'}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -2436,9 +3180,9 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
       delivery['customer_phone'] ?? '+27696469651',
     );
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Delivery accepted! 🚗')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Delivery accepted! 🚗')));
       _loadData();
     }
   }
@@ -2449,9 +3193,9 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
       delivery['customer_phone'] ?? '+27696469651',
     );
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Delivery completed! ✅')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Delivery completed! ✅')));
       _loadData();
     }
   }
@@ -2463,9 +3207,9 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
       'Unable to complete',
     );
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Delivery cancelled')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Delivery cancelled')));
       _loadData();
     }
   }
@@ -2474,7 +3218,8 @@ class _DeliveryAgentDashboardState extends State<DeliveryAgentDashboard> {
 // ============ HOTEL MANAGER DASHBOARD ============
 class HotelManagerDashboard extends StatefulWidget {
   final AppState state;
-  const HotelManagerDashboard({Key? key, required this.state}) : super(key: key);
+  const HotelManagerDashboard({Key? key, required this.state})
+    : super(key: key);
 
   @override
   State<HotelManagerDashboard> createState() => _HotelManagerDashboardState();
@@ -2503,13 +3248,16 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
   Future<void> _loadData() async {
     try {
       setState(() => _loading = true);
-      
+
       _pendingBookings = await _hotelService.getPendingBookings('hotel_001');
-      _confirmedBookings = await _hotelService.getConfirmedBookings('hotel_001', DateTime.now());
+      _confirmedBookings = await _hotelService.getConfirmedBookings(
+        'hotel_001',
+        DateTime.now(),
+      );
       _rooms = await _hotelService.getRooms('hotel_001');
       _occupancyRate = await _hotelService.getOccupancyRate('hotel_001');
       _todayRevenue = await _hotelService.getTodayRevenue('hotel_001');
-      
+
       setState(() => _loading = false);
     } catch (e) {
       print('❌ Error loading hotel data: $e');
@@ -2539,7 +3287,8 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const UpgradedHotelManagerDashboard(hotelId: 'hotel_001'),
+                builder: (_) =>
+                    const UpgradedHotelManagerDashboard(hotelId: 'hotel_001'),
               ),
             ),
           ),
@@ -2557,14 +3306,24 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
         selectedIndex: 0,
         onDestinationSelected: (i) {
           if (i == 1) {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (_) => const UpgradedHotelManagerDashboard(hotelId: 'hotel_001'),
-            ));
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const UpgradedHotelManagerDashboard(hotelId: 'hotel_001'),
+              ),
+            );
           }
         },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          NavigationDestination(icon: Icon(Icons.auto_awesome), label: 'Pro View'),
+          NavigationDestination(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.auto_awesome),
+            label: 'Pro View',
+          ),
         ],
       ),
       body: _loading
@@ -2579,15 +3338,25 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Hotel Manager',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                        Text(
+                          'Hotel Manager',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color: _isOpen ? const Color(0xFF10B981).withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                            color: _isOpen
+                                ? const Color(0xFF10B981).withOpacity(0.1)
+                                : Colors.grey.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: _isOpen ? const Color(0xFF10B981) : Colors.grey,
+                              color: _isOpen
+                                  ? const Color(0xFF10B981)
+                                  : Colors.grey,
                               width: 1.5,
                             ),
                           ),
@@ -2597,7 +3366,9 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
                               _isOpen ? '🟢 Open' : '🔴 Closed',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: _isOpen ? const Color(0xFF10B981) : Colors.grey,
+                                color: _isOpen
+                                    ? const Color(0xFF10B981)
+                                    : Colors.grey,
                               ),
                             ),
                           ),
@@ -2646,7 +3417,9 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
                               decoration: BoxDecoration(
                                 border: Border(
                                   bottom: BorderSide(
-                                    color: _tabIndex == 0 ? const Color(0xFF3B82F6) : Colors.transparent,
+                                    color: _tabIndex == 0
+                                        ? const Color(0xFF3B82F6)
+                                        : Colors.transparent,
                                     width: 2,
                                   ),
                                 ),
@@ -2655,8 +3428,12 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
                                 'Bookings',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontWeight: _tabIndex == 0 ? FontWeight.bold : FontWeight.normal,
-                                  color: _tabIndex == 0 ? const Color(0xFF3B82F6) : Colors.grey,
+                                  fontWeight: _tabIndex == 0
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: _tabIndex == 0
+                                      ? const Color(0xFF3B82F6)
+                                      : Colors.grey,
                                 ),
                               ),
                             ),
@@ -2670,7 +3447,9 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
                               decoration: BoxDecoration(
                                 border: Border(
                                   bottom: BorderSide(
-                                    color: _tabIndex == 1 ? const Color(0xFF3B82F6) : Colors.transparent,
+                                    color: _tabIndex == 1
+                                        ? const Color(0xFF3B82F6)
+                                        : Colors.transparent,
                                     width: 2,
                                   ),
                                 ),
@@ -2679,8 +3458,12 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
                                 'Rooms',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontWeight: _tabIndex == 1 ? FontWeight.bold : FontWeight.normal,
-                                  color: _tabIndex == 1 ? const Color(0xFF3B82F6) : Colors.grey,
+                                  fontWeight: _tabIndex == 1
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: _tabIndex == 1
+                                      ? const Color(0xFF3B82F6)
+                                      : Colors.grey,
                                 ),
                               ),
                             ),
@@ -2691,27 +3474,50 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
                     const SizedBox(height: 16),
                     if (_tabIndex == 0) ...[
                       if (_pendingBookings.isNotEmpty) ...[
-                        Text('Pending Confirmations',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: const Color(0xFFF59E0B))),
+                        Text(
+                          'Pending Confirmations',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: const Color(0xFFF59E0B)),
+                        ),
                         const SizedBox(height: 12),
-                        ..._pendingBookings.map((b) => _buildBookingCard(context, b, isPending: true)).toList(),
+                        ..._pendingBookings
+                            .map(
+                              (b) => _buildBookingCard(
+                                context,
+                                b,
+                                isPending: true,
+                              ),
+                            )
+                            .toList(),
                         const SizedBox(height: 20),
                       ],
-                      Text("Today's Check-ins",
-                        style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        "Today's Check-ins",
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 12),
-                      ..._confirmedBookings.map((b) => _buildBookingCard(context, b, isPending: false)).toList(),
+                      ..._confirmedBookings
+                          .map(
+                            (b) =>
+                                _buildBookingCard(context, b, isPending: false),
+                          )
+                          .toList(),
                       if (_confirmedBookings.isEmpty)
                         Center(
                           child: Padding(
                             padding: const EdgeInsets.all(24.0),
-                            child: Text('No bookings for today',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                            child: Text(
+                              'No bookings for today',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey),
+                            ),
                           ),
                         ),
                     ] else ...[
-                      Text('Available Rooms',
-                        style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Available Rooms',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 12),
                       ..._rooms.map((r) => _buildRoomTile(context, r)).toList(),
                     ],
@@ -2722,14 +3528,20 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
     );
   }
 
-  Widget _buildBookingCard(BuildContext context, Map<String, dynamic> b, {bool isPending = false}) {
+  Widget _buildBookingCard(
+    BuildContext context,
+    Map<String, dynamic> b, {
+    bool isPending = false,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.grey.withOpacity(0.2)),
-        color: isPending ? const Color(0xFFF59E0B).withOpacity(0.05) : Colors.grey.withOpacity(0.02),
+        color: isPending
+            ? const Color(0xFFF59E0B).withOpacity(0.05)
+            : Colors.grey.withOpacity(0.02),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2740,21 +3552,31 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Room ${b['room_number']} - ${b['room_type'] ?? 'N/A'}',
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text(b['guest_name'] ?? 'N/A',
-                    style: Theme.of(context).textTheme.bodySmall),
+                  Text(
+                    'Room ${b['room_number']} - ${b['room_type'] ?? 'N/A'}',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    b['guest_name'] ?? 'N/A',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 ],
               ),
               StatusBadge(
                 label: b['status'] ?? 'pending',
-                color: isPending ? const Color(0xFFF59E0B) : const Color(0xFF14B8A6),
+                color: isPending
+                    ? const Color(0xFFF59E0B)
+                    : const Color(0xFF14B8A6),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text('${b['nights']} nights • ${b['guests']} guest(s) • K${b['total_price']}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+          Text(
+            '${b['nights']} nights • ${b['guests']} guest(s) • K${b['total_price']}',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+          ),
           const SizedBox(height: 8),
           if (isPending)
             Row(
@@ -2762,7 +3584,9 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => _confirmBooking(b),
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                    ),
                     child: const Text('Confirm'),
                   ),
                 ),
@@ -2778,7 +3602,9 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
           else
             ElevatedButton(
               onPressed: () => _checkIn(b),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3B82F6),
+              ),
               child: const Text('Check In'),
             ),
         ],
@@ -2801,7 +3627,9 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: isAvailable ? const Color(0xFF10B981).withOpacity(0.15) : Colors.grey.withOpacity(0.15),
+              color: isAvailable
+                  ? const Color(0xFF10B981).withOpacity(0.15)
+                  : Colors.grey.withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
@@ -2816,10 +3644,16 @@ class _HotelManagerDashboardState extends State<HotelManagerDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(r['number'] ?? 'N/A',
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text('${r['type'] ?? 'N/A'} • K${r['price_per_night']}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                Text(
+                  r['number'] ?? 'N/A',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  '${r['type'] ?? 'N/A'} • K${r['price_per_night']}',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                ),
               ],
             ),
           ),
@@ -2884,13 +3718,88 @@ class AdminDashboard extends StatefulWidget {
 
 class _AdminDashboardState extends State<AdminDashboard> {
   int _tabIndex = 0;
+  bool _monitoringEnabled = true;
+
+  final List<_AdminApprovalRequest> _approvalRequests = const [
+    _AdminApprovalRequest(
+      name: 'Nshima Palace',
+      submittedBy: 'John Doe',
+      type: 'restaurant',
+      detail: '12 item menu imported and awaiting review',
+    ),
+    _AdminApprovalRequest(
+      name: 'Urban Couriers',
+      submittedBy: 'Grace Tembo',
+      type: 'delivery',
+      detail: '2 active riders requesting go-live clearance',
+    ),
+    _AdminApprovalRequest(
+      name: 'Radisson Blu',
+      submittedBy: 'Admin User',
+      type: 'hotel',
+      detail: 'Room inventory synced with 18 available rooms',
+    ),
+  ];
+
+  final List<_AdminFleetSnapshot> _fleetSnapshots = const [
+    _AdminFleetSnapshot(
+      fleet: 'BUS-001',
+      location: 'Lusaka',
+      status: 'Active',
+      info: '45/52 passengers',
+    ),
+    _AdminFleetSnapshot(
+      fleet: 'RIDER-204',
+      location: 'Intercity terminal',
+      status: 'Online',
+      info: '4 deliveries in progress',
+    ),
+    _AdminFleetSnapshot(
+      fleet: 'TAXI-088',
+      location: 'Ndola station',
+      status: 'Standby',
+      info: 'Awaiting next ride assignment',
+    ),
+  ];
+
+  final List<_AdminHealthEvent> _healthEvents = const [
+    _AdminHealthEvent(
+      title: 'GPS latency warning',
+      description:
+          'Two delivery units have not posted fresh coordinates in 4 minutes.',
+      severity: 'warning',
+    ),
+    _AdminHealthEvent(
+      title: 'Approval backlog',
+      description:
+          'Three provider accounts are waiting for verification review.',
+      severity: 'info',
+    ),
+    _AdminHealthEvent(
+      title: 'Payments healthy',
+      description:
+          'Wallet top-ups and transfers cleared with no failed checks in the last hour.',
+      severity: 'success',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Platform Admin'),
-        actions: [IconButton(icon: const Icon(Icons.logout), onPressed: () => context.read<AppState>().logout())],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => context.read<AppState>().logout(),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          _buildAdminOperationalHeader(context),
+          Expanded(child: _buildCurrentTab(context)),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tabIndex,
@@ -2898,124 +3807,516 @@ class _AdminDashboardState extends State<AdminDashboard> {
         destinations: const [
           NavigationDestination(icon: Icon(Icons.approval), label: 'Approvals'),
           NavigationDestination(icon: Icon(Icons.gps_fixed), label: 'Tracking'),
-          NavigationDestination(icon: Icon(Icons.analytics), label: 'Analytics'),
+          NavigationDestination(
+            icon: Icon(Icons.health_and_safety),
+            label: 'Health',
+          ),
+          NavigationDestination(icon: Icon(Icons.analytics), label: 'Metrics'),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('System Dashboard', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(child: MiniStatCard(title: 'Users', value: '12K', icon: Icons.people, color: const Color(0xFF3B82F6))),
-                const SizedBox(width: 12),
-                Expanded(child: MiniStatCard(title: 'Revenue', value: 'K2.4M', icon: Icons.attach_money, color: const Color(0xFF10B981))),
-                const SizedBox(width: 12),
-                Expanded(child: MiniStatCard(title: 'Transactions', value: '342', icon: Icons.swap_horiz, color: const Color(0xFFF59E0B))),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _tabIndex = 0),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: _tabIndex == 0 ? const Color(0xFF3B82F6) : Colors.transparent, width: 2))),
-                      child: Text('Approvals', textAlign: TextAlign.center, style: TextStyle(fontWeight: _tabIndex == 0 ? FontWeight.bold : FontWeight.normal)),
+    );
+  }
+
+  Widget _buildAdminOperationalHeader(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF111827), Color(0xFF3B82F6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Platform control centre',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Mobile now mirrors the web admin essentials: provider approvals, live fleet visibility, health alerts, and platform metrics.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white70,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _monitoringEnabled ? 'Monitoring on' : 'Monitoring paused',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _tabIndex = 1),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: _tabIndex == 1 ? const Color(0xFF3B82F6) : Colors.transparent, width: 2))),
-                      child: Text('Tracking', textAlign: TextAlign.center, style: TextStyle(fontWeight: _tabIndex == 1 ? FontWeight.bold : FontWeight.normal)),
-                    ),
+                  Switch.adaptive(
+                    value: _monitoringEnabled,
+                    activeColor: Colors.white,
+                    activeTrackColor: const Color(0xFF10B981),
+                    onChanged: (value) =>
+                        setState(() => _monitoringEnabled = value),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (_tabIndex == 0) ...[
-              Text('Pending Approvals', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 12),
-              _buildApprovalCard('Restaurant: Nshima Palace', 'John Doe', 'restaurant'),
-              _buildApprovalCard('Delivery: Urban Couriers', 'Grace Tembo', 'delivery'),
-              _buildApprovalCard('Hotel: Radisson Blu', 'Admin User', 'hotel'),
-            ] else ...[
-              Text('Fleet Operations', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 12),
-              _buildTrackingCard('BUS-001', 'Lusaka', 'Active', '45/52 passengers'),
-              _buildTrackingCard('BUS-002', 'Ndola', 'Active', '35/52 passengers'),
-              _buildTrackingCard('BUS-003', 'Kitwe', 'Maintenance', '- passengers'),
+                ],
+              ),
             ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _AdminHeaderPill('${_approvalRequests.length} approvals pending'),
+              _AdminHeaderPill(
+                '${_fleetSnapshots.length} live entities tracked',
+              ),
+              _AdminHeaderPill(
+                _monitoringEnabled
+                    ? 'Auto-fix queue ready'
+                    : 'Alert queue standby',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCurrentTab(BuildContext context) {
+    switch (_tabIndex) {
+      case 0:
+        return _buildApprovalsTab(context);
+      case 1:
+        return _buildTrackingTab(context);
+      case 2:
+        return _buildHealthTab(context);
+      default:
+        return _buildMetricsTab(context);
+    }
+  }
+
+  Widget _buildApprovalsTab(BuildContext context) {
+    final approvalCards = _approvalRequests
+        .map((request) => _buildApprovalCard(request))
+        .toList();
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: <Widget>[
+        Text(
+          'Pending approvals',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 12),
+        ...approvalCards,
+      ],
+    );
+  }
+
+  Widget _buildApprovalCard(_AdminApprovalRequest request) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3B82F6).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  _approvalIcon(request.type),
+                  color: const Color(0xFF3B82F6),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      request.name,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      'Submitted by: ${request.submittedBy}',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+              StatusBadge(label: request.type, color: const Color(0xFF3B82F6)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            request.detail,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Rejected ${request.name} for now'),
+                      ),
+                    );
+                  },
+                  child: const Text('Reject'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Approved ${request.name}')),
+                    );
+                  },
+                  child: const Text('Approve'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrackingTab(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Text(
+          'Live operations tracking',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 12),
+        ..._fleetSnapshots.map(_buildTrackingCard),
+      ],
+    );
+  }
+
+  Widget _buildTrackingCard(_AdminFleetSnapshot snapshot) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFF8B5CF6).withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              _trackingIcon(snapshot.fleet),
+              color: const Color(0xFF8B5CF6),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  snapshot.fleet,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  '${snapshot.location} • ${snapshot.info}',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          StatusBadge(
+            label: snapshot.status,
+            color: _trackingColor(snapshot.status),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHealthTab(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Text(
+          'System health',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 12),
+        ..._healthEvents.map(
+          (event) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _severityColor(event.severity).withOpacity(0.18),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.monitor_heart_outlined,
+                      color: _severityColor(event.severity),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        event.title,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    StatusBadge(
+                      label: event.severity,
+                      color: _severityColor(event.severity),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  event.description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade700,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: OutlinedButton.icon(
+                    onPressed: _monitoringEnabled
+                        ? () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Queued fix for ${event.title}'),
+                              ),
+                            );
+                          }
+                        : null,
+                    icon: const Icon(Icons.auto_fix_high_outlined),
+                    label: const Text('Auto-fix'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetricsTab(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: const [
+            SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'Total Users',
+                value: '12K',
+                subtitle: 'Across transport, food, and stays',
+                icon: Icons.people_outline,
+                color: Color(0xFF3B82F6),
+              ),
+            ),
+            SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'Platform Revenue',
+                value: 'K2.4M',
+                subtitle: 'Gross flow this month',
+                icon: Icons.attach_money_outlined,
+                color: Color(0xFF10B981),
+              ),
+            ),
+            SizedBox(
+              width: 170,
+              child: ReportMetricCard(
+                title: 'Live Transactions',
+                value: '342',
+                subtitle: 'Orders, rides, and bookings today',
+                icon: Icons.swap_horiz_outlined,
+                color: Color(0xFFF59E0B),
+              ),
+            ),
           ],
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildApprovalCard(String name, String submittedBy, String type) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.withOpacity(0.2))),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(color: const Color(0xFF3B82F6).withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
-            child: const Icon(Icons.check_circle_outline, color: Color(0xFF3B82F6), size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text('Submitted by: $submittedBy', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
-              ],
-            ),
-          ),
-          ElevatedButton(onPressed: () {}, child: const Text('Review')),
-        ],
-      ),
-    );
+  IconData _approvalIcon(String type) {
+    switch (type) {
+      case 'restaurant':
+        return Icons.restaurant_menu;
+      case 'delivery':
+        return Icons.delivery_dining;
+      case 'hotel':
+        return Icons.hotel_outlined;
+      default:
+        return Icons.verified_user_outlined;
+    }
   }
 
-  Widget _buildTrackingCard(String fleet, String location, String status, String info) {
+  IconData _trackingIcon(String fleet) {
+    if (fleet.startsWith('RIDER')) {
+      return Icons.delivery_dining;
+    }
+    if (fleet.startsWith('TAXI')) {
+      return Icons.local_taxi_outlined;
+    }
+    return Icons.directions_bus;
+  }
+
+  Color _trackingColor(String status) {
+    switch (status) {
+      case 'Active':
+      case 'Online':
+        return const Color(0xFF10B981);
+      case 'Standby':
+        return const Color(0xFFF59E0B);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Color _severityColor(String severity) {
+    switch (severity) {
+      case 'warning':
+        return const Color(0xFFF59E0B);
+      case 'success':
+        return const Color(0xFF10B981);
+      case 'info':
+      default:
+        return const Color(0xFF3B82F6);
+    }
+  }
+}
+
+class _AdminApprovalRequest {
+  final String name;
+  final String submittedBy;
+  final String type;
+  final String detail;
+
+  const _AdminApprovalRequest({
+    required this.name,
+    required this.submittedBy,
+    required this.type,
+    required this.detail,
+  });
+}
+
+class _AdminFleetSnapshot {
+  final String fleet;
+  final String location;
+  final String status;
+  final String info;
+
+  const _AdminFleetSnapshot({
+    required this.fleet,
+    required this.location,
+    required this.status,
+    required this.info,
+  });
+}
+
+class _AdminHealthEvent {
+  final String title;
+  final String description;
+  final String severity;
+
+  const _AdminHealthEvent({
+    required this.title,
+    required this.description,
+    required this.severity,
+  });
+}
+
+class _AdminHeaderPill extends StatelessWidget {
+  final String label;
+
+  const _AdminHeaderPill(this.label);
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.withOpacity(0.2))),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(color: const Color(0xFF8B5CF6).withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
-            child: const Icon(Icons.directions_bus, color: Color(0xFF8B5CF6), size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(fleet, style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text('$location ÔÇó $info', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
-              ],
-            ),
-          ),
-          StatusBadge(label: status, color: status == 'Active' ? const Color(0xFF10B981) : Colors.orange),
-        ],
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
