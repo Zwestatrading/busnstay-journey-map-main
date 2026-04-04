@@ -10,9 +10,20 @@ import 'database_service.dart';
 import 'flutterwave_service.dart';
 
 class AppState extends ChangeNotifier {
+  // Master demo credential (any role)
   static const String demoEmail = 'demo@busnstay.com';
   static const String demoPassword = 'demo123';
   static const String demoPhone = '+260 97 123 4567';
+
+  // Per-role demo emails (same password: demo123)
+  static const Map<String, String> demoRoleEmails = {
+    'passenger':  'passenger@busnstay.demo',
+    'transport':  'transport@busnstay.demo',
+    'restaurant': 'restaurant@busnstay.demo',
+    'delivery':   'delivery@busnstay.demo',
+    'hotel':      'hotel@busnstay.demo',
+    'admin':      'admin@busnstay.demo',
+  };
 
   // User state
   AppUser? _user;
@@ -199,7 +210,7 @@ class AppState extends ChangeNotifier {
         return true;
       }
 
-      await demoLogin(role: role);
+      await demoLogin(role: _roleFromDemoEmail(email));
       return true;
     } catch (e) {
       _authError = e.toString();
@@ -228,7 +239,20 @@ class AppState extends ChangeNotifier {
   }
 
   bool _isDemoCredentialPair(String email, String password) {
-    return email.trim().toLowerCase() == demoEmail && password == demoPassword;
+    if (password != demoPassword) return false;
+    final lower = email.trim().toLowerCase();
+    if (lower == demoEmail) return true;
+    return demoRoleEmails.values.any((e) => e.toLowerCase() == lower);
+  }
+
+  UserRole _roleFromDemoEmail(String email) {
+    final lower = email.trim().toLowerCase();
+    if (lower == 'transport@busnstay.demo') return UserRole.busOperator;
+    if (lower == 'restaurant@busnstay.demo') return UserRole.restaurantAdmin;
+    if (lower == 'delivery@busnstay.demo') return UserRole.deliveryAgent;
+    if (lower == 'hotel@busnstay.demo') return UserRole.hotelManager;
+    if (lower == 'admin@busnstay.demo') return UserRole.platformAdmin;
+    return UserRole.passenger; // default / passenger@busnstay.demo / demo@busnstay.com
   }
 
   Future<void> _restoreSession() async {

@@ -446,14 +446,119 @@ class _MapFrontPageState extends State<MapFrontPage>
 
   String _defaultEmailFor(UserRole role) {
     switch (role) {
-      case UserRole.passenger: return 'traveler@busnstay.demo';
-      case UserRole.busOperator: return 'operator@busnstay.demo';
+      case UserRole.passenger:     return 'passenger@busnstay.demo';
+      case UserRole.busOperator:   return 'transport@busnstay.demo';
       case UserRole.restaurantAdmin: return 'restaurant@busnstay.demo';
-      case UserRole.deliveryAgent: return 'rider@busnstay.demo';
-      case UserRole.hotelManager: return 'hotel@busnstay.demo';
+      case UserRole.deliveryAgent: return 'delivery@busnstay.demo';
+      case UserRole.hotelManager:  return 'hotel@busnstay.demo';
       case UserRole.platformAdmin: return 'admin@busnstay.demo';
       default: return AppState.demoEmail;
     }
+  }
+
+  Widget _buildDemoCard() {
+    final demoEmail = _defaultEmailFor(_selectedRole);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withOpacity(0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.bolt_rounded, color: AppColors.primary, size: 16),
+              const SizedBox(width: 6),
+              const Text(
+                'Demo access — try everything',
+                style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w800, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Per-role quick-tap chips
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _demoChip('Passenger',   UserRole.passenger),
+              _demoChip('Transport',   UserRole.busOperator),
+              _demoChip('Restaurant',  UserRole.restaurantAdmin),
+              _demoChip('Delivery',    UserRole.deliveryAgent),
+              _demoChip('Hotel',       UserRole.hotelManager),
+              _demoChip('Admin',       UserRole.platformAdmin),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _credRow('Email', demoEmail),
+          const SizedBox(height: 4),
+          _credRow('Password', AppState.demoPassword),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () => setState(() {
+              _emailController.text = demoEmail;
+              _passwordController.text = AppState.demoPassword;
+            }),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Center(
+                child: Text(
+                  'Fill credentials & login',
+                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 13),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _demoChip(String label, UserRole role) {
+    final isSelected = _selectedRole == role;
+    return GestureDetector(
+      onTap: () => setState(() {
+        _selectedRole = role;
+        _emailController.text = _defaultEmailFor(role);
+        _passwordController.text = AppState.demoPassword;
+      }),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : AppColors.darkCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? AppColors.primary : Colors.white12),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.black : Colors.white60,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _credRow(String label, String value) {
+    return Row(
+      children: [
+        Text('$label: ', style: const TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.w600)),
+        Expanded(
+          child: Text(value, style: const TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'monospace')),
+        ),
+      ],
+    );
   }
 
   Future<void> _submitAuth() async {
@@ -484,10 +589,9 @@ class _MapFrontPageState extends State<MapFrontPage>
     return GestureDetector(
       onTap: () {
         setState(() => _selectedRole = role);
-        if (kDebugMode) {
-          _emailController.text = _defaultEmailFor(role);
-          _passwordController.text = AppState.demoPassword;
-        }
+        // Always fill demo credentials when tapping a role card
+        _emailController.text = _defaultEmailFor(role);
+        _passwordController.text = AppState.demoPassword;
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
@@ -555,43 +659,9 @@ class _MapFrontPageState extends State<MapFrontPage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Demo credentials (debug only)
-        if (kDebugMode) ...[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.primary.withOpacity(0.18)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Demo credentials', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 13)),
-                const SizedBox(height: 4),
-                Text('Email: ${AppState.demoEmail}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                Text('Password: ${AppState.demoPassword}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () => setState(() {
-                    _emailController.text = AppState.demoEmail;
-                    _passwordController.text = AppState.demoPassword;
-                  }),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text('Use demo credentials', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 12)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-        ],
+        // ── Demo credentials card (always visible) ──
+        _buildDemoCard(),
+        const SizedBox(height: 14),
 
         // Email
         Container(
