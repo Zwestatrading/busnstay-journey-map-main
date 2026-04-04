@@ -497,14 +497,47 @@ class BusNStayApp extends StatelessWidget {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: brightness,
-        secondary: AppColors.primaryDark,
-        tertiary: AppColors.emerald,
-      ),
+      colorScheme: brightness == Brightness.dark
+          ? ColorScheme.dark(
+              primary: AppColors.primary,
+              onPrimary: Colors.black,
+              primaryContainer: const Color(0xFF2C2C2C),
+              onPrimaryContainer: AppColors.primaryLight,
+              secondary: AppColors.primaryDark,
+              onSecondary: Colors.black,
+              secondaryContainer: const Color(0xFF2C2C2C),
+              onSecondaryContainer: AppColors.accentLight,
+              tertiary: AppColors.emerald,
+              onTertiary: Colors.black,
+              surface: const Color(0xFF1A1A1A),
+              onSurface: Colors.white,
+              surfaceContainerHighest: const Color(0xFF2C2C2C),
+              outline: Colors.white24,
+              error: AppColors.error,
+            )
+          : ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: Colors.black,
+              primaryContainer: const Color(0xFFFFF8E1),
+              onPrimaryContainer: const Color(0xFF6D4C00),
+              secondary: AppColors.primaryDark,
+              onSecondary: Colors.black,
+              secondaryContainer: const Color(0xFFFFF8E1),
+              onSecondaryContainer: const Color(0xFF6D4C00),
+              tertiary: AppColors.emerald,
+              onTertiary: Colors.black,
+              surface: Colors.white,
+              onSurface: const Color(0xFF1A1A1A),
+              surfaceContainerHighest: const Color(0xFFF5F5F5),
+              outline: Colors.black12,
+              error: AppColors.error,
+            ),
       cardTheme: CardThemeData(
         elevation: 2,
+        color: brightness == Brightness.dark
+            ? const Color(0xFF2C2C2C)
+            : Colors.white,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
