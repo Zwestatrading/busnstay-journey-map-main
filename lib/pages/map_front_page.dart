@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
+import '../services/waze_service.dart';
 import '../models/user_model.dart';
 import '../services/app_state.dart';
 import '../theme/app_colors.dart';
@@ -748,6 +749,7 @@ class _RouteSelectionSheetState extends State<_RouteSelectionSheet> {
   List<_TownSuggestion> _filteredTo = [];
   _TownSuggestion? _selectedFrom;
   _TownSuggestion? _selectedTo;
+  bool _isRouteLoading = false;
 
   void _filterFrom(String query) {
     setState(() {
@@ -765,22 +767,47 @@ class _RouteSelectionSheetState extends State<_RouteSelectionSheet> {
     });
   }
 
-  void _tryConfirm() {
-    if (_selectedFrom != null && _selectedTo != null) {
+  Future<void> _tryConfirm() async {
+    if (_selectedFrom == null || _selectedTo == null) return;
+
+    setState(() => _isRouteLoading = true);
+
+    // Try Waze API for real driving distance + time
+    final wazeRoute = await WazeService.getDrivingDirections(
+      fromLat: _selectedFrom!.lat,
+      fromLng: _selectedFrom!.lng,
+      toLat: _selectedTo!.lat,
+      toLng: _selectedTo!.lng,
+    );
+
+    if (!mounted) return;
+
+    final String distance;
+    final String duration;
+
+    if (wazeRoute != null) {
+      distance = wazeRoute.distance;
+      duration = wazeRoute.duration;
+    } else {
+      // Fallback: straight-line estimate via Geolocator
       final dist = Geolocator.distanceBetween(
         _selectedFrom!.lat, _selectedFrom!.lng,
         _selectedTo!.lat, _selectedTo!.lng,
       );
       final km = (dist / 1000).round();
       final hours = (km / 80).toStringAsFixed(0);
-
-      widget.onRouteSelected(_RouteOption(
-        _selectedFrom!.name,
-        _selectedTo!.name,
-        '$km km',
-        '~${hours}h',
-      ));
+      distance = '$km km';
+      duration = '~${hours}h';
     }
+
+    setState(() => _isRouteLoading = false);
+
+    widget.onRouteSelected(_RouteOption(
+      _selectedFrom!.name,
+      _selectedTo!.name,
+      distance,
+      duration,
+    ));
   }
 
   @override
@@ -852,8 +879,32 @@ class _RouteSelectionSheetState extends State<_RouteSelectionSheet> {
 
           const SizedBox(height: 14),
 
-          // Quick suggestions
-          Wrap(
+          // Loading indicator while fetching Waze route
+          if (_isRouteLoading)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFC107)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Getting route from Waze…',
+                    style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13),
+                  ),
+                ],
+              ),
+            )
+          else
+            // Quick suggestions
+            Wrap(
             spacing: 8,
             runSpacing: 8,
             children: _towns.take(6).map((town) {
