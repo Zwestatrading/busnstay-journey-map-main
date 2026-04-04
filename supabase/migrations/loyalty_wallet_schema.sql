@@ -217,57 +217,71 @@ ALTER TABLE public.wallet_deposits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wallet_transfers ENABLE ROW LEVEL SECURITY;
 
 -- User Loyalty RLS
+DROP POLICY IF EXISTS "Users can view their own loyalty profile" ON public.user_loyalty;
 CREATE POLICY "Users can view their own loyalty profile"
   ON public.user_loyalty FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own loyalty profile" ON public.user_loyalty;
 CREATE POLICY "Users can update their own loyalty profile"
   ON public.user_loyalty FOR UPDATE USING (auth.uid() = user_id);
 
 -- Loyalty Transactions RLS
+DROP POLICY IF EXISTS "Users can view their own transactions" ON public.loyalty_transactions;
 CREATE POLICY "Users can view their own transactions"
   ON public.loyalty_transactions FOR SELECT USING (auth.uid() = user_id);
 
 -- Rewards RLS
+DROP POLICY IF EXISTS "Anyone can view active rewards" ON public.loyalty_rewards;
 CREATE POLICY "Anyone can view active rewards"
   ON public.loyalty_rewards FOR SELECT USING (active = true);
 
 -- Reward Redemptions RLS
+DROP POLICY IF EXISTS "Users can view their own redemptions" ON public.reward_redemptions;
 CREATE POLICY "Users can view their own redemptions"
   ON public.reward_redemptions FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create redemptions for themselves" ON public.reward_redemptions;
 CREATE POLICY "Users can create redemptions for themselves"
   ON public.reward_redemptions FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Wallets RLS
+DROP POLICY IF EXISTS "Users can view their own wallet" ON public.wallets;
 CREATE POLICY "Users can view their own wallet"
   ON public.wallets FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own wallet" ON public.wallets;
 CREATE POLICY "Users can update their own wallet"
   ON public.wallets FOR UPDATE USING (auth.uid() = user_id);
 
 -- Wallet Transactions RLS
+DROP POLICY IF EXISTS "Users can view their own transactions" ON public.wallet_transactions;
 CREATE POLICY "Users can view their own transactions"
   ON public.wallet_transactions FOR SELECT USING (
     auth.uid() = (SELECT user_id FROM public.wallets WHERE id = wallet_id)
   );
 
 -- Payment Methods RLS
+DROP POLICY IF EXISTS "Users can view their own payment methods" ON public.payment_methods;
 CREATE POLICY "Users can view their own payment methods"
   ON public.payment_methods FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create payment methods" ON public.payment_methods;
 CREATE POLICY "Users can create payment methods"
   ON public.payment_methods FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own payment methods" ON public.payment_methods;
 CREATE POLICY "Users can update their own payment methods"
   ON public.payment_methods FOR UPDATE USING (auth.uid() = user_id);
 
 -- Wallet Deposits RLS
+DROP POLICY IF EXISTS "Users can view their own deposits" ON public.wallet_deposits;
 CREATE POLICY "Users can view their own deposits"
   ON public.wallet_deposits FOR SELECT USING (
     auth.uid() = (SELECT user_id FROM public.wallets WHERE id = wallet_id)
   );
 
 -- Wallet Transfers RLS
+DROP POLICY IF EXISTS "Users can view transfers involving their wallet" ON public.wallet_transfers;
 CREATE POLICY "Users can view transfers involving their wallet"
   ON public.wallet_transfers FOR SELECT USING (
     auth.uid() = (SELECT user_id FROM public.wallets WHERE id = from_wallet_id) OR

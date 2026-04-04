@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import '../models/user_model.dart';
@@ -25,9 +24,7 @@ class MapFrontPage extends StatefulWidget {
 
 class _MapFrontPageState extends State<MapFrontPage>
     with SingleTickerProviderStateMixin {
-  GoogleMapController? _mapController;
   bool _routeSelected = false;
-  Position? _userPosition;
 
   // Route selection
   String _pickupText = '';
@@ -41,15 +38,12 @@ class _MapFrontPageState extends State<MapFrontPage>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  // Default center: Lusaka, Zambia
-  static const LatLng _defaultCenter = LatLng(-15.3875, 28.3228);
-
-  // Popular routes
+  // Default center: Lusaka, Zambia (kept for route options data)
   static const List<_RouteOption> _popularRoutes = [
-    _RouteOption('Ndola', 'Lusaka', LatLng(-12.9667, 28.6333), LatLng(-15.4167, 28.2833), '320 km', '~4h 30m'),
-    _RouteOption('Lusaka', 'Livingstone', LatLng(-15.4167, 28.2833), LatLng(-17.8419, 25.8544), '470 km', '~6h'),
-    _RouteOption('Kitwe', 'Ndola', LatLng(-12.8024, 28.2132), LatLng(-12.9667, 28.6333), '55 km', '~45m'),
-    _RouteOption('Kabwe', 'Lusaka', LatLng(-14.4469, 28.4464), LatLng(-15.4167, 28.2833), '130 km', '~1h 40m'),
+    _RouteOption('Ndola', 'Lusaka', '320 km', '~4h 30m'),
+    _RouteOption('Lusaka', 'Livingstone', '470 km', '~6h'),
+    _RouteOption('Kitwe', 'Ndola', '55 km', '~45m'),
+    _RouteOption('Kabwe', 'Lusaka', '130 km', '~1h 40m'),
   ];
 
   // Service categories
@@ -59,10 +53,6 @@ class _MapFrontPageState extends State<MapFrontPage>
     _ServiceCategory('Stay', Icons.hotel_rounded, AppColors.teal),
     _ServiceCategory('Delivery', Icons.local_shipping_rounded, AppColors.emerald),
   ];
-
-  // Map markers
-  final Set<Marker> _markers = {};
-  final Set<Polyline> _polylines = {};
 
   late AnimationController _panelController;
   late Animation<double> _panelAnimation;
@@ -76,25 +66,6 @@ class _MapFrontPageState extends State<MapFrontPage>
     );
     _panelAnimation = CurvedAnimation(parent: _panelController, curve: Curves.easeOutCubic);
     _panelController.forward();
-    _getUserLocation();
-  }
-
-  Future<void> _getUserLocation() async {
-    try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) return;
-
-      final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.medium);
-      if (mounted) {
-        setState(() => _userPosition = pos);
-        _mapController?.animateCamera(
-          CameraUpdate.newLatLng(LatLng(pos.latitude, pos.longitude)),
-        );
-      }
-    } catch (_) {}
   }
 
   void _selectRoute(_RouteOption route) {
@@ -102,48 +73,7 @@ class _MapFrontPageState extends State<MapFrontPage>
       _pickupText = route.from;
       _destinationText = route.to;
       _routeSelected = true;
-
-      _markers
-        ..clear()
-        ..add(Marker(
-          markerId: const MarkerId('origin'),
-          position: route.origin,
-          infoWindow: InfoWindow(title: route.from),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        ))
-        ..add(Marker(
-          markerId: const MarkerId('destination'),
-          position: route.destination,
-          infoWindow: InfoWindow(title: route.to),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
-        ));
-
-      _polylines
-        ..clear()
-        ..add(Polyline(
-          polylineId: const PolylineId('route'),
-          color: AppColors.primary,
-          width: 4,
-          points: [route.origin, route.destination],
-        ));
     });
-
-    // Fit camera to show both markers
-    _mapController?.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(
-            route.origin.latitude < route.destination.latitude ? route.origin.latitude : route.destination.latitude,
-            route.origin.longitude < route.destination.longitude ? route.origin.longitude : route.destination.longitude,
-          ),
-          northeast: LatLng(
-            route.origin.latitude > route.destination.latitude ? route.origin.latitude : route.destination.latitude,
-            route.origin.longitude > route.destination.longitude ? route.origin.longitude : route.destination.longitude,
-          ),
-        ),
-        80,
-      ),
-    );
   }
 
   void _clearRoute() {
@@ -151,23 +81,12 @@ class _MapFrontPageState extends State<MapFrontPage>
       _pickupText = '';
       _destinationText = '';
       _routeSelected = false;
-      _markers.clear();
-      _polylines.clear();
     });
-    _mapController?.animateCamera(
-      CameraUpdate.newLatLngZoom(
-        _userPosition != null
-            ? LatLng(_userPosition!.latitude, _userPosition!.longitude)
-            : _defaultCenter,
-        6,
-      ),
-    );
   }
 
   @override
   void dispose() {
     _panelController.dispose();
-    _mapController?.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -186,24 +105,11 @@ class _MapFrontPageState extends State<MapFrontPage>
     return Scaffold(
       body: Stack(
         children: [
-          // ── Full-screen Map ──
-          GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: _userPosition != null
-                  ? LatLng(_userPosition!.latitude, _userPosition!.longitude)
-                  : _defaultCenter,
-              zoom: 6,
-            ),
-            onMapCreated: (controller) {
-              _mapController = controller;
-            },
-            markers: _markers,
-            polylines: _polylines,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-            mapToolbarEnabled: false,
-            compassEnabled: false,
+          // ── Full-screen Map (or placeholder when no API key) ──
+          _MapBackground(
+            routeSelected: _routeSelected,
+            pickup: _pickupText,
+            destination: _destinationText,
           ),
 
           // ── Gradient overlay at bottom ──
@@ -378,7 +284,19 @@ class _MapFrontPageState extends State<MapFrontPage>
           Positioned(
             right: 16,
             top: MediaQuery.of(context).padding.top + 70,
-            child: _buildMyLocationButton(),
+            child: GestureDetector(
+              onTap: () {}, // GPS available once Google Maps API key is set
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.darkCard,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: const Icon(Icons.my_location_rounded, color: AppColors.accentLight, size: 22),
+              ),
+            ),
           ),
         ],
       ),
@@ -783,25 +701,6 @@ class _MapFrontPageState extends State<MapFrontPage>
     );
   }
 
-  Widget _buildMyLocationButton() {
-    return GestureDetector(
-      onTap: _getUserLocation,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: AppColors.darkCard,
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white10),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 8, offset: const Offset(0, 2)),
-          ],
-        ),
-        child: const Icon(Icons.my_location_rounded, color: AppColors.accentLight, size: 22),
-      ),
-    );
-  }
-
   void _showRouteSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -878,8 +777,6 @@ class _RouteSelectionSheetState extends State<_RouteSelectionSheet> {
       widget.onRouteSelected(_RouteOption(
         _selectedFrom!.name,
         _selectedTo!.name,
-        LatLng(_selectedFrom!.lat, _selectedFrom!.lng),
-        LatLng(_selectedTo!.lat, _selectedTo!.lng),
         '$km km',
         '~${hours}h',
       ));
@@ -1059,12 +956,10 @@ class _RouteSelectionSheetState extends State<_RouteSelectionSheet> {
 class _RouteOption {
   final String from;
   final String to;
-  final LatLng origin;
-  final LatLng destination;
   final String distance;
   final String duration;
 
-  const _RouteOption(this.from, this.to, this.origin, this.destination, this.distance, this.duration);
+  const _RouteOption(this.from, this.to, this.distance, this.duration);
 }
 
 class _ServiceCategory {
@@ -1081,4 +976,195 @@ class _TownSuggestion {
   final double lng;
 
   const _TownSuggestion(this.name, this.lat, this.lng);
+}
+
+// ── Map Background Placeholder ──
+// Shows a rich dark map-like background until Google Maps API key is configured.
+class _MapBackground extends StatelessWidget {
+  final bool routeSelected;
+  final String pickup;
+  final String destination;
+
+  const _MapBackground({
+    required this.routeSelected,
+    required this.pickup,
+    required this.destination,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: const Color(0xFF1A2535),
+      child: Stack(
+        children: [
+          // Grid overlay to simulate map tiles
+          CustomPaint(
+            size: Size.infinite,
+            painter: _MapGridPainter(),
+          ),
+          // Road-like lines
+          CustomPaint(
+            size: Size.infinite,
+            painter: _MapRoadsPainter(routeSelected: routeSelected),
+          ),
+          // Zambia label
+          Positioned(
+            top: 120,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                'ZAMBIA',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.08),
+                  fontSize: 52,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 12,
+                ),
+              ),
+            ),
+          ),
+          // City dots
+          ..._buildCityDots(context),
+          // Route label if selected
+          if (routeSelected)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 70,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.92),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(color: AppColors.primary.withOpacity(0.4), blurRadius: 12),
+                    ],
+                  ),
+                  child: Text(
+                    '$pickup → $destination',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildCityDots(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    // Approximate positions on screen for major Zambian cities
+    final cities = [
+      _CityDot('Lusaka', size.width * 0.52, size.height * 0.54, true),
+      _CityDot('Ndola', size.width * 0.55, size.height * 0.28, false),
+      _CityDot('Kitwe', size.width * 0.49, size.height * 0.25, false),
+      _CityDot('Livingstone', size.width * 0.50, size.height * 0.74, false),
+      _CityDot('Kabwe', size.width * 0.52, size.height * 0.45, false),
+    ];
+    return cities.map((c) => Positioned(
+      left: c.x - 4,
+      top: c.y - 4,
+      child: Column(
+        children: [
+          Container(
+            width: c.isCapital ? 10 : 7,
+            height: c.isCapital ? 10 : 7,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: c.isCapital ? AppColors.primary : Colors.white.withOpacity(0.55),
+              boxShadow: c.isCapital
+                  ? [BoxShadow(color: AppColors.primary.withOpacity(0.5), blurRadius: 8, spreadRadius: 2)]
+                  : [],
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            c.name,
+            style: TextStyle(
+              color: c.isCapital ? AppColors.primaryLight : Colors.white.withOpacity(0.5),
+              fontSize: c.isCapital ? 10 : 9,
+              fontWeight: c.isCapital ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    )).toList();
+  }
+}
+
+class _CityDot {
+  final String name;
+  final double x;
+  final double y;
+  final bool isCapital;
+  const _CityDot(this.name, this.x, this.y, this.isCapital);
+}
+
+class _MapGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF243045)
+      ..strokeWidth = 0.8;
+    const spacing = 40.0;
+    for (double x = 0; x < size.width; x += spacing) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += spacing) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _MapRoadsPainter extends CustomPainter {
+  final bool routeSelected;
+  const _MapRoadsPainter({required this.routeSelected});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final roadPaint = Paint()
+      ..color = const Color(0xFF2E3F55)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    final highlightPaint = Paint()
+      ..color = AppColors.primary.withOpacity(routeSelected ? 0.7 : 0.0)
+      ..strokeWidth = 3.5
+      ..strokeCap = StrokeCap.round;
+
+    // Main north-south highway (Great North Road)
+    final path1 = Path()
+      ..moveTo(size.width * 0.50, size.height * 0.12)
+      ..quadraticBezierTo(size.width * 0.52, size.height * 0.40, size.width * 0.52, size.height * 0.55)
+      ..quadraticBezierTo(size.width * 0.51, size.height * 0.65, size.width * 0.50, size.height * 0.82);
+    canvas.drawPath(path1, roadPaint);
+    if (routeSelected) canvas.drawPath(path1, highlightPaint);
+
+    // East-west road
+    final path2 = Path()
+      ..moveTo(size.width * 0.15, size.height * 0.50)
+      ..quadraticBezierTo(size.width * 0.35, size.height * 0.52, size.width * 0.52, size.height * 0.55)
+      ..quadraticBezierTo(size.width * 0.68, size.height * 0.53, size.width * 0.85, size.height * 0.48);
+    canvas.drawPath(path2, roadPaint);
+
+    // Copperbelt road
+    final path3 = Path()
+      ..moveTo(size.width * 0.43, size.height * 0.22)
+      ..quadraticBezierTo(size.width * 0.48, size.height * 0.34, size.width * 0.50, size.height * 0.42);
+    canvas.drawPath(path3, roadPaint..color = const Color(0xFF2E3F55));
+  }
+
+  @override
+  bool shouldRepaint(covariant _MapRoadsPainter old) => old.routeSelected != routeSelected;
 }
